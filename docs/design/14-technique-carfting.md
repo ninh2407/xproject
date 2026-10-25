@@ -4,10 +4,10 @@
 |------------|---------|
 | Mã tài liệu | GD-08 · Prefix ID: `TF` |
 | Owner | Game Designer + Technical Artist (VFX tham số) + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.1 |
+| Trạng thái | 🟡 Bản nháp v0.4 |
 | Cần trước | Phase 4 / Alpha (bản đầu: phẩm Hoàng – Huyền, theo PLAN Phase 4), Beta (sao chép, giao dịch ngọc giản, phẩm Địa) |
 | Quyết định nền | PLAN §4.10 (trụ cột P4, tính năng đặc trưng), D-15 (tự đặt tên + lọc + báo cáo), D-17 |
-| Liên quan | [PLAN §4.10](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-07 Kỹ năng](13-skills.md) (khung `SkillDef`, ngân sách §6.5) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-13 Kinh tế](19-economy.md) · [GD-14 Xã hội](20-social.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-28 Hiểm địa](27-danger-zones.md) |
+| Liên quan | [PLAN §4.10](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-07 Kỹ năng](13-skills.md) (khung `SkillDef`, ngân sách §6.5) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-13 Kinh tế](19-economy.md) · [GD-14 Xã hội](20-social.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [AR-04 VFX Guidelines](../art/vfx-guidelines.md) §6 (mẫu / bảng màu / lớp phủ VFX) |
 
 > Đọc [docs/README.md §3](../README.md) và **GD-07 §3, §5.6, §6.5** trước khi triển khai. Kỹ năng chế tạo là một `SkillDef` bình thường (GD-07) sinh ra từ dữ liệu thành phần; engine chiến đấu **không phân biệt** kỹ năng chế tạo với kỹ năng tác giả viết. Dữ liệu ở `shared/gamedata/technique_forge/*.json` (§7).
 
@@ -79,7 +79,7 @@ interface FragmentSpec {                                 // ItemTemplate.fragmen
 
 interface CoreDef {
   id: string;                                            // CORE_*
-  nameKey: string; vfxTemplateId: string;
+  nameKey: string; vfxTemplateId: string;               // VFX_* — mẫu VFX theo hạch tâm (AR-04 §6.2), bảng §7.1
   base: Omit<SkillDef, 'id' | 'nameKey' | 'descKey' | 'grade' | 'realmMin' | 'perfection'>;
   allowedDamageTypes: ('PHYSICAL' | 'SPELL')[];          // người chơi chọn một khi chế tạo
   shapeTags: string[];                                   // vd. "projectile", "area", "melee", "support"
@@ -89,7 +89,7 @@ interface ElementDef {
   id: string;                                            // ELEM_KIM ... ELEM_PHONG
   element: Element; statusId: string;                    // hiệu ứng hệ (GD-06 §5.12)
   baseStatusChance: number;                              // 0,3
-  paletteId: string;                                     // bảng màu VFX
+  paletteId: string;                                     // VPAL_{element} — bảng màu VFX (AR-04 §3.1, VFX-R-045), bảng §7.2
 }
 
 interface ModifierDef {
@@ -100,7 +100,7 @@ interface ModifierDef {
   excludes?: string[];                                   // không dùng chung với các biến thức này
   priority: number;                                      // thứ tự áp dụng (nhỏ trước)
   patches: PatchOp[];
-  vfxOverlayId?: string;
+  vfxOverlayId?: string;                                 // VFXO_* — lớp phủ VFX (AR-04 §6.4), bảng §7.3; bỏ trống = không lớp phủ
 }
 
 type PatchOp =                                           // danh sách trắng (TF-R-003)
@@ -191,7 +191,8 @@ interface CraftedTechnique {                             // định nghĩa vĩnh
 
 ### 5.7. Hiệu ứng Viên Mãn và VFX tham số
 - <a id="tf-r-070"></a>**TF-R-070** Kỹ năng chế tạo có Viên Mãn chung `COEFFICIENT_PCT +15%` (không tính vào `powerScore`, giống kỹ năng tác giả viết, GD-07 §6.5).
-- <a id="tf-r-071"></a>**TF-R-071** **VFX ghép tham số:** `vfxTemplateId` của hạch tâm (8 mẫu) × `paletteId` của nguyên tố (8 bảng màu; `INHERIT` dùng bảng màu theo hệ tâm pháp khi thi triển) × `vfxOverlayId` của biến thức (vệt sáng, nổ, nhân bản). Không làm VFX riêng cho từng công pháp.
+- <a id="tf-r-071"></a>**TF-R-071** **VFX ghép tham số** ([AR-04 §6](../art/vfx-guidelines.md)): `CoreDef.vfxTemplateId` của hạch tâm (8 mẫu, §7.1) × `ElementDef.paletteId` của nguyên tố (8 bảng `VPAL_{ELEMENT}`, §7.2; không có nguyên tố → `INHERIT` dùng `VPAL_{elementAffinity}` của người thi triển lúc thi triển, tâm pháp vô hệ → `VPAL_NONE`; hạch tâm hỗ trợ không nguyên tố → `VPAL_NONE`) × `ModifierDef.vfxOverlayId` của biến thức và đột biến (§7.3; áp theo `priority`, trùng ID chỉ áp một lần, tối đa 4 lớp phủ — AR-04 VFX-R-050, VFX-R-051). Biến thức chỉ đổi số liệu mà mẫu đã đọc thì không có lớp phủ. Không làm VFX riêng cho từng công pháp.
+- <a id="tf-r-072"></a>**TF-R-072** **Client lấy thành phần để dựng VFX:** `GET /v1/crafted-techniques/{id}` trả kèm `coreId`, `elementId`, `modifierIds`, `mutationModifierId`, `damageType` (công khai; không trả `q`, `suppressFactor`); client cache theo `id` vô thời hạn vì `CraftedTechnique` bất biến (TF-R-004). Game Server **không** đính kèm thành phần vào `S2C_SkillCast` (AR-04 VFX-Q-6). Chưa tải xong thì dùng mẫu suy từ `shape.type` (GD-07 SK-R-083).
 
 ### 5.8. Nguồn mảnh ngọc giản
 - <a id="tf-r-080"></a>**TF-R-080**
@@ -281,41 +282,52 @@ Huyền phẩm, hạch tâm **Phi Xạ** (`CORE_BOLT`: đạn 18 m/s, 11m, r 0,5
 ### 7.1. Hạch tâm (8)
 Giá trị gốc ở mức Hoàng (trước `gradeCoefMult`, GD-07 SK-R-022). Tất cả nằm trong ngân sách Hoàng ở `q = 0,5`.
 
-| ID | Tên | Hình dạng | Đòn | Hệ số | MP | CD | Phản ứng | Loại sát thương |
-|----|-----|-----------|-----|:---:|:---:|:---:|----------|:---:|
-| `CORE_BOLT` | Phi Xạ | Đạn 18 m/s, 11m, r 0,5 | 1 lượt | 1,6 | 12 | 5s | STAGGER, poise 20 | PHYS / SPELL |
-| `CORE_SWEEP` | Hoành Tảo | Quạt 3m / 120° | 1 lượt | 1,8 | 12 | 6s | KNOCKBACK 1,5m, poise 30 | PHYS / SPELL |
-| `CORE_SMITE` | Lạc Địa | Vùng r 2,5, tầm 10, trễ 0,7s | 1 lượt | 2,4 | 18 | 9s | FLINCH, poise 25 | SPELL / PHYS |
-| `CORE_DASH` | Thuấn Trảm | Lướt 6m × 1,2m, i-frame | 1 lượt | 1,3 | 12 | 9s | STAGGER | PHYS |
-| `CORE_NOVA` | Hộ Thể Bạo | Quanh thân r 3 | 1 lượt | 1,0 | 15 | 10s | KNOCKBACK 2m | PHYS / SPELL |
-| `CORE_FAMILIAR` | Ngự Vật | Triệu hồi 8s, tấn công mỗi 1s | — | 0,45 / đòn | 25 | 20s | FLINCH | PHYS / SPELL |
-| `CORE_BLOOM` | Hồi Xuân | Vùng r 4, tồn tại 4s, tick 1s, đồng minh | Hồi | 0,3 / tick | 28 | 18s | — | (hồi máu) |
-| `CORE_AEGIS` | Kim Thân | Bản thân | Khiên 12% `maxHp` 5s | — | 15 | 18s | — | (khiên) |
+| ID | Tên | Hình dạng | Đòn | Hệ số | MP | CD | Phản ứng | Loại sát thương | `vfxTemplateId` |
+|----|-----|-----------|-----|:---:|:---:|:---:|----------|:---:|----|
+| `CORE_BOLT` | Phi Xạ | Đạn 18 m/s, 11m, r 0,5 | 1 lượt | 1,6 | 12 | 5s | STAGGER, poise 20 | PHYS / SPELL | `VFX_BOLT` |
+| `CORE_SWEEP` | Hoành Tảo | Quạt 3m / 120° | 1 lượt | 1,8 | 12 | 6s | KNOCKBACK 1,5m, poise 30 | PHYS / SPELL | `VFX_SWEEP` |
+| `CORE_SMITE` | Lạc Địa | Vùng r 2,5, tầm 10, trễ 0,7s | 1 lượt | 2,4 | 18 | 9s | FLINCH, poise 25 | SPELL / PHYS | `VFX_SMITE` |
+| `CORE_DASH` | Thuấn Trảm | Lướt 6m × 1,2m, i-frame | 1 lượt | 1,3 | 12 | 9s | STAGGER | PHYS | `VFX_DASH` |
+| `CORE_NOVA` | Hộ Thể Bạo | Quanh thân r 3 | 1 lượt | 1,0 | 15 | 10s | KNOCKBACK 2m | PHYS / SPELL | `VFX_NOVA` |
+| `CORE_FAMILIAR` | Ngự Vật | Triệu hồi 8s, tấn công mỗi 1s | — | 0,45 / đòn | 25 | 20s | FLINCH | PHYS / SPELL | `VFX_FAMILIAR` |
+| `CORE_BLOOM` | Hồi Xuân | Vùng r 4, tồn tại 4s, tick 1s, đồng minh | Hồi | 0,3 / tick | 28 | 18s | — | (hồi máu) | `VFX_BLOOM` |
+| `CORE_AEGIS` | Kim Thân | Bản thân | Khiên 12% `maxHp` 5s | — | 15 | 18s | — | (khiên) | `VFX_AEGIS` |
 
 ### 7.2. Nguyên tố (8)
-`ELEM_KIM` (`ST_ARMOR_BREAK`) · `ELEM_MOC` (`ST_ENTANGLE`) · `ELEM_THUY` (`ST_FROST`) · `ELEM_HOA` (`ST_BURN`) · `ELEM_THO` (`ST_HEAVY`) · `ELEM_LOI` (`ST_SHOCK`) · `ELEM_BANG` (`ST_FROST`) · `ELEM_PHONG` (`ST_WIND_CUT`); `baseStatusChance` 0,3; mảnh Lôi / Băng / Phong chỉ từ phẩm Huyền trở lên.
+| ID | `element` | `statusId` | `paletteId` |
+|----|-----------|------------|-------------|
+| `ELEM_KIM` | `KIM` | `ST_ARMOR_BREAK` | `VPAL_KIM` |
+| `ELEM_MOC` | `MOC` | `ST_ENTANGLE` | `VPAL_MOC` |
+| `ELEM_THUY` | `THUY` | `ST_FROST` | `VPAL_THUY` |
+| `ELEM_HOA` | `HOA` | `ST_BURN` | `VPAL_HOA` |
+| `ELEM_THO` | `THO` | `ST_HEAVY` | `VPAL_THO` |
+| `ELEM_LOI` | `LOI` | `ST_SHOCK` | `VPAL_LOI` |
+| `ELEM_BANG` | `BANG` | `ST_FROST` | `VPAL_BANG` |
+| `ELEM_PHONG` | `PHONG` | `ST_WIND_CUT` | `VPAL_PHONG` |
+
+`baseStatusChance` 0,3; mảnh Lôi / Băng / Phong chỉ từ phẩm Huyền trở lên. `paletteId` luôn là `VPAL_{element}` (màu, motif: AR-01 §4.2, AR-04 §3.1).
 
 ### 7.3. Biến thức
-| ID | Tên | Yêu cầu | Phép vá | Hiếm |
-|----|-----|---------|---------|:---:|
-| `MOD_SPLIT` | Phân Hóa | `PROJECTILE` | `shape.count +2`, `shape.spreadDeg = 20`, hệ số ×0,7 | |
-| `MOD_PIERCE` | Xuyên Thấu | `PROJECTILE` | `shape.pierce +1`, `maxTargets +1` | |
-| `MOD_BURST` | Bạo Liệt | `PROJECTILE` | `shape.explodeRadius = 2` (dùng chung được với `MOD_PIERCE`, xem ví dụ §6.4) | |
-| `MOD_WIDEN` | Khoáng Đại | `CONE`, `GROUND_CIRCLE`, `SELF_CIRCLE` | `radius ×1,3`, `angleDeg ×1,3` | |
-| `MOD_REACH` | Viễn Trình | `PROJECTILE`, `GROUND_CIRCLE`, `DASH` | `range ×1,4`, `maxRange ×1,4`, `distance ×1,3` | |
-| `MOD_SWIFT` | Tốc Phát | — | `cooldownSec ×0,8`, hệ số ×0,9 | |
-| `MOD_EMPOWER` | Cường Hóa | — | hệ số ×1,25, `mpPctOfBase ×1,3` | |
-| `MOD_ECHO` | Liên Kích | có `damage` | `APPEND_HIT_ECHO` trễ 0,5s, 50% hệ số | |
-| `MOD_SURGE` | Nguyên Tố Thịnh | có nguyên tố | `APPEND_STATUS $ELEMENT +0,3` (cộng vào xác suất) | |
-| `MOD_CONCUSS` | Chấn Động | có `damage` | `REACTION_UP 1`, `poiseDamage ×1,5` | |
-| `MOD_LINGER` | Trì Lưu | `GROUND_CIRCLE` có `persistSec` | `persistSec +2`, `ticks.count +2` | |
-| `MOD_WARD` | Hộ Thuẫn | — | `APPEND_SELF_SHIELD` 8% `maxHp` 4s | |
-| `MOD_THRIFT` | Tiết Linh | — | `mpPctOfBase ×0,6` | |
-| `MOD_STEADFAST` | Bất Khuất | — | `armorDuringCast = HEAVY`, `cooldownSec +1` | |
-| `MOD_QUICKCAST` | Thuấn Phát | — | `windupSec ×0,6`, `cooldownSec +1` | |
-| `MOD_TWIN_ELEMENT` | Song Hành | có nguyên tố | `APPEND_STATUS $SECOND_ELEMENT 0,3` (hệ khắc chế của nguyên tố chính) | ✅ |
-| `MOD_GREAT_SPLIT` | Vạn Hóa | `PROJECTILE` | `shape.count +4`, `spreadDeg = 40`, hệ số ×0,6 | ✅ |
-| `MOD_VOID_COST` | Hư Không | — | `mpPctOfBase = 0`, `cooldownSec ×1,2` | ✅ |
+| ID | Tên | Yêu cầu | Phép vá | Hiếm | `vfxOverlayId` |
+|----|-----|---------|---------|:---:|----|
+| `MOD_SPLIT` | Phân Hóa | `PROJECTILE` | `shape.count +2`, `shape.spreadDeg = 20`, hệ số ×0,7 | | `VFXO_MULTI` |
+| `MOD_PIERCE` | Xuyên Thấu | `PROJECTILE` | `shape.pierce +1`, `maxTargets +1` | | `VFXO_TRAIL` |
+| `MOD_BURST` | Bạo Liệt | `PROJECTILE` | `shape.explodeRadius = 2` (dùng chung được với `MOD_PIERCE`, xem ví dụ §6.4) | | `VFXO_BURST` |
+| `MOD_WIDEN` | Khoáng Đại | `CONE`, `GROUND_CIRCLE`, `SELF_CIRCLE` | `radius ×1,3`, `angleDeg ×1,3` | | — |
+| `MOD_REACH` | Viễn Trình | `PROJECTILE`, `GROUND_CIRCLE`, `DASH` | `range ×1,4`, `maxRange ×1,4`, `distance ×1,3` | | — |
+| `MOD_SWIFT` | Tốc Phát | — | `cooldownSec ×0,8`, hệ số ×0,9 | | — |
+| `MOD_EMPOWER` | Cường Hóa | — | hệ số ×1,25, `mpPctOfBase ×1,3` | | `VFXO_EMPOWER` |
+| `MOD_ECHO` | Liên Kích | có `damage` | `APPEND_HIT_ECHO` trễ 0,5s, 50% hệ số | | `VFXO_ECHO` |
+| `MOD_SURGE` | Nguyên Tố Thịnh | có nguyên tố | `APPEND_STATUS $ELEMENT +0,3` (cộng vào xác suất) | | — |
+| `MOD_CONCUSS` | Chấn Động | có `damage` | `REACTION_UP 1`, `poiseDamage ×1,5` | | `VFXO_SHOCKWAVE` |
+| `MOD_LINGER` | Trì Lưu | `GROUND_CIRCLE` có `persistSec` | `persistSec +2`, `ticks.count +2` | | — |
+| `MOD_WARD` | Hộ Thuẫn | — | `APPEND_SELF_SHIELD` 8% `maxHp` 4s | | `VFXO_WARD` |
+| `MOD_THRIFT` | Tiết Linh | — | `mpPctOfBase ×0,6` | | — |
+| `MOD_STEADFAST` | Bất Khuất | — | `armorDuringCast = HEAVY`, `cooldownSec +1` | | `VFXO_STEADFAST` |
+| `MOD_QUICKCAST` | Thuấn Phát | — | `windupSec ×0,6`, `cooldownSec +1` | | — |
+| `MOD_TWIN_ELEMENT` | Song Hành | có nguyên tố | `APPEND_STATUS $SECOND_ELEMENT 0,3` (hệ khắc chế của nguyên tố chính) | ✅ | `VFXO_TWIN` |
+| `MOD_GREAT_SPLIT` | Vạn Hóa | `PROJECTILE` | `shape.count +4`, `spreadDeg = 40`, hệ số ×0,6 | ✅ | `VFXO_MULTI` |
+| `MOD_VOID_COST` | Hư Không | — | `mpPctOfBase = 0`, `cooldownSec ×1,2` | ✅ | — |
 
 ```jsonc
 // modifiers.json (trích)
@@ -326,8 +338,9 @@ Giá trị gốc ở mức Hoàng (trước `gradeCoefMult`, GD-07 SK-R-022). T�
                { "op": "MUL", "path": "hits[*].damage.coefficient", "value": 0.7 } ],
   "vfxOverlayId": "VFXO_MULTI" }
 ```
+`—` ở cột `vfxOverlayId` = không có lớp phủ (biến thức chỉ đổi số liệu mà mẫu tự co giãn theo, AR-04 VFX-R-040). `MOD_SPLIT` và đột biến `MOD_GREAT_SPLIT` dùng chung `VFXO_MULTI` (chỉ áp một lần, VFX-R-050).
 
-**Validator (CI):** mọi `PatchOp.path` thuộc `PatchPath`, `op` thuộc danh sách trắng; `statusId` tồn tại (GD-06); mọi `CoreDef.base` đạt `powerScore ≤ budget.HOANG` ở `q = 0,5`; TF-R-031 (duyệt mọi tổ hợp); biến thức `rare` không có trong bảng rơi đồ; mẫu mảnh sinh đủ cho mọi thành phần × phẩm hợp lệ.
+**Validator (CI):** mọi `PatchOp.path` thuộc `PatchPath`, `op` thuộc danh sách trắng; `statusId` tồn tại (GD-06); mọi `CoreDef.base` đạt `powerScore ≤ budget.HOANG` ở `q = 0,5`; TF-R-031 (duyệt mọi tổ hợp); biến thức `rare` không có trong bảng rơi đồ; mẫu mảnh sinh đủ cho mọi thành phần × phẩm hợp lệ; mọi `CoreDef.vfxTemplateId` ∈ `vfx/templates.json`, mọi `ElementDef.paletteId` ∈ `vfx/palettes.json` và bằng `VPAL_{element}`, mọi `ModifierDef.vfxOverlayId` ∈ `vfx/overlays.json` (AR-04 VFX-R-105; domain `vfx` chờ TD-07 đăng ký).
 
 ---
 
@@ -345,6 +358,7 @@ Giá trị gốc ở mức Hoàng (trước `gradeCoefMult`, GD-07 SK-R-022). T�
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -354,7 +368,7 @@ Giá trị gốc ở mức Hoàng (trước `gradeCoefMult`, GD-07 SK-R-022). T�
 | `POST /v1/characters/{id}/technique-forge/sandbox` | `{ preview params }` → vào Diễn Pháp Tràng 60s với kỹ năng ở `q = 0,5` | TF-R-022; 5 lần / ngày |
 | `POST /v1/characters/{id}/technique-forge/copy` | `{ craftedTechniqueId, requestId }` (Beta) | TF-R-060 |
 | `POST /v1/characters/{id}/technique-forge/dismantle` | `{ scrollItemInstanceId }` (Beta) | TF-R-061 |
-| `GET /v1/crafted-techniques/{id}` | Thông tin công khai (tên, người tạo, phẩm, chỉ số) | Tooltip ngọc giản |
+| `GET /v1/crafted-techniques/{id}` | Thông tin công khai: tên, người tạo, phẩm + phẩm phụ, chỉ số (`skillDef`), **thành phần** `coreId`, `elementId`, `modifierIds`, `mutationModifierId`, `damageType` | Tooltip ngọc giản; dựng VFX (TF-R-072); cache theo `id` (bất biến) |
 | `POST /v1/reports` (GD-14) | Báo cáo tên công pháp | TF-R-005 |
 
 ### 9.2. API nội bộ
@@ -439,6 +453,8 @@ CREATE TABLE technique_forge_sandbox_use (
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `technique_crafted` | tier, core, element, modifiers, q, sub, mutated, suppressFactor | Tổ hợp phổ biến, tỷ lệ áp chế, giá trị ngộ tính |
@@ -475,6 +491,9 @@ CREATE TABLE technique_forge_sandbox_use (
 | TF-AC-020 | Diễn Pháp Tràng lần thứ 6 trong ngày | Bắt đầu | Từ chối |
 | TF-AC-021 | Ngộ tính 30, khí vận 30 | Tính trần dưới của `q` khi U = 0 | `q = max(0, −0,1 − 0,04) = 0` (chặn) |
 | TF-AC-022 | Phẩm Thiên có đột biến | Sự kiện | Thông báo toàn server ưu tiên 2 |
+| <a id="tf-ac-023"></a>TF-AC-023 | `CraftedTechnique` `CORE_BOLT` + `ELEM_HOA` + `MOD_BURST` + `MOD_SPLIT` | Client dựng VFX | `VFX_BOLT`, `VPAL_HOA`, lớp phủ `VFXO_MULTI` / `VFXO_BURST` theo `priority` (TF-R-071, AR-04 VFX-AC-005) |
+| <a id="tf-ac-024"></a>TF-AC-024 | Công pháp `CSK_*` bất kỳ | `GET /v1/crafted-techniques/{id}` | Có `coreId`, `elementId`, `modifierIds`, `mutationModifierId`, `damageType`; không có `q`, `suppressFactor` (TF-R-072) |
+| <a id="tf-ac-025"></a>TF-AC-025 | `cores.json` có `vfxTemplateId = "VFX_XYZ"` không có trong `vfx/templates.json` | Validator | Fail |
 
 ---
 
@@ -507,4 +526,7 @@ CREATE TABLE technique_forge_sandbox_use (
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-22 | — | Bản nháp đầu: bất biến, thành phần (8 hạch tâm, 8 nguyên tố, 18 biến thức) dạng phép vá dữ liệu, thuật toán ghép tất định + ngộ đạo + đột biến + áp chế ngân sách, chi phí, ngọc giản tự chế (học, Tàng Bảo Các, sao chép có trần, tán giản), VFX tham số, nguồn mảnh, công thức + ví dụ, API, DB, nghiệm thu; mở khóa từ Trúc Cơ; bổ sung công thức `powerScore` cho GD-07 |
+| v0.2 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.3 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.4 | 2026-10-25 | — | Đợt rà nhất quán (AR-04): điền `CoreDef.vfxTemplateId` (8 mẫu), `ElementDef.paletteId` (`VPAL_*`), `ModifierDef.vfxOverlayId` (`VFXO_*`); TF-R-071 chi tiết bảng màu / lớp phủ; TF-R-072 + `GET /v1/crafted-techniques/{id}` trả thành phần (REST + cache, VFX-Q-6); validator VFX; TF-AC-023..025 |
 

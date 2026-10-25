@@ -4,10 +4,10 @@
 |------------|---------|
 | Mã tài liệu | GD-07 · Prefix ID: `SK` |
 | Owner | Game Designer + Client Dev |
-| Trạng thái | 🟡 Bản nháp v0.2 |
+| Trạng thái | 🟡 Bản nháp v0.6 |
 | Cần trước | Phase 1 (kiếm, 4 kỹ năng, đánh thường, máy trạng thái hành động), Phase 2 (quạt, tâm pháp, thuần thục) |
 | Quyết định nền | PLAN D-01 (logic 2D), D-10 (WASD), §4.9–4.10 |
-| Liên quan | [PLAN §4.9–4.10](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-06 Chỉ số & Công thức](12-stats-formulas.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-08 Chế tạo công pháp](14-technique-crafting.md) · GD-09 Trang bị · TD-02 Network · TD-14 Geometry 2D |
+| Liên quan | [PLAN §4.9–4.10](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-06 Chỉ số & Công thức](12-stats-formulas.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-08 Chế tạo công pháp](14-technique-crafting.md) · GD-09 Trang bị · TD-02 Network · TD-14 Geometry 2D · [AR-03 Animation List](../art/animation-list.md) (clip theo `ActionState` / `WeaponDef`) · [AR-04 VFX Guidelines](../art/vfx-guidelines.md) (mẫu VFX, bảng màu) |
 
 > Đọc [docs/README.md §3](../README.md) trước khi triển khai. Tham số và nội dung nằm ở `shared/gamedata/skills/*.json` (§7). Công thức sát thương, poise, thể lực ở **GD-06**; tài liệu này định nghĩa **kỹ năng làm gì và khi nào**.
 
@@ -124,6 +124,7 @@ interface SkillDef {
   holdToCastSec?: number;             // bắt buộc giữ phím (bí pháp liều mạng)
   perfection: PerfectionEffect;       // hiệu ứng khi đạt Viên Mãn (§5.5)
   telegraphForOthers: boolean;        // hiện vùng cảnh báo cho người chơi khác / quái (luôn true với quái)
+  vfx?: { templateId?: string; overlayIds?: string[] };   // tùy chọn, chỉ hiển thị: ghi đè VFX (AR-04 VFX-R-055 bước 1); bỏ trống = suy theo SK-R-083
 }
 
 type PerfectionEffect =
@@ -190,9 +191,9 @@ interface Loadout { characterId: string; mainTechniqueId: string | null;
 | `CASTING` (niệm + windup) | `armorDuringCast` | Nếu `movableCast` | Hết windup → `ACTIVE`; bị ngắt → `IDLE` (SK-R-064) | |
 | `ACTIVE` | `armorDuringCast` | Không (trừ DASH) | Hết lượt trúng cuối → `RECOVERY` | |
 | `RECOVERY` | NONE | Chậm | Hết `recoverySec`; từ `cancelAfterSec` được hủy | |
-| `DODGING` | IMMUNE trong i-frame | Lướt | Hết lướt | GD-06 SF-R-100 |
+| `DODGING` | IMMUNE trong i-frame | Lướt | Hết lướt (`stats/params.json → dodge.durationSec`, GD-06 SF-R-104) | GD-06 SF-R-100 |
 | `BLOCKING` | NONE | Chậm (40%) | Thả Shift | Đỡ / đỡ hoàn hảo GD-06 |
-| `STAGGERED` / `KNOCKED_BACK` / `KNOCKED_DOWN` | NONE | ❌ | Hết thời gian phản ứng | GD-06 SF-R-093 |
+| `STAGGERED` / `KNOCKED_BACK` / `KNOCKED_DOWN` | NONE | ❌ | Hết thời gian phản ứng (`stats/params.json → reactionSec`) | GD-06 SF-R-093 |
 | `STUNNED` / `ROOTED` / `SILENCED` | NONE | ❌ / ❌ / ✅ | Hết status | SILENCE vẫn đánh thường / né |
 | `POISE_BROKEN` | NONE | ❌ | Hết choáng phá thế | GD-06 SF-R-091 |
 | `CHANNELING` | NONE | ❌ | Đả tọa / đột phá / tương tác kết thúc | GD-04 |
@@ -243,6 +244,9 @@ masteryBonus: 1 → 0 · 2 → 0,05 · 3 → 0,10 · 4 → 0,15
 | **Kiếm** (`SWORD`) | 4 bước, hình quạt 2,2m / 100° (bước 4: 2,8m / 140°); hệ số 0,6 · 0,6 · 0,8 · 1,2 (`PHYSICAL`); poise 10 · 10 · 15 · 30; phản ứng FLINCH ×3, STAGGER ở bước 4 | Mức 1 (chạm, 15 thể lực): đâm thẳng `LINE` 4m × 1m, hệ số 1,0. Mức 2 (tụ 1,0s, 25 thể lực): hệ số 2,2, KNOCKBACK 2m, poise 45. Giáp `LIGHT` khi tụ |
 | **Quạt** (`FAN`) | 3 bước, đạn `PROJECTILE` tốc độ 18 m/s, tầm 12m, bán kính 0,4m; hệ số 0,45 · 0,45 · 0,9 (`SPELL`); poise 5 · 5 · 15 | Mức 1 (chạm, 12 thể lực): quạt `CONE` 4m / 60°, hệ số 0,9, KNOCKBACK 2m. Mức 2 (tụ 0,8s, 20 thể lực): `CONE` 6m / 60°, hệ số 1,6, KNOCKBACK 3m |
 
+- <a id="sk-r-054"></a>**SK-R-054** **Số bước combo do dữ liệu quyết định:** số bước đánh thường của một vũ khí = `len(WeaponDef.basicCombo)` trong `skills/weapons.json` (kiếm 4, quạt 3 theo bảng trên); không code nào giả định số bước cố định. Hoạt ảnh tương ứng là `ANM_HUMANOID_{WeaponType}_ATTACK_1..n` với `n = len(basicCombo)` ([AR-03 ANM-R-060](../art/animation-list.md#anm-r-060)); `art:check` đối chiếu số clip với `weapons.json`.
+- <a id="sk-r-055"></a>**SK-R-055** `weapons.json` chỉ chứa `WeaponDef` của `WeaponType` đã có thông số ở bảng trên (`SWORD`, `FAN`). `DUAL_BLADE`, `FIST` (Beta) và `ZITHER` (sau launch) **chưa có `WeaponDef`** — không được tạo dữ liệu / clip cho tới khi GD-07 bổ sung (SK-Q-6).
+
 ### 5.5. Thuần thục
 - <a id="sk-r-060"></a>**SK-R-060** **Điểm thuần thục thô:**
   - Kỹ năng: +1 mỗi lần thi triển trúng ít nhất 1 kẻ địch (kỹ năng hồi máu / khiên / bản thân: mỗi lần thi triển có tác dụng); +3 nếu trúng tinh anh / boss.
@@ -282,6 +286,21 @@ masteryBonus: 1 → 0 · 2 → 0,05 · 3 → 0,10 · 4 → 0,15
 - <a id="sk-r-080"></a>**SK-R-080** Quy ước hình học (TD-14): `CONE` có đỉnh tại tâm nhân vật, hướng theo `aim`; `LINE` là hình chữ nhật xoay bắt đầu từ mép nhân vật; `GROUND_CIRCLE` đặt tại `aim` (đã kẹp); `DASH` di chuyển nhân vật theo hướng `aim`, dừng trước chướng ngại, trúng mọi mục tiêu giao với hình chữ nhật đã đi qua. Định nghĩa hình học chính xác: [TD-14 §5.2](../tech/13-geom2d.md).
 - <a id="sk-r-081"></a>**SK-R-081** `GROUND_CIRCLE` có `delaySec > 0` luôn hiện vùng cảnh báo trên mặt đất cho mục tiêu (người chơi thấy vùng của quái; quái AI "thấy" vùng của người chơi và có thể né theo GD-12).
 - <a id="sk-r-082"></a>**SK-R-082** `PROJECTILE` có `explodeRadius`: khi chạm mục tiêu / địa hình / hết tầm thì nổ, áp lượt trúng cho mọi mục tiêu trong bán kính (bao gồm mục tiêu bị chạm).
+- <a id="sk-r-083"></a>**SK-R-083** **VFX suy từ hình dạng** (chỉ hiển thị, client; thuật toán đầy đủ [AR-04 VFX-R-055](../art/vfx-guidelines.md#vfx-r-055)). Thứ tự: (1) `SkillDef.vfx` có giá trị → dùng `vfx.templateId` / `vfx.overlayIds`; (2) kỹ năng chế tạo `CSK_*` → `CoreDef.vfxTemplateId` + `ModifierDef.vfxOverlayId` (GD-08 TF-R-071); (3) còn lại (kỹ năng tác giả viết, `ComboStep` đánh thường / đánh mạnh, chiêu quái) suy từ `shape.type`:
+
+| `shape.type` | Mẫu VFX (`templateId`) |
+|--------------|------------------------|
+| `PROJECTILE` | `VFX_BOLT` |
+| `CONE` | `VFX_SWEEP` |
+| `GROUND_CIRCLE` có lượt trúng đầu mang `heal` và `target = ALLIES` | `VFX_BLOOM` |
+| `GROUND_CIRCLE` còn lại | `VFX_SMITE` |
+| `DASH` | `VFX_DASH` |
+| `SELF_CIRCLE` | `VFX_NOVA` |
+| `SUMMON` | `VFX_FAMILIAR` |
+| `SELF` | `VFX_AEGIS` |
+| `LINE` | `VFX_THRUST` (mẫu thứ 9, không có hạch tâm GD-08; dùng cho đâm thẳng của kỹ năng tác giả viết, vd. đánh mạnh kiếm mức 1) |
+
+  Lớp phủ ở bước (3) suy từ `perfection` đang hiệu lực (AR-04 VFX-R-052) và `shape.explodeRadius > 0` → `VFXO_BURST`. **Bảng màu** theo AR-04 VFX-R-045: `damage.element` của lượt trúng đầu → `VPAL_{element}`; `INHERIT` → hệ tâm pháp chính của người thi triển lúc thi triển (`elementAffinity`, SK-R-030; người xem khác đọc `PlayerPublic.elementAffinity`, TD-02 §4.2); `NONE`, tâm pháp vô hệ hoặc không có `damage` → `VPAL_NONE`. VFX không ảnh hưởng va chạm / kết quả (SK-R-001).
 
 ### 5.8. Triệu hồi
 - <a id="sk-r-090"></a>**SK-R-090** Vật triệu hồi (`summons.json`) là thực thể thuộc chủ, chụp chỉ số của chủ lúc gọi, sống `durationSec`, tối đa `maxActive` mỗi kỹ năng (gọi lại thì thay cái cũ nhất). Biến mất khi chủ chuyển bản đồ, chết hoặc vào `CHANNELING`.
@@ -455,7 +474,7 @@ Hệ số là giá trị **gốc** (trước `gradeCoefMult` và thuần thục)
 | `SKL_ULT_SWORD_DOMAIN` | Kiếm Vực | Kiếm | Vùng r 6 quanh thân 6s: mọi kẻ địch trong vùng trúng 0,5 mỗi 0,5s; bản thân giáp HEAVY |
 | `SKL_ULT_FIVE_ELEMENTS` | Ngũ Hành Đại Trận | Quạt | Vùng r 7 tại con trỏ, 5 đợt mỗi đợt một hệ (Kim → Thủy → Mộc → Hỏa → Thổ), mỗi đợt 1,5; áp status hệ tương ứng |
 
-**Validator (CI):** ID `SKL_*` / `TEC_*` duy nhất; `shape`/`HitDef`/`PerfectionEffect` thuộc union §3; `statusId` tồn tại trong `statuses.json` (GD-06); `powerScore ≤ budget[tier]` (SK-R-130); `isUltimate` ⇔ có `costs.energy = 100`; `costs.lifespanYears > 0` ⇒ có `holdToCastSec ≥ 1` và tag `forbidden`; mọi `TECHNIQUE_SCROLL.teaches` trỏ tới ID tồn tại.
+**Validator (CI):** ID `SKL_*` / `TEC_*` duy nhất; `shape`/`HitDef`/`PerfectionEffect` thuộc union §3; `statusId` tồn tại trong `statuses.json` (GD-06); `powerScore ≤ budget[tier]` (SK-R-130); `isUltimate` ⇔ có `costs.energy = 100`; `costs.lifespanYears > 0` ⇒ có `holdToCastSec ≥ 1` và tag `forbidden`; mọi `TECHNIQUE_SCROLL.teaches` trỏ tới ID tồn tại; `vfx.templateId` (nếu có) ∈ `vfx/templates.json`, mọi `vfx.overlayIds[]` ∈ `vfx/overlays.json` (AR-04 VFX-R-105; domain `vfx` chờ TD-07 đăng ký); `weapons.json` chỉ có `WeaponType` thuộc SK-R-055.
 
 ---
 
@@ -481,6 +500,7 @@ Hệ số là giá trị **gốc** (trước `gradeCoefMult` và thuần thục)
 | `PUT /internal/v1/characters/{id}/main-technique` | `{ techniqueId, changeId }` | `Loadout` | SK-R-032; phát `stats.inputs_changed` (GD-06) |
 
 ### 9.2. API công khai (Client → API Service)
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -560,11 +580,13 @@ CREATE TABLE character_persistent_cooldown (
 ---
 
 ## 11. UI/UX
+
+> Phím, giữ-để-ngắm, hỗ trợ ngắm theo thiết bị: [GD-24](25-camera-controls.md) (CAM-R-030).
 - **Thanh kỹ năng:** Q · E · R · F · (V) · (T), biểu tượng hồi chiêu dạng quét; kỹ năng sai vũ khí mờ; bí pháp viền đỏ, có vòng "giữ phím".
 - **Ngắm:** khi giữ phím kỹ năng (tùy chọn "giữ để ngắm"), hiện hình dạng trên mặt đất (quạt / vùng / đường đạn); mặc định thi triển ngay khi bấm theo con trỏ.
 - **Bảng Công pháp** (phím `K`): tab Tâm pháp (đang dùng, danh sách, thuần thục, `techniqueMultiplier`), tab Kỹ năng (kéo thả vào ô, thẻ chi tiết hiện hình dạng, hệ số hiệu lực, sát thương ước tính, điểm thuần thục, hiệu ứng Viên Mãn).
 - **Lên thuần thục:** thông báo nhỏ + hiệu ứng trên biểu tượng; Viên Mãn có hiệu ứng lớn.
-- **Vùng cảnh báo của quái:** đỏ; của đồng đội: xanh mờ (tắt được).
+- **Vùng cảnh báo của quái:** đỏ cam (bảng thay thế mù màu + sọc chéo theo GD-24 CAM-R-061); của đồng đội: lam trắng mờ (tắt được). Màu theo [AR-01 §4.4](../art/art-bible.md); giá trị hex của 4 bảng ở GD-24 §9.
 
 ---
 
@@ -580,6 +602,7 @@ CREATE TABLE character_persistent_cooldown (
 | GD-09 | Vũ khí; ngọc giản là vật phẩm |
 | GD-12 | Quái dùng cùng `SkillDef` (luôn `telegraphForOthers = true`) |
 | GD-22 | Cơ duyên tặng ngọc giản (`GRANT_ITEM`) |
+| AR-03 / AR-04 / TD-05 | Clip theo `ActionState` và `WeaponDef.basicCombo` (SK-R-054); VFX suy từ `shape.type` / `SkillDef.vfx` (SK-R-083) |
 
 ---
 
@@ -600,6 +623,8 @@ CREATE TABLE character_persistent_cooldown (
 ---
 
 ## 14. Telemetry
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
@@ -640,6 +665,10 @@ CREATE TABLE character_persistent_cooldown (
 | SK-AC-022 | Học ngọc giản kỹ năng đã biết | API | `409 ALREADY_KNOWN`, vật phẩm không bị tiêu |
 | SK-AC-023 | Combo kiếm, bấm bước 2 sau khi hết `nextInputWindowSec` | Server | Thực hiện lại bước 1 |
 | SK-AC-024 | Kiếp kết thúc | Kiếp mới | Không còn công pháp / thuần thục của kiếp trước (SK-R-004) |
+| <a id="sk-ac-025"></a>SK-AC-025 | `SkillDef` không có `vfx`: (a) đánh mạnh kiếm mức 1 `LINE`; (b) `SKL_HEALING_RAIN`; (c) `SKL_THUNDER_STRIKE` | Suy mẫu VFX (unit test client) | (a) `VFX_THRUST`; (b) `VFX_BLOOM`; (c) `VFX_SMITE` (SK-R-083) |
+| <a id="sk-ac-026"></a>SK-AC-026 | `SkillDef.vfx.templateId = "VFX_XYZ"` không có trong `vfx/templates.json` | Validator | Fail |
+| <a id="sk-ac-027"></a>SK-AC-027 | `SKL_SWORD_QI_SLASH` (`INHERIT`), người thi triển có `elementAffinity = HOA` / `NONE` | Người xem khác chọn bảng màu | `VPAL_HOA` / `VPAL_NONE` (SK-R-083, TD-02 `PlayerPublic.elementAffinity`) |
+| <a id="sk-ac-028"></a>SK-AC-028 | `weapons.json` có `SWORD.basicCombo` 4 bước | `art:check` thiếu `ANM_HUMANOID_SWORD_ATTACK_4` | Fail (SK-R-054, ANM-AC-002) |
 
 ---
 
@@ -666,6 +695,7 @@ CREATE TABLE character_persistent_cooldown (
 - [ ] **SK-Q-3:** Có cho học kỹ năng từ người chơi khác (sư phụ truyền công) thay vì chỉ ngọc giản? (liên quan sư đồ, sau launch)
 - [ ] **SK-Q-4:** Thuần thục có nên chuyển một phần sang kiếp sau (vd. qua `UNL_PAST_LIFE_MEMORY`) không? *Mặc định: không (SK-R-004).*
 - [ ] **SK-Q-5:** Quạt bắn đạn cho đánh thường có làm người chơi quạt quá an toàn so với kiếm? Theo dõi `damage_taken_sample` theo vũ khí.
+- [ ] **SK-Q-6:** `WeaponDef` của `DUAL_BLADE`, `FIST` (số bước combo, hình / hệ số / poise từng bước, đánh mạnh) và mốc phát hành (Beta 1 hay Beta 2) chưa có; `ZITHER` (Cầm) chỉ có trong chú thích `WeaponType`, chưa có trong glossary. *Mặc định: chưa có — không tạo dữ liệu / clip (SK-R-055); AR-03 ước lượng `n = 4`, Beta 1 chỉ để lập kế hoạch sản xuất (ANM-Q-13).* Cần designer quyết.
 
 ---
 
@@ -675,4 +705,8 @@ CREATE TABLE character_persistent_cooldown (
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, kiểu dữ liệu thành phần, máy trạng thái hành động, phẩm cấp (bảng `techniqueMultiplier` chuẩn), tâm pháp, ô kỹ năng, vũ khí kiếm / quạt, thuần thục, quy trình thi triển server, hình dạng, triệu hồi, tuyệt kỹ, bí pháp, hook, ngân sách sức mạnh, 7 tâm pháp, 14 kỹ năng, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | SK-R-075: `ENEMIES` gồm người chơi theo chế độ PK (GD-32) |
+| v0.3 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.4 | 2026-10-25 | — | Trỏ GD-24 cho phím / ngắm |
+| v0.5 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.6 | 2026-10-25 | — | Đợt rà nhất quán (AR-03 / AR-04): trường tùy chọn `SkillDef.vfx`; SK-R-083 suy mẫu VFX từ `shape.type` (gồm `VFX_THRUST` cho `LINE`) + bảng màu theo `elementAffinity`; SK-R-054 số clip `ATTACK_1..n` theo `WeaponDef.basicCombo`; SK-R-055 + SK-Q-6 (`DUAL_BLADE` / `FIST` / `ZITHER` chưa có `WeaponDef`); §11 màu vùng cảnh báo quái "đỏ cam", đồng minh "lam trắng mờ" (AR-01); validator VFX; §4 trỏ khóa `reactionSec` / `dodge.durationSec` (GD-06); SK-AC-025..028 |
 

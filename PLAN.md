@@ -4,7 +4,7 @@
 > **Thể loại:** MMORPG nhập vai hành động **một mạng (permadeath) kết hợp roguelite**, thế giới mở chia bản đồ, bối cảnh tiên hiệp
 > **Đồ họa:** 2.5D — model 3D low-poly stylized, camera nhìn chéo từ trên xuống (isometric/top-down nghiêng)
 > **Nền tảng:** Trình duyệt web desktop (Chrome/Edge/Firefox), mobile web để sau (2.5D giúp khả thi hơn)
-> **Công nghệ:** Babylon.js (TypeScript) · Spring Boot (Java 21) · PostgreSQL · Redis
+> **Công nghệ:** Babylon.js (TypeScript) · Spring Boot (Java 21) · PostgreSQL · Valkey
 > **Quy mô team:** ≤ 10 người
 > **Trạng thái tài liệu:** v0.5 — đề xuất v0.1–v0.3 đã duyệt (2026-10-19); khảo sát dự án nền tảng mã nguồn mở, **D-19 (kiến trúc lai: Colyseus/TS cho game server, Spring Boot cho API) đã duyệt 2026-10-22**; cập nhật liên tục
 
@@ -95,8 +95,8 @@ Mọi quyết định tính năng phải phục vụ ít nhất 1 trụ cột. K
 ### 2.2. Mô hình thế giới: "Open world chia bản đồ"
 
 ```
-                         ┌────────── ĐẠI LỤC THIÊN HUYỀN ──────────┐
-   VỰC 1: Thanh Vân        VỰC 2: Vạn Thú Sơn       VỰC 3: Huyết Sa
+                         ┌────────── HUYỀN HOANG ĐẠI LỤC ──────────┐
+   VỰC 1: Thanh Vân        VỰC 2: Xích Viêm         VỰC 3: Hàn Băng
   ┌─────┬─────┬─────┐     ┌─────┬─────┬─────┐     ┌─────┬─────┐
   │Rừng │Thanh│Bờ   │────►│Cửa  │Thú  │Đỉnh │────►│ ... │ ... │
   │Trúc │Vân  │Sông │     │Núi  │Cốc  │Mây  │     │     │     │
@@ -170,7 +170,7 @@ Mọi quyết định tính năng phải phục vụ ít nhất 1 trụ cột. K
 | **Ma Vực** (hiểm địa PvP, chết thật — GD-28 §5.12) | | ✅ (Beta 2) | |
 | PvP đấu trường (Luận Võ Đài) | | | ✅ |
 | Shop / monetization | | ✅ (cơ bản) | ✅ |
-| Mobile web (cảm ứng) | | | ✅ |
+| Mobile: PWA → app iOS / Android qua Capacitor, cùng codebase (§5.8) | | | ✅ |
 
 ### 2.4. Các thứ cố ý KHÔNG làm (ít nhất đến sau launch)
 - Không làm thế giới liền mạch thật sự (seamless streaming không màn chuyển). Bản đồ chia ô + chuyển nhanh là đủ.
@@ -215,17 +215,19 @@ Mọi quyết định tính năng phải phục vụ ít nhất 1 trụ cột. K
 > Phần này là tóm tắt. Chi tiết từng hệ thống sẽ nằm trong các tài liệu riêng (xem mục 8).
 
 ### 4.1. Thế giới & cốt truyện
-- **Tên thế giới (tạm):** *Thiên Huyền Giới*.
-- **Bối cảnh:** Thiên địa linh khí suy kiệt sau một trận đại chiến thượng cổ giữa các tiên nhân. Các tông môn tranh giành những mạch linh khí cuối cùng. Phong ấn cổ đang yếu dần, ma tộc trỗi dậy.
+- **Tên thế giới (tạm):** *Huyền Hoang Giới* (đại lục chính: Huyền Hoang Đại Lục — [LR-01](docs/lore/world-bible.md)).
+- **Bối cảnh:** Thiên địa linh khí suy kiệt sau một trận đại chiến thượng cổ giữa các tiên nhân. Các tông môn tranh giành những mạch linh khí cuối cùng. Phong ấn cổ từ Đoạn Thiên Chi Chiến đang yếu dần (chi tiết: [LR-01](docs/lore/world-bible.md), [LR-03](docs/lore/story-outline.md)).
 - **Nhân vật chính:** người chơi xuất thân phàm nhân, vô tình nhận được một *mảnh ngọc giản cổ* (cơ chế cốt truyện giải thích vì sao người chơi có thể "chế tạo công pháp" — thiên phú đặc biệt).
 - **Cấu trúc cốt truyện:** chia theo cảnh giới. Mỗi cảnh giới = 1 chương, mở ra vùng đất mới.
 
 | Chương | Cảnh giới | Vùng đất | Chủ đề |
 |--------|-----------|----------|--------|
-| 1 | Luyện Khí | Thanh Vân Trấn & núi rừng phụ cận | Bước vào tiên đồ, gia nhập tông môn |
-| 2 | Trúc Cơ | Vạn Thú Sơn Mạch | Thí luyện tông môn, bí mật ngọc giản |
-| 3 | Kim Đan | Huyết Sa Hoang Mạc | Ma tộc xuất hiện, tông môn nội đấu |
-| 4+ | Nguyên Anh... | (mở rộng sau launch) | |
+| Tiền chương + 1 — Nhập Đạo | Phàm nhân → Luyện Khí | Vực 1 Thanh Vân Vực | Bước vào tiên đồ, gia nhập tông môn, bí ẩn mỏ cũ |
+| 2 — Đạo Cơ | Trúc Cơ | Vực 1 (phần đầu) → Vực 2 *Xích Viêm Vực* (đề xuất) | Thí luyện tông môn, bí mật ngọc giản |
+| 3 — Kim Đan | Kim Đan | Vực 2 → Vực 3 *Hàn Băng Vực* (đề xuất) | Phong ấn Đoạn Thiên lung lay |
+| 4+ | Nguyên Anh… | (mở rộng sau launch) | Tiên lộ |
+
+> Nguồn sự thật cốt truyện theo chương: [LR-03 Story Outline](docs/lore/story-outline.md); tên vực: LR-01 §4.1 (WB-Q-1).
 
 **Tài liệu cần viết:** World Bible (địa lý, lịch sử, thế lực, nhân vật), Story Outline theo chương, Quest Design Doc.
 
@@ -283,7 +285,7 @@ Mọi quyết định tính năng phải phục vụ ít nhất 1 trụ cột. K
 - **Offline không già đi**, để không phạt người bận rộn. Ngoại lệ: người chơi *chủ động* chọn **bế quan offline** để đổi thọ nguyên lấy tu vi.
 - **Hành động tiêu thọ nguyên trực tiếp:** bế quan (đổi năm lấy tu vi), luyện đan/khí cao cấp (1–3 năm), trọng thương, thất bại đột phá, **bí pháp liều mạng** (đốt thọ nguyên lấy sức mạnh tạm thời).
 - **Kéo dài thọ nguyên:** đột phá cảnh giới (nguồn chính), Diên Thọ Đan và linh quả (hiệu quả giảm dần mỗi lần dùng), cơ duyên, thiên phú.
-- **Tiết tấu mục tiêu:** kiếp đầu tiên của người chơi trung bình kéo dài **40–80 giờ chơi** và đạt Trúc Cơ – Kim Đan. Người chơi giỏi/may mắn có thể sống nhiều tháng.
+- **Tiết tấu mục tiêu (D-11, sửa theo GD-03):** người chơi trung bình **đạt Trúc Cơ – Kim Đan trong 40–80 giờ chơi**; độ dài cả kiếp có thể dài hơn nhiều nhờ thọ nguyên cảnh giới cao — kiếp thường kết thúc vì **mạo hiểm** (hiểm địa, thiên kiếp, binh giải) hơn là hết thọ sớm. Đường cong chuẩn: [GD-03 §4](docs/design/02-core-loop.md).
 - **Đại hạn:** khi thọ nguyên còn < 10%, nhân vật nhận trạng thái "Đại hạn sắp tới" và mở chuỗi nhiệm vụ tìm diên thọ / chuẩn bị di sản. Đây là chương cuối kịch tính của mỗi kiếp.
 
 #### Luân hồi: tiến trình cấp tài khoản
@@ -441,6 +443,7 @@ Mọi quyết định tính năng phải phục vụ ít nhất 1 trụ cột. K
 - **Thế Thân Phù:** vật phẩm cực hiếm (từ cơ duyên / chế tạo cao cấp), đỡ 1 lần chết. **Không bán bằng tiền thật.**
 - **Mất kết nối:** nhân vật vào trạng thái *quy tức* 60 giây (bất động, phòng ngự rất cao, quái mất mục tiêu dần). Xem thêm chính sách server ở 5.3.
 - **MVP chỉ có PvE:** người chơi không thể tấn công nhau trong hiểm địa. **PvP hiểm địa (Ma Vực)** để sau launch và là lựa chọn riêng (Q9).
+
 ### 4.6. Thế giới mở & khám phá (trụ cột P5)
 
 > Mục tiêu: mỗi bản đồ có **mật độ nội dung cao**. Người chơi đi bất kỳ hướng nào trong 1–2 phút đều gặp điều gì đó đáng chú ý.
@@ -522,6 +525,8 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 **Triết lý:** Action combat top-down hiện đại (kiểu Hades / Lost Ark / Diablo IV), server-authoritative, chịu được độ trễ mạng 50–150ms. Góc nhìn trên cao giúp người chơi **thấy rõ vòng cảnh báo trên mặt đất**, rất hợp với combat né chiêu.
 
 **Điều khiển (PC: bàn phím + chuột):**
+> **Sơ đồ phím chuẩn (nguồn duy nhất): [GD-24 §5](docs/design/25-camera-controls.md)** — bảng dưới là phác thảo ban đầu (linh thú dùng `Y` / `U`, thu phục `X`, đả tọa `Z`).
+
 | Phím | Hành động |
 |------|-----------|
 | WASD | Di chuyển (tùy chọn: click chuột phải để di chuyển cho người quen MOBA/Diablo) |
@@ -670,11 +675,10 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 - Free-to-play, **không pay-to-win**.
 - Vật phẩm mua bằng tiền thật **gắn với tài khoản, giữ qua mọi kiếp** (ngoại hình, danh hiệu, hiệu ứng): mua một lần, dùng mãi. Trong game một mạng, đây là lý do mua rất rõ ràng.
 - **Tuyệt đối không bán:** hồi sinh, thọ nguyên, thế thân phù, lượt roll thiên phú, ô Tàng Bảo Các.
-- Bán: ngoại hình (trang phục, hiệu ứng kiếm, tọa kỵ), Vấn Đạo Lệnh (battle pass theo mùa — đổi tên vì "Tiên Lộ" là tên game), tiện ích (mở rộng túi, ô nhân vật).
+- Bán: ngoại hình (trang phục, hiệu ứng kiếm, tọa kỵ), Vấn Đạo Lệnh (battle pass theo mùa — đổi tên vì "Tiên Lộ" là tên game), tiện ích không sức mạnh (mở rộng túi **tối đa 20 ô**, 20 ô còn lại đạt trong game; ô nhân vật **chỉ ở server khác** — D-12). Chi tiết danh mục được phép / cấm: [GD-19](docs/design/50-monetization.md).
 - Chi tiết trong Monetization Design Doc — chốt trước Beta.
 
 ---
-
 ## 5. Kiến trúc kỹ thuật
 
 ### 5.1. Sơ đồ tổng quan
@@ -703,7 +707,7 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 └──────────┬───────────────┘          └──────────┬───────────────────────┘
            │                                     │
            │        ┌───────────────────┐        │
-           ├───────►│ Redis             │◄───────┤
+           ├───────►│ Valkey             │◄───────┤
            │        │ - Session, online │        │
            │        │ - Pub/Sub (chat,  │        │
            │        │   sự kiện chéo)   │        │
@@ -722,13 +726,15 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 - MVP chạy cả 2 trong **1 monorepo** (Gradle cho API Service, pnpm workspace cho client / game server / shared), triển khai riêng.
 
 **Mô hình bản đồ trên server (open world chia bản đồ):**
-- Mỗi **(bản đồ, kênh)** là một đối tượng `MapInstance` độc lập có tick loop riêng; một tiến trình game-server chứa nhiều `MapInstance` (vd. 20–50 cái), chạy nhiều tiến trình Node.js để dùng hết CPU (Colyseus + Redis presence/driver).
-- **World Directory** (trong API service + Redis): biết `MapInstance` nào đang chạy ở tiến trình nào, còn bao nhiêu chỗ → điều phối khi người chơi vào game / chuyển bản đồ / mở kênh mới.
-- **Chuyển bản đồ (handoff):** người chơi chạm cổng → server hiện tại lưu trạng thái nhân vật (Redis + đánh dấu ghi DB) → cấp *transfer ticket* → client kết nối tới `MapInstance` đích (cùng hoặc khác tiến trình) → server đích nạp trạng thái. Mục tiêu < 2 giây kể cả tải bản đồ (client đã tải trước).
-- **Trạng thái toàn cục** (giờ trong game, thời tiết, lịch sự kiện thế giới) do một **World Clock / Event Scheduler** phát qua Redis pub/sub cho mọi `MapInstance`.
+- Mỗi **(bản đồ, kênh)** là một đối tượng `MapInstance` độc lập có tick loop riêng; một tiến trình game-server chứa nhiều `MapInstance` (vd. 20–50 cái), chạy nhiều tiến trình Node.js để dùng hết CPU (Colyseus + Redis presence/driver (dùng với Valkey)).
+- **World Directory** (trong API service + Valkey): biết `MapInstance` nào đang chạy ở tiến trình nào, còn bao nhiêu chỗ → điều phối khi người chơi vào game / chuyển bản đồ / mở kênh mới.
+- **Chuyển bản đồ (handoff):** người chơi chạm cổng → server hiện tại lưu trạng thái nhân vật (Valkey + đánh dấu ghi DB) → cấp *transfer ticket* → client kết nối tới `MapInstance` đích (cùng hoặc khác tiến trình) → server đích nạp trạng thái. Mục tiêu < 2 giây kể cả tải bản đồ (client đã tải trước).
+- **Trạng thái toàn cục** (giờ trong game, thời tiết, lịch sự kiện thế giới) do một **World Clock / Event Scheduler** phát qua Valkey pub/sub cho mọi `MapInstance`.
 - Bản đồ ít người → tự động gộp kênh; bản đồ trống → tạm ngưng tick để tiết kiệm CPU.
 
 ### 5.2. Client (Babylon.js)
+
+> Kiến trúc chi tiết: [TD-05 Client Architecture](docs/tech/04-client.md). **Mọi ngân sách hiệu năng (nguồn duy nhất): [TD-11 Performance Budget](docs/tech/10-performance.md)** — số dưới đây là tóm tắt.
 
 | Hạng mục | Lựa chọn | Ghi chú |
 |----------|----------|---------|
@@ -747,7 +753,7 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 
 **Ngân sách hiệu năng (mục tiêu):**
 - 60 FPS trên GPU tích hợp (Intel UHD/Iris Xe) ở chất lượng Trung bình; mục tiêu sau launch: 30–60 FPS trên điện thoại tầm trung.
-- **Lần tải đầu < 15MB** để vào game; mỗi bản đồ thêm 2–5MB, tải trước bản đồ kề cạnh trong nền; cache bằng Service Worker / IndexedDB.
+- **Lần tải đầu < 15MB** để vào game; mỗi bản đồ thêm ≤ 5MB (dã ngoại), ≤ 6MB (thành trấn), ≤ 2MB (instance) — TD-13 §7 / TD-11, tải trước bản đồ kề cạnh trong nền; cache bằng Service Worker / IndexedDB.
 - Draw call < 200 trong thành trấn đông người; dùng instancing, thin instances, gộp mesh tĩnh theo ô (chunk merge), texture atlas.
 - Nhân vật người chơi: ≤ 5k tris; quái thường ≤ 3k tris; prop môi trường ≤ 500–1.500 tris.
 - Texture: phần lớn dùng **1 atlas màu gradient chung** (kiểu Synty/low-poly), chỉ 256–512px cho đồ đặc biệt.
@@ -758,15 +764,15 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 | Hạng mục | Lựa chọn |
 |----------|----------|
 | Ngôn ngữ | Java 21 (API Service, virtual threads) · TypeScript trên Node.js LTS (Game Server) |
-| Framework | Spring Boot 3.x (API Service) · Colyseus (Game Server, bản ổn định mới nhất lúc fork T5C) |
+| Framework | Spring Boot 3.x (API Service) · Colyseus (Game Server, bản ổn định mới nhất lúc dựng repo ở Phase 0) |
 | Realtime | Colyseus room (WebSocket) trong Game Server; mỗi room = 1 `MapInstance` |
 | Serialization | Client ↔ Game Server: `@colyseus/schema` + message TS · Game Server ↔ API Service: REST/JSON nội bộ (OpenAPI, sinh client TS) · Client ↔ API Service: REST/JSON |
 | ORM | Spring Data JPA (API) + jOOQ/JDBC thuần cho truy vấn nóng. Game Server **không** truy cập PostgreSQL trực tiếp |
 | Migration DB | Flyway |
 | Auth | JWT ngắn hạn + refresh token; game server xác thực ticket một lần khi kết nối WS |
-| Cache / pub-sub | Redis |
+| Cache / pub-sub | Valkey |
 | Monitoring | Spring Actuator + Micrometer (API) · prom-client (Game Server) + Prometheus + Grafana; log tập trung (Loki hoặc ELK) |
-| Test | JUnit 5, Testcontainers (API Service) · Vitest (Game Server, `shared/sim`); test tích hợp chạy cả hai với PostgreSQL/Redis thật |
+| Test | JUnit 5, Testcontainers (API Service) · Vitest (Game Server, `shared/sim`); test tích hợp chạy cả hai với PostgreSQL/Valkey thật |
 
 **Nguyên tắc server:**
 - **Server-authoritative tuyệt đối:** client chỉ gửi *input/ý định* (di chuyển hướng X, dùng kỹ năng Y vào mục tiêu Z), server quyết định kết quả. Mọi giao dịch đồ, chế tác, rơi đồ đều do server tính.
@@ -788,6 +794,7 @@ Ngẫu nhiên là **trải nghiệm cốt lõi**, nhưng người chơi luôn c�
 - Dùng **JSONB** cho thuộc tính linh hoạt (thuộc tính phụ trang bị, stats), cột thường cho thứ cần index/truy vấn.
 - **Bảng log/ledger** cho tiền tệ và vật phẩm là bắt buộc — để điều tra dupe/hack và rollback.
 - Partition bảng log theo tháng.
+
 ### 5.5. Cấu trúc repo đề xuất (monorepo)
 
 ```
@@ -804,7 +811,7 @@ xproject/
 │   └── public/
 ├── server/
 │   ├── api-service/         # Spring Boot REST
-│   ├── game-server/         # Colyseus · Node.js · TypeScript (fork T5C, D-19)
+│   ├── game-server/         # Colyseus · Node.js · TypeScript (dựng mới theo TD-06, D-19 / D-23)
 │   └── common/              # entity, DTO phía Java
 ├── shared/
 │   ├── sim/                 # TS dùng chung client + game server: geom2d, công thức combat, AI, Ink runner
@@ -820,12 +827,12 @@ xproject/
 ```
 
 ### 5.6. Hạ tầng & triển khai
-- **Dev:** docker-compose (PostgreSQL, Redis, api, game-server).
+- **Dev:** docker-compose (PostgreSQL, Valkey, api, game-server).
 - **CI/CD:** GitHub Actions / GitLab CI — build, test, lint, validate gamedata, deploy staging tự động.
 - **Staging + Production:** bắt đầu bằng VPS/cloud VM (2–3 máy) + Docker; chỉ lên Kubernetes khi thực sự cần scale.
 - **CDN** cho asset (Cloudflare/BunnyCDN), version hóa theo hash để cache vĩnh viễn.
 - **Backup:** PostgreSQL PITR (WAL archiving), backup hằng ngày, **diễn tập khôi phục** định kỳ.
-- **Ước lượng ban đầu:** 1 game-server (8 vCPU/16GB) chịu ~500–1000 CCU tùy mức độ combat — cần load test xác nhận.
+- **Ước lượng ban đầu:** một máy 8 vCPU / 16GB chạy nhiều tiến trình Game Server (400 người / tiến trình) ≈ **2.000–2.500 CCU / máy** — số chuẩn ở [TD-11](docs/tech/10-performance.md), xác nhận ở load test Alpha.
 
 ### 5.7. Chiến lược sử dụng mã nguồn mở
 
@@ -854,6 +861,8 @@ RPG-JS là framework TypeScript (license MIT) để làm RPG / MMORPG **2D** tr�
 
 #### 5.7.2. Bộ thư viện mã nguồn mở đề xuất
 
+> **Sổ đăng ký chuẩn (license, trạng thái duyệt): [TD-15](docs/tech/14-oss-register.md).** Bảng dưới là tổng quan; khi vênh, theo TD-15.
+
 | Lĩnh vực | Thư viện | License | Dùng cho | Thay thế phần tự viết nào |
 |----------|----------|---------|----------|---------------------------|
 | Render | **Babylon.js** | Apache-2.0 | Render 2.5D, animation, glTF loader | (đã chọn) |
@@ -867,11 +876,13 @@ RPG-JS là framework TypeScript (license MIT) để làm RPG / MMORPG **2D** tr�
 | **Cơ duyên / hội thoại** | **Ink** (inkle): soạn bằng **Inky**, runtime **inkjs** (client preview và game server) | MIT / Apache-2.0 | Content designer viết cơ duyên, hội thoại lựa chọn, nhánh truyện; **server chạy kịch bản** nên kết quả do server quyết định | Encounter editor + ngôn ngữ kịch bản tự định nghĩa (tiết kiệm ~1–1,5 tháng) |
 | AI quái | Behavior tree / FSM TS tự viết nhẹ trong `shared/sim` (tham khảo **mistreevous**, MIT) | MIT | AI quái, boss pattern phía server | |
 | Server | Spring Boot, Flyway, jOOQ, Caffeine, Micrometer (API Service); Colyseus, Node.js (Game Server) | Apache-2.0 / MIT | Nền tảng server | |
-| Test | **Testcontainers**, JUnit 5 | MIT / EPL-2.0 | Test với PostgreSQL / Redis thật | |
+| Test | **Testcontainers**, JUnit 5 | MIT / EPL-2.0 | Test với PostgreSQL / Valkey thật | |
 | Validate data | **JSON Schema + Ajv** | MIT | Kiểm tra gamedata trong CI | Validator tự viết |
 | Admin / GM panel | **Refine** hoặc **react-admin** | MIT | CRUD, tra cứu người chơi, Death Review UI | Giảm ~0,5 tháng |
 | Monitoring | Prometheus, Grafana, Loki | Apache-2.0 / AGPL (công cụ nội bộ) | Giám sát, log | |
 | Load test | **k6** (WebSocket) + bot client dùng lại Colyseus client | AGPL (công cụ nội bộ) | Load test | |
+| Đa nền tảng | **Capacitor** | MIT | Bọc bản web thành app iOS / Android (§5.8) | App native riêng |
+| Mỹ thuật AI | **TRELLIS.2**, SDXL / FLUX.1 schnell, ComfyUI, Blender, Mixamo / AccuRIG | MIT / theo mô hình / GPL (công cụ) / điều khoản nhà cung cấp | Quy trình §6.6 | Phần lớn công dựng 3D thủ công |
 | Analytics | **PostHog** (self-host) hoặc bảng sự kiện + **Metabase** | MIT / AGPL (nội bộ) | Telemetry, KPI một mạng | |
 | Asset | **Kenney, Quaternius, KayKit** (CC0), Mixamo (miễn phí, không phải OSS: đọc điều khoản) | CC0 | Asset prototype & bổ sung | Giảm khối lượng 3D |
 
@@ -882,7 +893,7 @@ RPG-JS là framework TypeScript (license MIT) để làm RPG / MMORPG **2D** tr�
 - **Colyseus** (MIT, Node.js): đồng bộ state theo room, delta patch. Tham khảo khi thiết kế `MapInstance`.
 - **Nakama** (Apache-2.0, Go): mô hình social / guild / leaderboard / chat. Tham khảo thiết kế API.
 - **RPG-JS** (MIT): client prediction, event hook cho nội dung.
-- **T5C**: nền fork theo D-19 (xem 5.7.7).
+- **T5C**: **tham khảo** (D-23) — đọc cách tổ chức scene / chuyển vùng / navmesh / lưới không gian / chat; mượn từng phần nhỏ khi hữu ích, giữ ghi công MIT.
 - **Reldens** (Phaser + Colyseus): admin panel quản lý NPC / quái / vật phẩm / kỹ năng, mô hình dữ liệu RPG.
 - **L2J / aCis** (GPL, Java): kiến trúc server MMO Java lâu năm. **Chỉ đọc tham khảo, tuyệt đối không copy mã** vì license GPL.
 - **Veloren** (GPL-3.0, Rust): open world MMO, mô phỏng thế giới, netcode.
@@ -927,14 +938,16 @@ Kết quả khảo sát (2026-10-19): **không có dự án nào khớp trọn p
 
 > **Phát hiện quan trọng:** T5C chạy game server bằng **Colyseus (TypeScript)**. Nếu dùng làm nền, **logic mô phỏng chỉ viết một lần bằng TypeScript và dùng chung cho client và server**. Plan hiện tại (D-06) phải viết **hai lần** (TS cho client prediction, Java cho server): thư viện va chạm 2D (TD-14), navmesh (recast-navigation-js + recast4j), Ink (inkjs + blade-ink), công thức combat. Đây là nguồn tốn thời gian, tốn token AI và dễ gây lỗi lệch kết quả giữa hai phía.
 
-#### 5.7.7. D-19 (đã duyệt 2026-10-22): kiến trúc lai, fork T5C
+#### 5.7.7. D-19 (đã duyệt 2026-10-22): kiến trúc lai · D-23 (2026-10-25): dựng mới, T5C chỉ tham khảo
+
+> **Cập nhật D-23:** kiến trúc lai (cột B) giữ nguyên, nhưng **không fork T5C làm codebase**. Lý do: kiến trúc T5C khác xa thiết kế (SQLite ngay trong server Colyseus trong khi Game Server không được chạm DB; click-to-move / navmesh thay vì WASD + va chạm 2D tất định trong `shared/sim`; cấu trúc code không theo TD-05 / TD-06); dự án **code bằng AI theo spec** nên dựng khung mới gần như không tốn thêm, còn chuyển codebase có sẵn cho khớp spec thì tốn và dễ làm AI lẫn hai kiểu code; T5C chỉ có 1 tác giả. Khung xuất phát: starter chính thức (`npm create colyseus-app`, template Vite + Babylon.js) rồi dựng đúng cấu trúc TD-10. Các dòng nhắc "fork T5C" trong bảng dưới là lịch sử của đề xuất ban đầu.
 
 | | Phương án A: giữ nguyên D-06 | **Phương án B: lai (đề xuất)** | Phương án C: toàn bộ Node.js |
 |---|---|---|---|
 | Client | Babylon.js tự xây | **Fork T5C** (Babylon.js) rồi phát triển | Fork T5C |
 | Game server realtime | Spring Boot + Netty tự xây | **Colyseus (TypeScript) từ T5C**: mỗi room = 1 `MapInstance` | Colyseus |
 | API / dữ liệu bền vững | Spring Boot | **Spring Boot giữ nguyên**: tài khoản, nhân vật, vật phẩm, kinh tế, ledger, luân hồi, đấu giá, GM, death log | Node.js |
-| Database | PostgreSQL + Redis | PostgreSQL + Redis (thay MySQL của T5C) | PostgreSQL + Redis |
+| Database | PostgreSQL + Valkey | PostgreSQL + Valkey (thay MySQL của T5C) | PostgreSQL + Valkey |
 | Code mô phỏng dùng chung client/server | ❌ Viết 2 lần (TS + Java) | ✅ Viết 1 lần (TS) | ✅ |
 | Tận dụng được | Chỉ thư viện | Nền client + server realtime chạy được ngay | Tối đa |
 | Tiết kiệm ước tính (Phase 0–2) | 0 | **~3–5 người-tháng** | ~4–6 người-tháng |
@@ -943,7 +956,7 @@ Kết quả khảo sát (2026-10-19): **không có dự án nào khớp trọn p
 **Vì sao đề xuất B:**
 - Giữ Spring Boot ở nơi cần nhất: **giao dịch, kinh tế, kiểm toán, cái chết thật** (transaction, ledger, death log, RNG audit).
 - Phần realtime chuyển sang TypeScript dùng chung với client, bỏ được việc port Java ↔ TS, nên giảm cả thời gian dev lẫn token AI.
-- Colyseus (MIT) có sẵn room, đồng bộ state dạng delta (schema), matchmaking, mở rộng nhiều tiến trình qua Redis. Khớp mô hình `MapInstance` + kênh của plan.
+- Colyseus (MIT) có sẵn room, đồng bộ state dạng delta (schema), matchmaking, mở rộng nhiều tiến trình qua Valkey. Khớp mô hình `MapInstance` + kênh của plan.
 - Node.js một luồng mỗi tiến trình đủ cho room 20Hz, 100–150 người, góc nhìn top-down; mở rộng bằng cách chạy nhiều tiến trình.
 
 **Ranh giới quyền hạn nếu chọn B:**
@@ -951,7 +964,7 @@ Kết quả khảo sát (2026-10-19): **không có dự án nào khớp trọn p
 - **API Service (Spring Boot) là nguồn sự thật** cho mọi thứ có giá trị lâu dài. Game server gọi API nội bộ cho các thao tác quan trọng (mang đồ ra khỏi hiểm địa, chết thật, đột phá, chế tác, giao dịch); mọi thao tác đều ghi ledger.
 - RNG quan trọng (roll thiên phú, đột phá, kết quả chế tác) và đồng hồ tuổi được tính ở API Service.
 
-**Việc phải làm khi fork T5C:**
+**Việc phải làm khi fork T5C** *(không còn áp dụng sau D-23 — giữ để tham khảo)*:
 1. Xác minh LICENSE, đánh giá chất lượng code, test, phiên bản Babylon.js / Colyseus (3–5 ngày, Phase 0).
 2. Thay MySQL/SQLite bằng lời gọi API Spring Boot + PostgreSQL.
 3. Đổi camera sang 2.5D cố định; đổi combat sang WASD + skillshot + né lướt (giữ hệ kỹ năng / buff / cooldown).
@@ -959,17 +972,17 @@ Kết quả khảo sát (2026-10-19): **không có dự án nào khớp trọn p
 5. Dọn bỏ phần không dùng, viết tài liệu module (giảm token khi AI đọc code).
 6. Giữ ghi công MIT; fork độc lập (theo dõi upstream nhưng không phụ thuộc).
 
-**Phương án dự phòng (cổng Phase 0):** kiến trúc B là cố định. Đánh giá T5C (3–5 ngày) chỉ quyết định **có fork T5C hay không**: nếu LICENSE không rõ ràng hoặc chất lượng code kém thì vẫn dùng Colyseus + TypeScript nhưng dựng game server / client từ đầu, T5C chỉ để tham khảo. Ghi kết quả vào Decision Log.
+~~**Phương án dự phòng (cổng Phase 0):**~~ *(đã chốt ở D-23: dựng mới)* Kiến trúc B là cố định. Đánh giá T5C (3–5 ngày) chỉ quyết định **có fork T5C hay không**: nếu LICENSE không rõ ràng hoặc chất lượng code kém thì vẫn dùng Colyseus + TypeScript nhưng dựng game server / client từ đầu, T5C chỉ để tham khảo. Ghi kết quả vào Decision Log.
 
 #### 5.7.8. Bản đồ tận dụng mã nguồn mở theo module
 
 | Module trong plan | Nguồn mở đề xuất | Mức tận dụng | Phần phải tự làm |
 |-------------------|------------------|:------------:|------------------|
-| Client nền (scene, login, chọn nhân vật, đồng bộ thực thể, animation) | T5C | Cao | Camera 2.5D, UI phong cách riêng |
-| Netcode realtime | Colyseus + prediction của T5C | Cao | Lag compensation cho skillshot |
+| Client nền (scene, login, chọn nhân vật, đồng bộ thực thể, animation) | Template Vite + Babylon.js; **T5C làm tham khảo** (D-23) | Trung bình | Toàn bộ theo TD-05 |
+| Netcode realtime | Colyseus (`create-colyseus-app`); cách dự đoán của T5C để tham khảo | Cao | Dự đoán / bù trễ theo TD-02 |
 | Va chạm 2D | detect-collisions (JS, xác minh license) hoặc tự viết nhẹ | Cao | Hình quạt, quy tắc hitbox |
 | Tìm đường | recast-navigation-js | Cao | Sinh navmesh từ map editor |
-| AI quái | FSM của T5C, Yuka (MIT, ít cập nhật) | Trung bình | Boss pattern, telegraph |
+| AI quái | Khung FSM tự viết trong `shared/sim` (TD-06 §9); T5C / Yuka để tham khảo | Trung bình | Boss pattern, telegraph |
 | Map editor | Babylon.js Editor (Apache-2.0) | Trung bình – cao | Plugin xuất dữ liệu logic (spawn, POI, cổng, hiểm địa) |
 | Cơ duyên / hội thoại | Ink + inkjs (MIT) | Cao (phần kể chuyện) | Engine điều kiện kích hoạt, phần thưởng, khí vận |
 | Dữ liệu game & validate | JSON Schema + Ajv, json-schema-to-typescript | Cao | Schema dữ liệu game |
@@ -994,12 +1007,33 @@ Kết quả khảo sát (2026-10-19): **không có dự án nào khớp trọn p
 
 ---
 
+### 5.8. Đa nền tảng (D-22)
+Cùng **một codebase TypeScript / Babylon.js** cho mọi nền tảng; server dùng chung hoàn toàn.
+
+| Bước | Nền tảng | Cách | Dùng lại code | Thời điểm |
+|------|----------|------|:---:|-----------|
+| 1 | **Web PC** | Trình duyệt | 100% | MVP → Launch |
+| 2 | **Mobile web / PWA** | Cùng bản web, thêm vào màn hình chính | ~100% | Sau launch |
+| 3 | **App iOS / Android** | Bọc bằng **Capacitor** (WebView + plugin native: mua hàng trong app, thông báo đẩy) | ~95% | Sau launch |
+| (tùy chọn) | App desktop / Steam | Electron hoặc Tauri | ~100% | Khi cần |
+
+> **Mức mobile lúc launch (D-26):** trình duyệt điện thoại **chạy được, chưa tối ưu** — điều khiển cảm ứng (GD-24 §5.8), điểm ngắt màn hình và vùng chạm 44px (TD-05) có từ đầu; bố cục HUD điện thoại đầy đủ (GD-17), PWA và app Capacitor làm sau launch.
+
+**Chuẩn bị ngay từ đầu (bắt buộc, chi tiết ở TD-01 §18 và TD-05):**
+1. **Lớp trừu tượng đầu vào:** bàn phím + chuột / cảm ứng / tay cầm đều sinh cùng một luồng ý định (`C2S_Input`, lệnh hành động — TD-02); code combat không biết thiết bị.
+2. **Lớp nền tảng:** lưu trữ, thanh toán, thông báo, vòng đời app (vào nền / quay lại) qua interface; đổi web ↔ Capacitor không đụng logic game.
+3. **UI co giãn** (React) từ đầu, kể cả khi bản đầu chỉ cho PC; bố cục mobile riêng khi tới bước 2.
+4. **Mức chất lượng đồ họa** (thấp / trung / cao) có sẵn trong client; mục tiêu mobile tầm trung 30–60 FPS (§5.2).
+
+**Việc riêng của mobile (không phải viết lại engine):** điều khiển cảm ứng + **hỗ trợ ngắm / tự chọn mục tiêu** cho skillshot (GD-24); xử lý mạng chập chờn / app xuống nền (cửa sổ kết nối lại 60s TD-02, quy tức GD-28); **thanh toán bắt buộc qua cửa hàng ứng dụng** cho vật phẩm số trong app (phí nền tảng — GD-19); **giấy phép trò chơi điện tử trực tuyến** tại Việt Nam áp dụng cho cả web và app (kiểm tra với tư vấn pháp lý trước khi phát hành).
+
 ## 6. Pipeline nội dung & asset
 
 ### 6.1. Phong cách mỹ thuật
 - **Định hướng:** **low-poly stylized cổ phong**: khối hình đơn giản, màu phẳng/gradient, toon shading, viền nhẹ; điểm nhấn là **VFX phát sáng** (kiếm khí, linh quang, trận pháp) và **bảng màu theo vùng**. Tham khảo: Albion Online, Synty POLYGON, Sky: Children of the Light, tranh thủy mặc cho bầu trời/nền.
 - Nhân vật hơi "chibi" nhẹ (đầu to ~1/5–1/6 thân) để dễ nhận diện từ góc nhìn trên cao; silhouette và màu trang phục phải phân biệt được ở khoảng cách xa.
 - Thiết kế cho góc nhìn trên cao: chi tiết dồn vào **đỉnh đầu, vai, vũ khí, mặt đất**; mặt đất có texture/decal phong phú vì chiếm phần lớn màn hình.
+- **D-22 (2026-10-25): giữ 3D phong cách hóa + Babylon.js**, không chuyển sang 2D sprite / isometric hay Godot. Nâng cấp so với "low-poly màu phẳng": **texture vẽ tay cho nhân vật / điểm nhấn**, môi trường dùng atlas màu chung; toon shading + viền; tùy chọn **shader thủy mặc** (mực tàu, viền loang) làm bản sắc tiên hiệp. Lý do chọn 3D: combat nhắm 360°, trang bị hiện trên người, linh thú dùng lại model quái, cửa hàng ngoại hình (mỗi trang phục = 1 mesh), ngày / đêm / thời tiết, bản đồ rộng theo kit, và **quy trình AI 3D nhất quán hơn AI vẽ sprite nhiều hướng** (§6.6).
 - **Tài liệu:** Art Bible (bắt buộc trước khi sản xuất hàng loạt) có ảnh mẫu chụp đúng góc camera game.
 
 ### 6.2. Pipeline 3D
@@ -1026,9 +1060,9 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 - Công cụ **tán prop tự động** (cỏ, đá, cây theo vùng tô) để làm nhanh bản đồ lớn.
 
 ### 6.4. Dữ liệu game (data-driven)
-- Toàn bộ số liệu (item, kỹ năng, quái, đan phương, rơi đồ, cảnh giới, nhiệm vụ) do **Game Designer quản lý trên Google Sheets/Excel** → script export ra JSON trong `shared/gamedata/` → cả client và server đọc.
+- Toàn bộ số liệu (item, kỹ năng, quái, đan phương, rơi đồ, cảnh giới, nhiệm vụ) nằm trong `shared/gamedata/` dạng **JSONC / CSV trong repo**, kiểu dữ liệu sinh từ TypeScript — chuẩn ở [TD-07](docs/tech/06-gamedata.md) (bảng tính ngoài repo là câu hỏi mở DT-Q-1).
 - Có **validator** chạy trong CI (ID trùng, tham chiếu không tồn tại, giá trị ngoài phạm vi).
-- **Cơ duyên & hội thoại** viết bằng **Ink** (kể chuyện, lựa chọn, nhánh) + YAML/JSON (điều kiện kích hoạt, phần thưởng, sự kiện thế giới). Server chạy Ink bằng runtime Java nên mọi kết quả do server quyết định; validator kiểm tra cả hai phần trong CI.
+- **Cơ duyên & hội thoại** viết bằng **Ink** (kể chuyện, lựa chọn, nhánh) + YAML/JSON (điều kiện kích hoạt, phần thưởng, sự kiện thế giới). Game Server chạy Ink bằng **inkjs** (D-19) nên mọi kết quả do server quyết định; validator kiểm tra cả hai phần trong CI.
 - Server hỗ trợ **hot reload** gamedata ở môi trường dev/staging để designer chỉnh và thử ngay.
 
 ### 6.5. Công cụ nội bộ cần làm
@@ -1044,6 +1078,42 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 | Bot load test | Giả lập hàng trăm client kết nối | Phase 2–4 |
 
 ---
+### 6.6. Quy trình mỹ thuật ưu tiên AI (D-22)
+
+> **D-28 (2026-10-25):** tài liệu chỉ **liệt kê asset cần có** và quy chuẩn kỹ thuật (AR-02 quy chuẩn, AR-03 hoạt ảnh, AR-04 VFX, AR-06 kit, AR-05 tracker); **team tự chọn công cụ / nguồn và bổ sung asset**. Quy trình dưới đây là gợi ý, không bắt buộc. Asset vào bản phát hành vẫn cần hồ sơ nguồn gốc + license cho phép thương mại (TD-15 §3.4).
+
+> License mô hình AI và hồ sơ nguồn gốc asset (`art/provenance/{assetId}.json`): chuẩn ở [TD-15 §3.4](docs/tech/14-oss-register.md).
+Dự án dùng AI cho phần lớn việc code và tạo hình ảnh. Với 3D, AI cho kết quả **nhất quán** hơn AI vẽ sprite nhiều hướng / nhiều khung (một model → mọi hướng, mọi khung, mọi trang phục dùng chung bộ xương).
+
+```
+Concept / ảnh tham chiếu (mô hình vẽ ảnh chạy local qua ComfyUI, LoRA giữ phong cách)
+  → Ảnh → model 3D (TRELLIS.2, MIT)
+  → Blender (script Python do AI viết): giảm đa giác về ngân sách low-poly, làm lại UV, gộp vào atlas / bake texture vẽ tay
+  → Gắn bộ xương chung (Mixamo / AccuRIG) → hoạt ảnh từ thư viện chung (Mixamo + sinh chuyển động)
+  → glTF-Transform (Meshopt, KTX2) → xem đúng góc camera game → người duyệt → CDN
+2D (vẫn cần): icon vật phẩm, chân dung NPC, UI, bản đồ thế giới, minh họa cơ duyên → mô hình vẽ ảnh + chỉnh tay
+```
+
+| Công cụ | Dùng cho | License / điều kiện (kiểm tra lại khi đưa vào OSS Register TD-15) |
+|---------|----------|------------------------------------------------------------------|
+| **TRELLIS.2** (Microsoft) | Ảnh → model 3D, GLB + PBR | MIT; cần GPU ~16GB VRAM hoặc thuê cloud |
+| Mô hình vẽ ảnh: **SDXL**, **FLUX.1 schnell** | Concept, icon, chân dung, texture | Đọc kỹ license từng mô hình — vd. FLUX.1 **dev** có giới hạn thương mại, không dùng cho asset phát hành |
+| **ComfyUI** | Chạy pipeline vẽ ảnh local | GPL-3.0 — công cụ nội bộ, không phân phối kèm game |
+| **Blender** | Giảm đa giác, UV, bake, rig, xuất glTF | GPL (chỉ công cụ; asset tạo ra không bị ràng buộc GPL) |
+| **Mixamo**, **AccuRIG** | Gắn xương tự động, thư viện hoạt ảnh | Miễn phí theo điều khoản nhà cung cấp — đọc điều khoản dùng thương mại |
+| ~~Hunyuan3D~~ | — | **Không dùng** cho asset thương mại khi chưa rà license (bản mở loại trừ một số khu vực, giới hạn người dùng) |
+
+- **Vẫn cần ít nhất 1 người** làm art director / tech artist: chọn kết quả, giữ phong cách, sửa lưới / UV, tối ưu cho web. AI không thay được bước duyệt.
+- **Pháp lý:** asset do AI tạo khó được bảo hộ bản quyền; lưu hồ sơ công cụ + prompt + nguồn ảnh tham chiếu cho từng asset; khai báo dùng AI khi nền tảng phát hành yêu cầu.
+
+### 6.7. Chiến lược tiết kiệm chi phí mỹ thuật (team nhỏ, vận hành lâu dài)
+1. **Một bộ xương người chung + thư viện hoạt ảnh chung** cho người chơi, NPC, tàn hồn; quái theo nhóm bộ xương (GD-12 `SkeletonGroup`).
+2. **Atlas màu gradient chung** cho môi trường; texture vẽ tay chỉ cho nhân vật và điểm nhấn.
+3. **Kit môi trường module theo vực** + asset CC0 (Kenney, Quaternius, KayKit) cho bản thử và đồ phụ; **cọ rải + mẫu biome** trong editor (TD-13 E11) để phủ bản đồ rộng nhanh; mỗi bản đồ chỉ 2–3 điểm nhấn vẽ riêng.
+4. **Bảng màu theo vực**: cùng kit, đổi màu ra cảm giác vùng khác (AR-06).
+5. **Trang phục là mesh thay thế** trên cùng bộ xương; đổi màu bằng shader để có nhiều biến thể (cửa hàng ngoại hình rẻ để làm).
+6. **VFX bằng shader / particle có tham số** (GD-08 VFX ghép tham số), không vẽ khung.
+7. Không hoạt ảnh khuôn mặt; cutscene ngắn bằng camera + hiệu ứng.
 
 ## 7. Lộ trình phát triển (Roadmap)
 
@@ -1061,12 +1131,14 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
   - [ ] Thư viện va chạm 2D trong `shared/sim`, chạy cùng một bộ test ở client và game server.
   - [ ] Map editor bản thô: đặt prop, vẽ vùng đi được, xuất GLB + JSON.
   - [ ] Asset pipeline: Blender → glTF → Meshopt/KTX2 tự động (glTF-Transform).
+  - [ ] **Valkey + Colyseus:** chạy Colyseus driver / presence (gói Redis) với Valkey qua 2 tiến trình, kiểm tra Streams, pub/sub, `SET NX` dùng ở TD-01 / TD-12; ghi kết quả vào Decision Log (OSS-Q-1).
+  - [ ] **Pipeline mỹ thuật AI (§6.6):** 1 nhân vật + 1 quái + 5 prop qua TRELLIS.2 → Blender script → bộ xương chung → vào game đúng góc camera; đo giờ công, chất lượng, kích thước — chốt phong cách cùng mẫu Art Bible (Q13).
   - [ ] **Đánh giá mã nguồn mở** (mỗi hạng mục ≤ 3 ngày, ghi kết quả vào Decision Log):
     - [ ] Babylon.js Editor: có đủ làm nền map editor không (plugin, xuất dữ liệu logic)?
     - [ ] Ink + inkjs: viết 3 cơ duyên mẫu, chạy trên game server, preview trên client; lưu / khôi phục trạng thái qua API Service.
     - [ ] recast-navigation-js chạy trên Node.js (game server) với navmesh xuất từ map editor.
     - [ ] Lập OSS Register + kiểm tra license trong CI.
-  - [ ] **Đánh giá T5C (3–5 ngày):** fork, chạy local, đọc kiến trúc, thử 100 bot, xác minh LICENSE → quyết định **fork hay dựng từ đầu** (D-19, cổng 5.7.7).
+  - [ ] **Đọc T5C làm tham khảo (1–2 ngày, D-23):** chạy local, ghi lại các phần đáng mượn (nạp navmesh, lưới không gian, chuyển vùng, chat) vào Decision Log; **dựng repo mới** bằng starter chính thức theo TD-10 (cổng 5.7.7).
 - [ ] **Prototype giấy vòng đời một mạng:** thẻ bài + spreadsheet mô phỏng 1 kiếp (roll thiên phú, cơ duyên, luyện đan, đột phá, hiểm địa, chết / tọa hóa); chơi thử nội bộ trước khi code.
 - [ ] Thiết lập repo, CI, docker-compose, quy trình làm việc.
 
@@ -1099,7 +1171,7 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 - [ ] Túi đồ, trang bị (hiển thị trên nhân vật), rơi đồ, NPC cửa hàng.
 - [ ] Hệ thống nhiệm vụ (data-driven) + 15–20 nhiệm vụ chương 1.
 - [ ] Hệ thống cơ duyên (engine + encounter editor) + 10 cơ duyên.
-- [ ] Vũ khí thứ 2 (pháp trượng/quạt).
+- [ ] Vũ khí thứ 2 (quạt `FAN` — GD-07 §3).
 - [ ] Chat, tổ đội.
 - [ ] Lưu trữ DB đầy đủ, ledger/log.
 - [ ] Map editor hoàn thiện (tán prop tự động, bake ánh sáng).
@@ -1112,7 +1184,7 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 - [ ] Luyện Đan đầy đủ (minigame + tự động, cấp nghề), khai khoáng.
 - [ ] **Hoàn thiện Vực 1: 6 bản đồ dã ngoại + 3 bí cảnh**, thời tiết.
 - [ ] Cơ duyên: đạt 20–30 cái, có ít nhất 2 chuỗi cơ duyên nhiều bước.
-- [ ] **Đột phá dựa trên vật phẩm:** đan đột phá Trúc Cơ / Kim Đan, tỷ lệ thành công, tâm ma; Kim Đan (bản giới hạn) + **Thiên Kiếp** v1.
+- [ ] **Đột phá dựa trên vật phẩm:** đan đột phá Trúc Cơ, tỷ lệ thành công, tâm ma, thiên kiếp Trúc Cơ (không lethal). **Trần của Alpha và Beta 1 là Trúc Cơ Viên Mãn (TC4)** (GD-03 C2, D-25); **Kết Kim Đan làm ở Beta 2** cùng Vực 2 (nguyên liệu Kết Kim Đan ở Vực 2).
 - [ ] **2 hiểm địa chết thật** (nhất giai, nhị giai), cân bằng phần thưởng – rủi ro.
 - [ ] Balance Simulator: mô phỏng tuổi thọ & tiến trình của nhiều kiểu người chơi.
 - [ ] Hoàn thiện chương 1, khởi động chương 2.
@@ -1126,6 +1198,7 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 - [ ] Thu thập telemetry: tỷ lệ rời bỏ theo từng bước, **heatmap di chuyển trên bản đồ** (vùng nào bị bỏ qua), tỷ lệ gặp cơ duyên, thời gian đột phá, phân bố tiền tệ.
 - [ ] **KPI riêng của game một mạng:** thời gian sống trung bình mỗi kiếp, phân bố nguyên nhân chết, **tỷ lệ người chơi bắt đầu kiếp mới trong 24h / 7 ngày sau khi chết** (chỉ số sống còn), khảo sát "cái chết có công bằng không".
 - [ ] Sửa lỗi, cân bằng, tối ưu server.
+- [ ] Dựng **on-call + status page**, chạy runbook thử (TD-09).
 - [ ] Bắt đầu Luyện Khí + Chế tạo công pháp (bản đầu), sự kiện thế giới (bản đầu).
 
 ### Phase 5a — Closed Beta 1 · Tháng 16–18 *(hệ thống chiều sâu + xã hội)*
@@ -1133,18 +1206,19 @@ Phác thảo layout 2D (giấy/Miro) → Blockout trong Map Editor (địa hình
 - [ ] Tông môn tự lập + Tông quy, **Tạc Thiên Bang & Hợp Hoan Tông** (tổng đàn, nhánh gia nhập, xuất thân), danh vọng phe.
 - [ ] **PvP dã ngoại có kiểm soát** (GD-32): chế độ PK, sát nghiệp, Chấp Pháp, Thiên Đạo Hóa Thân.
 - [ ] Thiên kiếp + binh giải, thức tỉnh / thay đổi thiên phú, động phủ cá nhân.
-- [ ] Chống hack, bảo mật, pentest cơ bản; load test 500+ CCU.
+- [ ] Chống hack, bảo mật (TD-08), **pentest trước Beta 1**; load test 500+ CCU.
 
 ### Phase 5b — Closed Beta 2 · Tháng 19–21 *(nội dung mở rộng)*
 - [ ] **Linh thú** (bắt Linh chủng / boss, trứng, lai tạo), Ngự kiếm phi hành.
-- [ ] **Vực 2** (ít nhất 4 bản đồ + 2 bí cảnh), cửa hàng phe Vực 2, tầng KD / NA của Di Tàng.
+- [ ] **Vực 2** (ít nhất 4 bản đồ + 2 bí cảnh), cửa hàng phe Vực 2, tầng KD / NA của Di Tàng; **mở Kết Kim Đan** — trần nâng lên Kim Đan (D-25).
 - [ ] Sự kiện thế giới động + World boss, Ma Uyên, Thượng Cổ Tiên Phủ, **Ma Vực**.
 - [ ] Sơn môn tông môn trên bản đồ, di sản – động phủ truyền thừa.
 - [ ] Monetization cơ bản (cosmetic shop) + thanh toán.
-- [ ] Load test 1000+ CCU.
+- [ ] Load test 1000+ CCU; **diễn tập DR** (khôi phục khác vùng, TD-09 §5).
 - [ ] Wipe dữ liệu trước Open Beta (thông báo trước).
 
 ### Phase 6 — Open Beta / Launch · Tháng 22+
+- [ ] **Pentest lại trước Open Beta** (TD-08).
 - [ ] Marketing, landing page, trailer (góc nhìn 2.5D + VFX rất hợp làm clip ngắn TikTok/Shorts).
 - [ ] Vận hành live: on-call, hotfix, sự kiện.
 - [ ] Lộ trình sau launch: Luận Võ Đài, Vực 3–4, xây tự do Hoang Vực, phẩm Thiên của chế công pháp, mobile web (cảm ứng).
@@ -1167,50 +1241,51 @@ Phase 6                                                                 ██�
 ## 8. Danh mục tài liệu thiết kế cần viết
 
 > Tất cả đặt trong `docs/`, viết bằng Markdown, quản lý version cùng code. Mỗi tài liệu có owner, trạng thái, và lịch sử thay đổi ở cuối file.
+
 ### 8.1. Tài liệu Game Design
 
 | # | Tài liệu | File | Nội dung chính | Owner | Cần trước | Trạng thái |
 |---|----------|------|----------------|-------|-----------|-----------|
-| GD-01 | **Game Concept Doc** | `docs/design/00-concept.md` | Pitch, pillars, đối tượng, USP, tham khảo (1–3 trang) | Director | Phase 0 | ⬜ |
-| GD-02 | **GDD tổng (index)** | `docs/design/01-gdd.md` | Tổng quan, liên kết tới các doc hệ thống | Designer | Phase 0 | ⬜ |
-| GD-03 | Core Loop & Progression | `docs/design/02-core-loop.md` | Vòng lặp phút/giờ/ngày/tuần, đường cong tiến triển, thời gian lên cấp | Designer | Phase 0 | ⬜ |
-| GD-04 | **Hệ thống Tu luyện** | `docs/design/10-cultivation.md` | Cảnh giới, nguồn tu vi & tỷ trọng, bình cảnh, đan độc, đột phá dựa trên vật phẩm, tâm ma, thiên kiếp | Designer | Phase 1 | 🟡 [v0.1](docs/design/10-cultivation.md) |
+| GD-01 | **Game Concept Doc** | `docs/design/00-concept.md` | Pitch, pillars, đối tượng, USP, tham khảo (1–3 trang) | Director | Phase 0 | 🟡 [v0.1](docs/design/00-concept.md) |
+| GD-02 | **GDD tổng (index)** | `docs/design/01-gdd.md` | Tổng quan, liên kết tới các doc hệ thống | Designer | Phase 0 | 🟡 [v0.2](docs/design/01-gdd.md) |
+| GD-03 | Core Loop & Progression | `docs/design/02-core-loop.md` | Vòng lặp phút/giờ/ngày/tuần, đường cong tiến triển, thời gian lên cấp | Designer | Phase 0 | 🟡 [v0.3](docs/design/02-core-loop.md) |
+| GD-04 | **Hệ thống Tu luyện** | `docs/design/10-cultivation.md` | Cảnh giới, nguồn tu vi & tỷ trọng, bình cảnh, đan độc, đột phá dựa trên vật phẩm, tâm ma, thiên kiếp | Designer | Phase 1 | 🟡 [v0.6](docs/design/10-cultivation.md) |
 | GD-05 | **Combat Design** | `docs/design/11-combat.md` | Điều khiển, combo, frame data, hit reaction, poise, công thức sát thương, ngũ hành | Designer + Client Dev | Phase 1 | ➖ Gộp vào [GD-06](docs/design/12-stats-formulas.md) + [GD-07](docs/design/13-skills.md) (2026-10-23) |
-| GD-06 | Chỉ số & Công thức | `docs/design/12-stats-formulas.md` | Toàn bộ chỉ số, công thức tính, bảng tăng trưởng | Designer | Phase 1 | 🟡 [v0.1](docs/design/12-stats-formulas.md) |
-| GD-07 | Kỹ năng & Công pháp | `docs/design/13-skills.md` | Danh sách công pháp, kỹ năng, thuần thục | Designer | Phase 1 | 🟡 [v0.1](docs/design/13-skills.md) |
-| GD-08 | **Chế tạo Công pháp** | `docs/design/14-technique-crafting.md` | Hạch tâm/thuộc tính/biến thức, power budget, VFX tham số | Designer + Tech Artist | Phase 3 | 🟡 [v0.1](docs/design/14-technique-crafting.md) |
-| GD-09 | Trang bị & Vật phẩm | `docs/design/15-items-equipment.md` | Ô trang bị, phẩm cấp, thuộc tính, set, ràng buộc | Designer | Phase 2 | 🟡 [v0.1](docs/design/15-items-equipment.md) |
-| GD-10 | **Luyện Đan** | `docs/design/16-alchemy.md` | Đan phương, linh thảo, minigame, phẩm chất, cấp nghề | Designer | Phase 3 | 🟡 [v0.1](docs/design/16-alchemy.md) |
-| GD-11 | **Luyện Khí** | `docs/design/17-forging.md` | Chế tạo, cường hóa, tẩy luyện, pháp bảo | Designer | Phase 4 | 🟡 [v0.1](docs/design/17-forging.md) |
-| GD-12 | Quái vật & AI | `docs/design/18-enemies-ai.md` | Phân loại quái, hành vi, boss pattern, bảng rơi đồ | Designer | Phase 1 | 🟡 [v0.1](docs/design/18-enemies-ai.md) |
-| GD-13 | **Kinh tế** | `docs/design/19-economy.md` | Tiền tệ, faucet/sink, mô phỏng dòng tiền, đấu giá | Designer | Phase 3 | 🟡 [v0.1](docs/design/19-economy.md) |
-| GD-14 | Xã hội | `docs/design/20-social.md` | Tổ đội, tông môn, chat, giao dịch, bạn bè | Designer | Phase 2 | 🟡 [v0.1](docs/design/20-social.md) |
-| GD-15 | Nhiệm vụ | `docs/design/21-quests.md` | Cấu trúc nhiệm vụ, loại nhiệm vụ, phần thưởng, format data | Designer | Phase 2 | 🟡 [v0.1](docs/design/21-quests.md) |
-| GD-16 | Level Design | `docs/design/30-levels/*.md` | Mỗi bản đồ/bí cảnh 1 file: layout, luồng, khu quái, POI, cơ duyên, checklist mật độ | Content Designer | Mỗi bản đồ | ⬜ |
-| GD-21 | **Open World & Khám phá** | `docs/design/22-open-world.md` | Cấu trúc đại lục/vực/bản đồ, quy tắc nối bản đồ, chuẩn mật độ nội dung, fog of war, Vạn Giới Lục, thần thức quét, ngày/đêm, thời tiết | Content Designer | Phase 1 | 🟡 [v0.1](docs/design/22-open-world.md) |
-| GD-22 | **Cơ duyên (Kỳ ngộ)** | `docs/design/23-encounters.md` | Loại cơ duyên, điều kiện kích hoạt, tỷ lệ, phần thưởng, format kịch bản, danh sách cơ duyên | Content Designer | Phase 1 | 🟡 [v0.1](docs/design/23-encounters.md) |
-| GD-23 | Sự kiện thế giới | `docs/design/24-world-events.md` | Loại sự kiện, lịch, quy mô, thưởng theo đóng góp | Designer | Phase 4 | ⬜ |
-| GD-24 | Camera & Điều khiển | `docs/design/25-camera-controls.md` | Góc camera, zoom, sơ đồ phím, click-to-move, hỗ trợ ngắm, gamepad/cảm ứng sau này | Designer + Client Dev | Phase 0 | ⬜ |
-| GD-25 | **Linh thú** | `docs/design/26-spirit-beasts.md` | Linh chủng & thu phục (cả boss đặc biệt), trứng, đồng hành, lai tạo & biến dị, thú qua các kiếp | Designer + Content | Phase 4 | 🟡 [v0.2](docs/design/26-spirit-beasts.md) |
-| GD-31 | Ngự kiếm phi hành | `docs/design/29-sword-flight.md` | Di chuyển nhanh trên bản đồ (tách khỏi GD-25 cũ) | Designer | Phase 4 | ⬜ |
-| GD-32 | **PvP dã ngoại & Sát nghiệp** | `docs/design/31-pvp-infamy.md` | Chế độ PK, sát nghiệp, rơi đồ PvP, Huyết thù, Chấp Pháp, truy nã, hệ số PvP | Designer + Server | Phase 4 | 🟡 [v0.3](docs/design/31-pvp-infamy.md) |
-| GD-30 | **Động phủ & Sơn môn** | `docs/design/28-caves-sect-sites.md` | Cửa động, động phủ instance, công trình, Linh Điền; địa điểm sơn môn, mặt tiền, Uy vọng, Sơn Môn Đại Hội, phế tích | Designer + Content | Beta | 🟡 [v0.1](docs/design/28-caves-sect-sites.md) |
-| GD-26 | **Vòng đời nhân vật: Thọ nguyên · Cái chết · Luân hồi** | `docs/design/03-lifecycle.md` | Đồng hồ tuổi, bảng thọ nguyên, trọng thương / chết thật, tổng kết kiếp, điểm Luân Hồi, Tàng Bảo Các, di sản, Bia Vạn Cổ | Director + Designer | **Phase 0** | 🟡 [v0.1](docs/design/03-lifecycle.md) |
-| GD-27 | **Thiên phú & Xuất thân** | `docs/design/04-talents.md` | Quy trình tạo nhân vật, linh căn, pool thiên phú & độ hiếm, roll lại, sự kiện thay đổi thiên phú | Designer | Phase 1 | 🟡 [v0.1](docs/design/04-talents.md) |
-| GD-28 | **Hiểm địa** | `docs/design/27-danger-zones.md` | Phân cấp, vào–lấy–thoát, hấp hối, di hài, bảng phần thưởng, quy tắc công bằng | Designer + Content | Phase 1 | 🟡 [v0.1](docs/design/27-danger-zones.md) |
-| GD-29 | Ngẫu nhiên & Công bằng (RNG) | `docs/design/05-rng-fairness.md` | Nguyên tắc ngẫu nhiên, hiển thị tỷ lệ, pity, khí vận, kiểm toán | Designer | Phase 1 | 🟡 [v0.1](docs/design/05-rng-fairness.md) |
-| GD-17 | UI/UX Spec | `docs/design/40-ui-ux.md` | Wireframe các màn hình, luồng người dùng, HUD | Designer + UI Artist | Phase 1 | ⬜ |
-| GD-18 | Onboarding/Tutorial | `docs/design/41-onboarding.md` | 30 phút đầu tiên của người chơi | Designer | Phase 3 | ⬜ |
-| GD-19 | Monetization | `docs/design/50-monetization.md` | Mô hình kiếm tiền, shop, battle pass, nguyên tắc chống P2W | Director | Phase 4 | ⬜ |
-| GD-20 | Telemetry & KPI | `docs/design/51-analytics.md` | Sự kiện cần tracking, KPI (D1/D7/D30 retention, ARPDAU) | Director + Server Dev | Phase 4 | ⬜ |
+| GD-06 | Chỉ số & Công thức | `docs/design/12-stats-formulas.md` | Toàn bộ chỉ số, công thức tính, bảng tăng trưởng | Designer | Phase 1 | 🟡 [v0.5](docs/design/12-stats-formulas.md) |
+| GD-07 | Kỹ năng & Công pháp | `docs/design/13-skills.md` | Danh sách công pháp, kỹ năng, thuần thục | Designer | Phase 1 | 🟡 [v0.6](docs/design/13-skills.md) |
+| GD-08 | **Chế tạo Công pháp** | `docs/design/14-technique-crafting.md` | Hạch tâm/thuộc tính/biến thức, power budget, VFX tham số | Designer + Tech Artist | Phase 3 | 🟡 [v0.4](docs/design/14-technique-crafting.md) |
+| GD-09 | Trang bị & Vật phẩm | `docs/design/15-items-equipment.md` | Ô trang bị, phẩm cấp, thuộc tính, set, ràng buộc | Designer | Phase 2 | 🟡 [v0.5](docs/design/15-items-equipment.md) |
+| GD-10 | **Luyện Đan** | `docs/design/16-alchemy.md` | Đan phương, linh thảo, minigame, phẩm chất, cấp nghề | Designer | Phase 3 | 🟡 [v0.7](docs/design/16-alchemy.md) |
+| GD-11 | **Luyện Khí** | `docs/design/17-forging.md` | Chế tạo, cường hóa, tẩy luyện, pháp bảo | Designer | Phase 4 | 🟡 [v0.5](docs/design/17-forging.md) |
+| GD-12 | Quái vật & AI | `docs/design/18-enemies-ai.md` | Phân loại quái, hành vi, boss pattern, bảng rơi đồ | Designer | Phase 1 | 🟡 [v0.5](docs/design/18-enemies-ai.md) |
+| GD-13 | **Kinh tế** | `docs/design/19-economy.md` | Tiền tệ, faucet/sink, mô phỏng dòng tiền, đấu giá | Designer | Phase 3 | 🟡 [v0.7](docs/design/19-economy.md) |
+| GD-14 | Xã hội | `docs/design/20-social.md` | Tổ đội, tông môn, chat, giao dịch, bạn bè | Designer | Phase 2 | 🟡 [v0.15](docs/design/20-social.md) |
+| GD-15 | Nhiệm vụ | `docs/design/21-quests.md` | Cấu trúc nhiệm vụ, loại nhiệm vụ, phần thưởng, format data | Designer | Phase 2 | 🟡 [v0.11](docs/design/21-quests.md) |
+| GD-16 | Level Design | `docs/design/30-levels/*.md` | Mỗi bản đồ/bí cảnh 1 file: layout, luồng, khu quái, POI, cơ duyên, checklist mật độ | Content Designer | Mỗi bản đồ | 🟡 [v0.3](docs/design/30-levels/README.md) — có `V1_F01` |
+| GD-21 | **Open World & Khám phá** | `docs/design/22-open-world.md` | Cấu trúc đại lục/vực/bản đồ, quy tắc nối bản đồ, chuẩn mật độ nội dung, fog of war, Vạn Giới Lục, thần thức quét, ngày/đêm, thời tiết | Content Designer | Phase 1 | 🟡 [v0.10](docs/design/22-open-world.md) |
+| GD-22 | **Cơ duyên (Kỳ ngộ)** | `docs/design/23-encounters.md` | Loại cơ duyên, điều kiện kích hoạt, tỷ lệ, phần thưởng, format kịch bản, danh sách cơ duyên | Content Designer | Phase 1 | 🟡 [v0.7](docs/design/23-encounters.md) |
+| GD-23 | Sự kiện thế giới | `docs/design/24-world-events.md` | Loại sự kiện, lịch, quy mô, thưởng theo đóng góp | Designer | Phase 4 | 🟡 [v0.4](docs/design/24-world-events.md) |
+| GD-24 | Camera & Điều khiển | `docs/design/25-camera-controls.md` | Góc camera, zoom, sơ đồ phím, click-to-move, hỗ trợ ngắm, gamepad; **thiết kế cảm ứng cho mobile** (joystick ảo, nút kỹ năng, hỗ trợ ngắm / tự chọn mục tiêu cho skillshot — §5.8) | Designer + Client Dev | Phase 0 | 🟡 [v0.3](docs/design/25-camera-controls.md) |
+| GD-25 | **Linh thú** | `docs/design/26-spirit-beasts.md` | Linh chủng & thu phục (cả boss đặc biệt), trứng, đồng hành, lai tạo & biến dị, thú qua các kiếp | Designer + Content | Phase 4 | 🟡 [v0.7](docs/design/26-spirit-beasts.md) |
+| GD-31 | Ngự kiếm phi hành | `docs/design/29-sword-flight.md` | Di chuyển nhanh trên bản đồ (tách khỏi GD-25 cũ) | Designer | Phase 4 | 🟡 [v0.3](docs/design/29-sword-flight.md) |
+| GD-32 | **PvP dã ngoại & Sát nghiệp** | `docs/design/31-pvp-infamy.md` | Chế độ PK, sát nghiệp, rơi đồ PvP, Huyết thù, Chấp Pháp, truy nã, hệ số PvP | Designer + Server | Phase 4 | 🟡 [v0.6](docs/design/31-pvp-infamy.md) |
+| GD-30 | **Động phủ & Sơn môn** | `docs/design/28-caves-sect-sites.md` | Cửa động, động phủ instance, công trình, Linh Điền; địa điểm sơn môn, mặt tiền, Uy vọng, Sơn Môn Đại Hội, phế tích | Designer + Content | Beta | 🟡 [v0.3](docs/design/28-caves-sect-sites.md) |
+| GD-26 | **Vòng đời nhân vật: Thọ nguyên · Cái chết · Luân hồi** | `docs/design/03-lifecycle.md` | Đồng hồ tuổi, bảng thọ nguyên, trọng thương / chết thật, tổng kết kiếp, điểm Luân Hồi, Tàng Bảo Các, di sản, Bia Vạn Cổ | Director + Designer | **Phase 0** | 🟡 [v0.9](docs/design/03-lifecycle.md) |
+| GD-27 | **Thiên phú & Xuất thân** | `docs/design/04-talents.md` | Quy trình tạo nhân vật, linh căn, pool thiên phú & độ hiếm, roll lại, sự kiện thay đổi thiên phú | Designer | Phase 1 | 🟡 [v0.5](docs/design/04-talents.md) |
+| GD-28 | **Hiểm địa** | `docs/design/27-danger-zones.md` | Phân cấp, vào–lấy–thoát, hấp hối, di hài, bảng phần thưởng, quy tắc công bằng | Designer + Content | Phase 1 | 🟡 [v0.5](docs/design/27-danger-zones.md) |
+| GD-29 | Ngẫu nhiên & Công bằng (RNG) | `docs/design/05-rng-fairness.md` | Nguyên tắc ngẫu nhiên, hiển thị tỷ lệ, pity, khí vận, kiểm toán | Designer | Phase 1 | 🟡 [v0.3](docs/design/05-rng-fairness.md) |
+| GD-17 | UI/UX Spec | `docs/design/40-ui-ux.md` | Wireframe các màn hình, luồng người dùng, HUD | Designer + UI Artist | Phase 1 | 🟡 [v0.2](docs/design/40-ui-ux.md) |
+| GD-18 | Onboarding/Tutorial | `docs/design/41-onboarding.md` | 30 phút đầu tiên của người chơi | Designer | Phase 3 | 🟡 [v0.4](docs/design/41-onboarding.md) |
+| GD-19 | Monetization | `docs/design/50-monetization.md` | Mô hình kiếm tiền, shop, battle pass (Vấn Đạo Lệnh), nguyên tắc chống P2W; **thanh toán web vs mua hàng trong app của Apple / Google** (phí nền tảng, đồng bộ quyền sở hữu cosmetic giữa web và app — §5.8) | Director | Phase 4 | 🟡 [v0.2](docs/design/50-monetization.md) |
+| GD-20 | Telemetry & KPI | `docs/design/51-analytics.md` | Sự kiện cần tracking, KPI (D1/D7/D30 retention, ARPDAU) | Director + Server Dev | Phase 4 | 🟡 [v0.2](docs/design/51-analytics.md) |
 
 ### 8.2. Tài liệu Cốt truyện & Thế giới
 
 | # | Tài liệu | File | Nội dung chính | Cần trước |
 |---|----------|------|----------------|-----------|
-| LR-01 | **World Bible** | `docs/lore/world-bible.md` | Lịch sử, địa lý, hệ thống tu luyện trong lore, thế lực, tông môn | Phase 0 |
-| LR-02 | Nhân vật | `docs/lore/characters.md` | NPC chính, phản diện, tính cách, vai trò | Phase 1 |
-| LR-03 | Story Outline | `docs/lore/story-outline.md` | Tóm tắt từng chương, plot point chính | Phase 1 |
+| LR-01 | **World Bible** 🟡 [v0.5](docs/lore/world-bible.md) | `docs/lore/world-bible.md` | Lịch sử, địa lý, hệ thống tu luyện trong lore, thế lực, tông môn | Phase 0 |
+| LR-02 | Nhân vật 🟡 [v0.6](docs/lore/characters.md) | `docs/lore/characters.md` | NPC chính, phản diện, tính cách, vai trò | Phase 1 |
+| LR-03 | Story Outline 🟡 [v0.5](docs/lore/story-outline.md) | `docs/lore/story-outline.md` | Tóm tắt từng chương, plot point chính | Phase 1 |
 | LR-04 | Script/Hội thoại | `docs/lore/scripts/*.md` | Kịch bản hội thoại theo chương | Phase 2+ |
 | LR-05 | Từ điển thuật ngữ 🟡 [v0.1](docs/lore/glossary.md) | `docs/lore/glossary.md` | Thuật ngữ tiên hiệp thống nhất (VN/EN/ID trong code) | Phase 0 |
 
@@ -1218,33 +1293,33 @@ Phase 6                                                                 ██�
 
 | # | Tài liệu | File | Nội dung chính | Cần trước |
 |---|----------|------|----------------|-----------|
-| TD-01 | **Technical Design Doc (TDD)** 🟡 [v0.1](docs/tech/00-tdd.md) | `docs/tech/00-tdd.md` | Kiến trúc tổng, lựa chọn công nghệ, lý do | Phase 0 |
-| TD-02 | **Network Protocol** 🟡 [v0.1](docs/tech/01-network.md) | `docs/tech/01-network.md` | Message, tick, snapshot, prediction, lag compensation | Phase 0 |
-| TD-03 | Database Schema 🟡 [v0.1](docs/tech/02-database.md) | `docs/tech/02-database.md` | ERD, bảng, index, chiến lược lưu trạng thái | Phase 1 |
-| TD-04 | API Spec | `docs/tech/03-api.md` (+ OpenAPI) | Endpoint REST | Phase 2 |
-| TD-05 | Client Architecture | `docs/tech/04-client.md` | ECS, scene management, asset loading, UI | Phase 1 |
-| TD-06 | Game Server Architecture | `docs/tech/05-game-server.md` | Tick loop, `MapInstance`/instance, AOI, AI, persistence | Phase 1 |
-| TD-07 | Gamedata Format 🟡 [v0.1](docs/tech/06-gamedata.md) | `docs/tech/06-gamedata.md` | Schema JSON của data, quy trình export/validate | Phase 1 |
-| TD-08 | Bảo mật & Chống hack | `docs/tech/07-security.md` | Mô hình đe dọa, biện pháp | Phase 2 |
-| TD-09 | Hạ tầng & Vận hành | `docs/tech/08-infra-ops.md` | Deploy, monitoring, backup, runbook sự cố | Phase 4 |
-| TD-10 | Coding Conventions | `docs/tech/09-conventions.md` | Quy tắc code TS/Java, git flow, review | Phase 0 |
-| TD-11 | Performance Budget | `docs/tech/10-performance.md` | Ngân sách FPS, draw call, bộ nhớ, dung lượng tải | Phase 1 |
-| TD-12 | **World & Map Architecture** 🟡 [v0.1](docs/tech/11-world-maps.md) | `docs/tech/11-world-maps.md` | `MapInstance`, kênh, World Directory, handoff chuyển bản đồ, World Clock, preload phía client | Phase 0 |
-| TD-13 | **Map Format & Map Editor** 🟡 [v0.1](docs/tech/12-map-editor.md) | `docs/tech/12-map-editor.md` | Định dạng dữ liệu bản đồ (hiển thị + logic), tính năng editor, quy trình xuất | Phase 1 |
-| TD-14 | Geometry 2D & Collision 🟡 [v0.1](docs/tech/13-geom2d.md) | `docs/tech/13-geom2d.md` | Hình học dùng chung client/server, lưới đi được, tìm đường, bộ test chung | Phase 0 |
-| TD-15 | **OSS Register & License Policy** | `docs/tech/14-oss-register.md` | Danh sách thư viện / asset bên thứ ba, license, người duyệt; chính sách 5.7.4 | Phase 0 |
+| TD-01 | **Technical Design Doc (TDD)** 🟡 [v0.8](docs/tech/00-tdd.md) | `docs/tech/00-tdd.md` | Kiến trúc tổng, lựa chọn công nghệ, lý do | Phase 0 |
+| TD-02 | **Network Protocol** 🟡 [v0.7](docs/tech/01-network.md) | `docs/tech/01-network.md` | Message, tick, snapshot, prediction, lag compensation | Phase 0 |
+| TD-03 | Database Schema 🟡 [v0.6](docs/tech/02-database.md) | `docs/tech/02-database.md` | ERD, bảng, index, chiến lược lưu trạng thái | Phase 1 |
+| TD-04 | API Spec 🟡 [v0.5](docs/tech/03-api.md) | `docs/tech/03-api.md` (+ OpenAPI) | Endpoint REST | Phase 2 |
+| TD-05 | Client Architecture 🟡 [v0.4](docs/tech/04-client.md) | `docs/tech/04-client.md` | ECS, scene management, asset loading, UI; **lớp đầu vào trừu tượng, lớp nền tảng (web / Capacitor), UI co giãn, mức chất lượng đồ họa** (§5.8, TD-01 §18) | Phase 1 |
+| TD-06 | Game Server Architecture 🟡 [v0.3](docs/tech/05-game-server.md) | `docs/tech/05-game-server.md` | Tick loop, `MapInstance`/instance, AOI, AI, persistence | Phase 1 |
+| TD-07 | Gamedata Format 🟡 [v0.11](docs/tech/06-gamedata.md) | `docs/tech/06-gamedata.md` | Schema JSON của data, quy trình export/validate | Phase 1 |
+| TD-08 | Bảo mật & Chống hack 🟡 [v0.3](docs/tech/07-security.md) | `docs/tech/07-security.md` | Mô hình đe dọa, biện pháp | Phase 2 |
+| TD-09 | Hạ tầng & Vận hành 🟡 [v0.1](docs/tech/08-infra-ops.md) | `docs/tech/08-infra-ops.md` | Deploy, monitoring, backup, runbook sự cố | Phase 4 |
+| TD-10 | Coding Conventions 🟡 [v0.3](docs/tech/09-conventions.md) | `docs/tech/09-conventions.md` | Quy tắc code TS/Java, git flow, review | Phase 0 |
+| TD-11 | Performance Budget 🟡 [v0.4](docs/tech/10-performance.md) | `docs/tech/10-performance.md` | Ngân sách FPS, draw call, bộ nhớ, dung lượng tải | Phase 1 |
+| TD-12 | **World & Map Architecture** 🟡 [v0.4](docs/tech/11-world-maps.md) | `docs/tech/11-world-maps.md` | `MapInstance`, kênh, World Directory, handoff chuyển bản đồ, World Clock, preload phía client | Phase 0 |
+| TD-13 | **Map Format & Map Editor** 🟡 [v0.9](docs/tech/12-map-editor.md) | `docs/tech/12-map-editor.md` | Định dạng dữ liệu bản đồ (hiển thị + logic), tính năng editor, quy trình xuất | Phase 1 |
+| TD-14 | Geometry 2D & Collision 🟡 [v0.3](docs/tech/13-geom2d.md) | `docs/tech/13-geom2d.md` | Hình học dùng chung client/server, lưới đi được, tìm đường, bộ test chung | Phase 0 |
+| TD-15 | **OSS Register & License Policy** 🟡 [v0.5](docs/tech/14-oss-register.md) | `docs/tech/14-oss-register.md` | Danh sách thư viện / asset bên thứ ba, license, người duyệt; chính sách 5.7.4 | Phase 0 |
 
 ### 8.4. Tài liệu Mỹ thuật & Âm thanh
 
 | # | Tài liệu | File | Nội dung chính | Cần trước |
 |---|----------|------|----------------|-----------|
-| AR-01 | **Art Bible** | `docs/art/art-bible.md` | Phong cách, bảng màu, tỷ lệ, ví dụ đúng/sai | Phase 0 |
-| AR-02 | Asset Guidelines | `docs/art/asset-guidelines.md` | Quy chuẩn kỹ thuật: poly, texture, đặt tên, export | Phase 1 |
-| AR-03 | Animation List | `docs/art/animation-list.md` | Danh sách animation cần làm, frame data, ưu tiên | Phase 1 |
-| AR-04 | VFX Guidelines | `docs/art/vfx-guidelines.md` | Màu theo nguyên tố, ngân sách particle | Phase 1 |
-| AR-05 | Asset Tracker | `docs/art/asset-tracker.md` (hoặc Sheet) | Danh sách toàn bộ asset + trạng thái | Phase 1 |
-| AR-06 | **Environment Kits** | `docs/art/environment-kits.md` | Danh sách kit module theo vực, quy chuẩn lắp ghép (grid snap), bảng màu từng vực | Phase 1 |
-| AU-01 | Audio Design | `docs/audio/audio-design.md` | Phong cách nhạc (cổ phong), danh sách SFX | Phase 2 |
+| AR-01 | **Art Bible** 🟡 [v0.2](docs/art/art-bible.md) | `docs/art/art-bible.md` | Phong cách, bảng màu, tỷ lệ, ví dụ đúng/sai | Phase 0 |
+| AR-02 | Asset Guidelines 🟡 [v0.4](docs/art/asset-guidelines.md) | `docs/art/asset-guidelines.md` | Quy chuẩn kỹ thuật: poly, texture, đặt tên, export | Phase 1 |
+| AR-03 | Animation List 🟡 [v0.3](docs/art/animation-list.md) | `docs/art/animation-list.md` | Danh sách animation cần làm, frame data, ưu tiên | Phase 1 |
+| AR-04 | VFX Guidelines 🟡 [v0.3](docs/art/vfx-guidelines.md) | `docs/art/vfx-guidelines.md` | Màu theo nguyên tố, ngân sách particle | Phase 1 |
+| AR-05 | Asset Tracker 🟡 [v0.4](docs/art/asset-tracker.md) | `docs/art/asset-tracker.md` (hoặc Sheet) | Danh sách toàn bộ asset + trạng thái | Phase 1 |
+| AR-06 | **Environment Kits** 🟡 [v0.3](docs/art/environment-kits.md) | `docs/art/environment-kits.md` | Danh sách kit module theo vực, quy chuẩn lắp ghép (grid snap), bảng màu từng vực | Phase 1 |
+| AU-01 | Audio Design 🟡 [v0.2](docs/audio/audio-design.md) | `docs/audio/audio-design.md` | Phong cách nhạc (cổ phong), danh sách SFX | Phase 2 |
 
 ### 8.5. Tài liệu Quản lý dự án
 
@@ -1252,9 +1327,10 @@ Phase 6                                                                 ██�
 |---|----------|------|----------------|
 | PM-01 | **Plan tổng (file này)** | `PLAN.md` | Tổng quan, roadmap |
 | PM-02 | Milestone & Backlog | Jira/Linear/GitHub Projects | Task chi tiết theo sprint |
-| PM-03 | Risk Register | `docs/pm/risks.md` | Danh sách rủi ro cập nhật (mở rộng từ mục 10) |
-| PM-04 | Decision Log | `docs/pm/decisions.md` | Ghi lại các quyết định quan trọng (ADR): ngày, bối cảnh, lựa chọn, lý do |
-| PM-05 | Playtest Reports | `docs/pm/playtests/*.md` | Kết quả mỗi buổi playtest |
+| PM-03 | Risk Register 🟡 [v0.3](docs/pm/risks.md) | `docs/pm/risks.md` | Danh sách rủi ro cập nhật (mở rộng từ mục 10) |
+| PM-04 | Decision Log 🟡 [v0.4](docs/pm/decisions.md) | `docs/pm/decisions.md` | Ghi lại các quyết định quan trọng (ADR): ngày, bối cảnh, lựa chọn, lý do |
+| PM-05 | Playtest Reports 🟡 [v0.2](docs/pm/playtests/README.md) | `docs/pm/playtests/*.md` | Kết quả mỗi buổi playtest |
+| PM-06 | Kế hoạch coding 🟡 [v0.1](docs/pm/coding-plan.md) | `docs/pm/coding-plan.md` | Luồng SH / GS / API / CL / TO, mốc M0–M4, backlog giao việc cho AI |
 
 ### 8.6. Mẫu (template) cho tài liệu hệ thống
 Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
@@ -1312,7 +1388,9 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 | R14 | **Cân bằng thời gian sống khó** (quá ngắn thì nản, quá dài thì mất căng thẳng) | 🟠 TB | Tham số hóa toàn bộ, Balance Simulator, điều chỉnh qua telemetry, playtest dài hạn từ Phase 3 |
 | R15 | **Bot / AFK lợi dụng** cơ chế thời gian & bế quan | 🟡 Thấp-TB | Tuổi chỉ trôi khi hoạt động, bế quan offline có giới hạn, phát hiện hành vi bot |
 | R16 | **Phụ thuộc mã nguồn mở** (thư viện ngừng phát triển, breaking change, vi phạm license) | 🟡 Thấp-TB | Chọn thư viện có cộng đồng; pin version; bọc qua interface nội bộ; OSS Register + kiểm tra license trong CI; không dùng framework game làm nền (D-16) |
-| R17 | **Phụ thuộc fork T5C** (D-19) và **hai ngôn ngữ phía server**: 1 tác giả, chất lượng code chưa rõ | 🟠 TB | Đánh giá kỹ ở Phase 0; fork độc lập; viết test cho phần giữ lại; sẵn sàng viết lại từng module; không phụ thuộc upstream |
+| R17 | **Hai ngôn ngữ phía server** (TS + Java) *(rủi ro "phụ thuộc fork T5C" đã loại bỏ ở D-23)* | 🟡 Thấp-TB | Ranh giới rõ trong TD-01; code chung tối thiểu (TA-R-011) + testvectors; contract-first (TD-04) |
+
+> R18–R23 (PvP, pháp lý, asset AI, thanh toán kho ứng dụng, chi phí hạ tầng, trần Alpha) và trạng thái cập nhật của mọi rủi ro: xem **[PM-03 Risk Register](docs/pm/risks.md)** — nguồn sự thật.
 
 ---
 
@@ -1320,7 +1398,7 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 
 ### 11.1. Quyết định đã chốt (duyệt ngày 2026-10-19)
 
-> Toàn bộ đề xuất trong plan v0.1–v0.3 đã được duyệt. Khi tạo `docs/pm/decisions.md` (PM-04), chuyển bảng này sang đó, mỗi quyết định một mục ADR.
+> Toàn bộ đề xuất trong plan v0.1–v0.3 đã được duyệt. **Nguồn sự thật của quyết định từ 2026-10-25 là [PM-04 Decision Log](docs/pm/decisions.md)**; bảng dưới giữ để tra nhanh — khi lệch, theo PM-04.
 
 | # | Quyết định | Nguồn |
 |---|-----------|-------|
@@ -1329,12 +1407,12 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 | D-03 | **Một mạng + thọ nguyên + luân hồi**; chết thật chỉ ở hiểm địa và thiên kiếp Nguyên Anh+, vùng thường là trọng thương | 4.2 |
 | D-04 | **Thiên phú & xuất thân ngẫu nhiên**, roll lại có giới hạn, thay đổi thiên phú qua sự kiện | 4.3 |
 | D-05 | **Tu luyện dựa trên vật phẩm / đan dược**; tu vi đánh quái có giới hạn, bình cảnh, đan độc | 4.4 |
-| D-06 | Kiến trúc: API Service (Spring MVC) + Game Server, PostgreSQL + Redis; **React** cho UI (Q2). *Sửa bởi D-19:* Game Server dùng Colyseus/TS thay Spring Boot + Netty; Protobuf (Q3) thay bằng `@colyseus/schema` ở kênh realtime | 5 |
+| D-06 | Kiến trúc: API Service (Spring MVC) + Game Server, PostgreSQL + Valkey; **React** cho UI (Q2). *Sửa bởi D-19:* Game Server dùng Colyseus/TS thay Spring Boot + Netty; Protobuf (Q3) thay bằng `@colyseus/schema` ở kênh realtime | 5 |
 | D-07 | **Launch Việt Nam trước, i18n từ đầu** (Q1) | |
 | D-08 | MVP: **preset ngoại hình + đổi màu** (Q5) | |
 | D-09 | **Camera cố định** ở MVP, cân nhắc xoay sau (Q11) | |
 | D-10 | **WASD mặc định**, click-to-move là tùy chọn (Q12) | |
-| D-11 | **1 giờ chơi ≈ 1 năm** (tham số); kiếp đầu mục tiêu **40–80 giờ** (Q16) | 4.2 |
+| D-11 | **1 giờ chơi ≈ 1 năm** (tham số); người chơi trung bình **đạt Trúc Cơ – Kim Đan trong 40–80 giờ chơi** (sửa 2026-10-25 theo GD-03 C1 — độ dài cả kiếp có thể dài hơn; cái chết chủ yếu đến từ mạo hiểm) (Q16) | 4.2, GD-03 |
 | D-12 | **1 nhân vật sống / tài khoản / server**, mở thêm ô bằng Luân Hồi (Q17) | |
 | D-13 | **Bảo hộ tân thủ** kiếp đầu: không chết thật trước Trúc Cơ (Q18) | |
 | D-14 | **Fog of war giữ qua kiếp**, cơ duyên reset (Q19) | |
@@ -1342,15 +1420,22 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 | D-16 | **Không dùng RPG-JS làm nền tảng**; dùng thư viện mã nguồn mở theo chiến lược 5.7 | 5.7 |
 | D-17 | **Không bán bằng tiền thật** bất cứ thứ gì giảm rủi ro chết / kéo dài thọ nguyên; cosmetic gắn tài khoản | 2.4, 4.19 |
 | D-18 | Team: thêm **Content Designer**, 3D artist low-poly; roadmap ~15–17 tháng tới Open Beta | 3, 7 |
-| D-19 | **Kiến trúc lai** (duyệt 2026-10-22): client + Game Server realtime bằng TypeScript (Colyseus, fork T5C nếu qua đánh giá Phase 0), code mô phỏng dùng chung `shared/sim`; **Spring Boot là nguồn sự thật** (kinh tế, ledger, một mạng, RNG quan trọng); PostgreSQL + Redis | 5.1–5.5, 5.7.7 |
+| D-19 | **Kiến trúc lai** (duyệt 2026-10-22): client + Game Server realtime bằng TypeScript (Colyseus, **dựng mới — D-23**), code mô phỏng dùng chung `shared/sim`; **Spring Boot là nguồn sự thật** (kinh tế, ledger, một mạng, RNG quan trọng); PostgreSQL + Valkey | 5.1–5.5, 5.7.7 |
 | D-20 | **Chết không mất trắng** (2026-10-23): đồ mang theo rớt; kho đồ / thư / đấu giá **phong ấn** vào Di Tàng theo tầng cảnh giới, kiếp sau đánh bại **tàn hồn của chính mình** để lấy lại (tiêu tán nếu kiếp sau cũng kết thúc trước khi lấy); động phủ phong ấn, mở bằng **thú canh cửa** | 4.2, GD-26 §5.15 |
 | D-21 | **PvP dã ngoại có kiểm soát** (2026-10-23, thay nguyên tắc "không open-world PvP" §2.4): chế độ PK (Hòa bình / Tông môn / Sát lục), **không miễn theo cảnh giới** (v0.2), vùng an toàn + hiểm địa không PvP, giết người yếu hơn nhiều mang sát nghiệp ×3; chết PvP = trọng thương, người vô tội không mất thọ / tu vi; sát nghiệp → tên đỏ → NPC Chấp Pháp truy sát (đánh bại được nhưng rất khó, có thưởng; giết Chấp Pháp → Đại ác nhân + Thiên Đạo Hóa Thân truy sát), chết giảm sát nghiệp; Huyết thù; truy nã; cờ server `pvpEnabled` | 2.4, GD-32 |
+| D-22 | **Giữ 3D phong cách hóa + Babylon.js** (2026-10-25): không đổi sang Godot / 2D isometric; mỹ thuật **ưu tiên AI** (TRELLIS.2 → Blender → bộ xương chung); **đa nền tảng cùng codebase** (web → PWA → Capacitor); backend không đổi vì logic vẫn trên mặt phẳng 2D | 5.8, 6.1, 6.6, 6.7 |
+| D-23 | **Dựng mới, không fork T5C** (2026-10-25): giữ kiến trúc lai D-19; khung xuất phát từ starter chính thức (`create-colyseus-app`, Vite + Babylon.js) dựng đúng TD-05 / 06 / 10; T5C (MIT) chỉ tham khảo và mượn từng phần có ghi công | 5.7.6–5.7.8 |
+| D-24 | **Valkey thay Redis** (2026-10-25): BSD-3, tương thích giao thức Redis, đủ mọi tính năng dùng (Streams, pub/sub, sorted set, `SET NX`); tên khóa / lệnh không đổi | 5.1, 5.3, TD-15 OSS-Q-1 |
+| D-25 | **Trần cảnh giới theo phase** (2026-10-25): Alpha và Beta 1 dừng ở **TC4**; **Kết Kim Đan ra ở Beta 2 cùng Vực 2** (sửa GD-03 C2 / LOOP-Q-2 vốn ghi Beta 1) | 7, GD-03, GD-04, GD-10 |
+| D-26 | **Mobile lúc launch: "chạy được, chưa tối ưu"** (2026-10-25): trình duyệt điện thoại dùng được với điều khiển cảm ứng, điểm ngắt màn hình, vùng chạm 44px (TD-05, GD-24); bố cục HUD điện thoại đầy đủ, PWA, Capacitor làm sau launch (GD-17) | 5.8, GD-17, GD-24, TD-05 |
+| D-27 | **Mạch truyện lớn** (2026-10-25): phản diện chính Đoạn Thiên Minh Chủ (tàn niệm bị phong ấn); Lão Mù giữ Tàng Bảo Các là chân linh mang dấu ấn canh giữ qua nhiều đời; Luân Hồi Đài do "hai người đồng tâm" dựng | LR-01, LR-02, LR-03 |
+| D-28 | **Asset do team bổ sung** (2026-10-25): tài liệu chỉ liệt kê yêu cầu asset + quy chuẩn; công cụ / nguồn sinh asset (TRELLIS.2 bản dùng thử, Mixamo, mua, vẽ tay…) do team tự chọn; asset phát hành cần hồ sơ nguồn gốc + license thương mại | 6.6, TD-15 OSS-Q-5, AR-02..06 |
 
 ### 11.2. Đề xuất chờ duyệt
 *(Không còn đề xuất chờ duyệt.)*
 
 ### 11.3. Chốt bằng mẫu / playtest
-- [ ] **Q13:** Tỷ lệ nhân vật (chuẩn hay chibi nhẹ): chốt bằng mẫu phong cách ở Phase 0.
+- [ ] **Q13** (= [AR-01 ART-Q-1](docs/art/art-bible.md)): Tỷ lệ nhân vật (chuẩn hay chibi nhẹ): chốt bằng mẫu phong cách ở Phase 0.
 - [ ] **Q15:** Kích thước bản đồ chuẩn (250m hay 400m): chốt sau playtest bản đồ đầu tiên ở Phase 1.
 - [ ] **Q22:** Map editor: mở rộng Babylon.js Editor hay tự viết: chốt sau đánh giá Phase 0 (tiêu chí spike: TD-13 MF-R-031; yêu cầu editor TD-13 §5.1).
 - [ ] **Q23:** Ink + inkjs chạy trên game server có đáp ứng cơ duyên (tag trên lựa chọn, lưu / khôi phục trạng thái) không: chốt sau đánh giá Phase 0.
@@ -1360,7 +1445,7 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 - [ ] **Q7:** Hỗ trợ tay cầm (gamepad) ở MVP không?
 - [x] **Q8:** *(Tạm: game **Tiên Lộ**, thế giới **Huyền Hoang Giới** — 2026-10-23; chốt chính thức trước marketing.)* Tên chính thức của game và thế giới.
 - [x] **Q9:** *(Đã chốt: **có**, Beta 2 — GD-28 §5.12.)* Ma Vực (hiểm địa PvP, một mạng).
-- [ ] **Q10:** Nhà cung cấp cloud / ngân sách hạ tầng hằng tháng.
+- [ ] **Q10:** Nhà cung cấp cloud / ngân sách hạ tầng hằng tháng (tiêu chí chọn + ước tính chi phí: [TD-09 §2.4, §9](docs/tech/08-infra-ops.md)).
 - [x] **Q14:** *(Đã chốt: **không** giới hạn — ai cũng có cơ hội; GD-22 ENC-Q-1.)* Cơ duyên hiếm có giới hạn toàn server không?
 - [x] **Q20:** *(Đã chốt: **không** mở server hòa bình / theo mùa song song ở launch — GD-32 PK-Q-1.)* Có server theo mùa song song không?
 - [x] **Q21:** *(Đã chốt: **có** — chỉ trong thiên kiếp lethal, ×0,9, ưu đãi như tọa hóa; GD-26 §5.16.)* Binh giải.
@@ -1413,6 +1498,22 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 | v0.40 | 2026-10-23 | — | **Chốt loạt câu hỏi tổng quan:** giãn roadmap 15–17 → **21–22 tháng**, Beta chia 5a / 5b; tên tạm **Tiên Lộ** / thế giới **Huyền Hoang Giới** (battle pass đổi tên Vấn Đạo Lệnh); không server hòa bình; `V1_F01` không PvP; **Ma Vực** ở Beta 2; không cơ duyên độc nhất toàn server; **binh giải** (GD-26 §5.16); bế quan offline 10 năm / lần, 1 lần / ngày; phí giải ấn Di Tàng; **GD-05 gộp vào GD-06/07**; đồng bộ bảng cảnh giới (chế công pháp ở Trúc Cơ), §4.13 kinh tế (Di Tàng), bảng phạm vi (thêm Di Tàng, ký ức nghề, ba tông, danh vọng phe, Ma Vực) |
 | v0.41 | 2026-10-23 | — | Viết **TD-03 Database Schema** v0.1 (`docs/tech/02-database.md`): quy ước, phạm vi dữ liệu + **ma trận giữ qua kiếp**, sổ đăng ký ~120 bảng, DDL bảng lõi (account, `character` gộp cột, platform, world, danh vọng, gói phúc lợi, PvP), phân vùng / hạn lưu, thứ tự khóa, migration, khóa Redis; PLAN §5.4 thay bằng tham chiếu; sửa khóa `npc_sect_membership` (GD-14), thêm `seal_band` (GD-09), module `beast` / `pvp` (TD-01) |
 | v0.42 | 2026-10-23 | — | Viết **TD-12 World & Map Architecture** v0.1 (room mở / instance, đặt room theo tải, chọn / mở / gộp kênh, máy trạng thái chuyển bản đồ < 2s, instance, World Clock & Weather tất định, fog gộp OR, drain) và **TD-13 Map Format & Map Editor** v0.1 (`MapDef`, 18 loại POI, yêu cầu editor độc lập Q22, pipeline build, 12 validator, ngân sách bản đồ; chốt DT-Q-4); đồng bộ GD-21, TD-02, TD-07, glossary |
+| v0.43 | 2026-10-25 | — | **D-22:** giữ 3D phong cách hóa + Babylon.js (đánh giá Godot / 2D isometric); thêm §5.8 **Đa nền tảng** (web → PWA → Capacitor, 4 chuẩn bị bắt buộc), §6.6 **Quy trình mỹ thuật ưu tiên AI** (TRELLIS.2, mô hình vẽ ảnh, Blender, Mixamo; license, người duyệt, pháp lý), §6.7 **Chiến lược tiết kiệm chi phí mỹ thuật**; spike pipeline AI ở Phase 0; công cụ mới vào §5.7.2; ghi chú cho GD-24 (cảm ứng), GD-19 (thanh toán kho ứng dụng), TD-05; sửa §6.4 lỗi thời (Ink chạy bằng inkjs, gamedata theo TD-07) |
+| v0.44 | 2026-10-25 | — | Viết bộ tài liệu kỹ thuật cho AI code: **TD-04 API Spec** (≈190 endpoint, 36 mã lỗi, contract-first), **TD-05 Client Architecture** (bitECS, IntentFrame, render toon / thủy mặc, preset), **TD-06 Game Server Architecture** (22 system, thứ tự tick, khuôn mẫu system / handler), **TD-08 Bảo mật & Chống gian lận**, **TD-10 Coding Conventions & Quy trình code bằng AI**, **TD-15 OSS Register**; đồng bộ TD-01/02/03/07/14, GD-04/07/08/09/10/11/12/13/14/25/26/28/32 (đường dẫn API chuẩn TD-04, mã lý do `GATHERED`, bảo mật), tên gói `@tienlo/*`, pentest trước Beta 1 / Open Beta |
+| v0.45 | 2026-10-25 | — | **D-23:** không fork T5C — dựng mới bằng starter chính thức theo TD-05 / 06 / 10, T5C chỉ tham khảo (lý do: kiến trúc khác spec, code bằng AI theo spec, 1 tác giả); cập nhật §5.3, §5.5, §5.7.3, §5.7.7, §5.7.8, Phase 0, R17, D-19, bước tiếp theo; TD-01 (TA-Q-1), TD-08, TD-15 |
+| v0.46 | 2026-10-25 | — | **D-24 Valkey thay Redis** (chốt OSS-Q-1): đổi tên trong PLAN, AGENTS.md, glossary, TD-01/02/03/04/06/08/10/12/15, GD-14, GD-21 (tên thư viện Colyseus Redis driver / Spring Data Redis giữ nguyên); Phase 0 thêm kiểm tra Colyseus + Valkey |
+| v0.47 | 2026-10-25 | — | Viết **TD-09 Hạ tầng & Vận hành**, **TD-11 Performance Budget** (nguồn duy nhất cho ngân sách), **GD-19 Monetization** (danh mục được phép / cấm, Vấn Đạo Lệnh, không cosmetic ngẫu nhiên ở launch, thanh toán web / IAP), **GD-24 Camera & Điều khiển** (sơ đồ phím chuẩn, hỗ trợ ngắm, cảm ứng, tay cầm, trợ năng); thống nhất số: 400 người / tiến trình, 2.000–2.500 CCU / máy, ngân sách bản đồ; phím linh thú đổi `Y` / `U` / `X`; mở rộng túi 20 + 20; on-call / status page (Phase 4), diễn tập DR (Phase 5b); đồng bộ TD-01/03/04/05/07/12/13, GD-07/09/10/12/13/14/15/25/26/29 |
+| v0.48 | 2026-10-25 | — | Đợt 1 tài liệu còn lại: **GD-03 Core Loop & Progression** (đường cong chuẩn + 6 mâu thuẫn số liệu C1–C6 chờ quyết định), **GD-23 Sự kiện thế giới** (lịch tất định, thưởng theo đóng góp, world boss thu phục top 3 / kênh), **GD-20 Telemetry & KPI** (≈150 sự kiện chuẩn, KPI một mạng, chính sách A/B), **GD-31 Ngự kiếm phi hành** (phím `N`, cờ `fly`, vùng `NO_FLY`), **LR-01 World Bible** (luật lore, lý giải luân hồi, ba tông, chương 1); đồng bộ TD-01/02/03/04/06/07/13/14, GD-04/06/09/12/15/19/21/24/25/32, trỏ telemetry chuẩn ở mọi GD, glossary §25 |
+| v0.49 | 2026-10-25 | — | Chốt mâu thuẫn GD-03: **D-11** sửa thành "đạt Trúc Cơ – Kim Đan trong 40–80 giờ" (C1); **trần Alpha = TC4**, Kim Đan + Thiên Kiếp ở Beta 1 (C2); tỷ trọng tu vi GD-04 chỉnh theo thực tế (C3–C5); đan phương Trúc Cơ ở Tạp Hóa 2.000 (C6) |
+| v0.50 | 2026-10-25 | — | Đợt tài liệu 2: **GD-01** Concept, **GD-02** GDD index, **GD-17** UI/UX, **GD-18** Onboarding, **AR-01** Art Bible, **AR-02** Asset Guidelines, **AU-01** Audio, **PM-03** Risk Register, **PM-04** Decision Log (nguồn sự thật cho quyết định / rủi ro); tên thế giới thống nhất *Huyền Hoang Giới / Huyền Hoang Đại Lục*; đồng bộ chéo (GD-22 `scripted`, GD-20 `ob_*`, TD-07 domain `onboarding`, TD-11 PERF-R-031 âm thanh, TD-13 `collisionTemplate` theo AR-02) |
+| v0.51 | 2026-10-25 | — | Đợt tài liệu 3: **AR-03** Animation List (206 clip), **AR-04** VFX, **AR-05** Asset Tracker, **AR-06** Environment Kits, **LR-02** Nhân vật, **LR-03** Story Outline, **PM-05** Playtest; §4.1 bảng chương + §2.2 tên vực theo LR-01 / LR-03 (bỏ "ma tộc", "Vạn Thú Sơn", "Huyết Sa"); đồng bộ chéo (TD-07 domain `vfx` + quy ước `NPC_`, AR-02 `ROOTED` / combo, TD-13 = TD-11 300k, GD-15 `JOIN_NPC_SECT`, LR-01 Đại Đế hạ 10 Hóa Thân) |
+| v0.52 | 2026-10-25 | — | **D-25** trần TC4 cho Alpha + Beta 1, Kết Kim Đan ở Beta 2 cùng Vực 2 (sửa mâu thuẫn Phase 3 ↔ 5b); **D-26** mobile lúc launch "chạy được, chưa tối ưu" (§5.8); **D-27** duyệt mạch truyện lớn (LR-01/02/03) |
+| v0.53 | 2026-10-25 | — | **Đợt rà nhất quán:** VFX ↔ kỹ năng (`SkillDef.vfx`, `PlayerPublic.elementAffinity`, `vfxTemplateId` / `paletteId` / `vfxOverlayId`), `ST_CHARMED`, khóa `reactionSec`; hex 8 hệ + bảng màu telegraph; NPC giao nhiệm vụ chương 1, NPC lãnh đạo ba tông, danh bạ tên LR-01; mọi xuất thân bắt đầu ở `V1_F01`; `SPIRIT_RAIN`; Linh Thú Viên (5 công trình động phủ); thiên kiếp sức chứa 1; TD-15 kiểm license (TRELLIS.2 có phụ thuộc phi thương mại; FLUX.1 schnell / SDXL / Mixamo chờ ký); `art:check`, `docs:check`; vũ khí thứ 2 = quạt |
+| v0.54 | 2026-10-25 | — | **D-28** asset do team bổ sung, tài liệu chỉ liệt kê yêu cầu (§6.6, đóng OSS-Q-5); GD-15 chốt QS-Q-6 nhiệm vụ theo nhánh tông (QS-R-053..055); xác nhận mọi xuất thân bắt đầu ở `V1_F01`, Lâm Thanh Phong ngoại môn, "Tĩnh Tâm Lão Nhân" |
+| v0.55 | 2026-10-25 | — | **PM-06 Kế hoạch coding**: đánh giá sẵn sàng (đủ cho Phase 0–2; thiếu tệp máy đọc — contracts, gamedata, events — sinh ở M0), chia 5 luồng, mốc M0–M4, backlog M0–M1 |
+| v0.56 | 2026-10-25 | — | **GD-16 Level Design**: index + template (`docs/design/30-levels/README.md`) và bản đồ đầu tiên `V1_F01` (bố cục, POI, spawn, thu thập, luồng onboarding, checklist mật độ, `MapDef` mẫu) |
+| v0.57 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: F01 nối F03 qua biên Nam; Nguyệt Quang mọc ở F01 (ban đêm); người mới chưa kích hoạt truyền tống trận hồi sinh ở miếu F01 (LC-R-061); S2 nhập tông lấy Trận Thử Tâm làm đường chính; `PoiKind.ENCOUNTER_POINT`; spawn theo khu dùng `SP_*` (TD-13 theo GD-12); Lâm Thanh Phong cố định ở HUB, thêm NPC Nghiêm Bá, A Huỳnh; loại sự kiện chiến đấu khỏi F01; glossary sửa `PoiKind` / `MapDef.type` theo TD-13 |
+| v0.58 | 2026-10-25 | — | Chốt kết nối Vực 1 (GD-21 OW-6): vòng HUB–F01–F03–F04–F02–HUB, nhánh F04–F05–F06 → Vực 2; Lâm Thanh Phong chủ trì Trận Thử Tâm (`QuestStep.dialogueNpcId`, GD-15 QS-R-056) |
 
 
 
@@ -1425,6 +1526,5 @@ Mỗi doc hệ thống (GD-04 → GD-15) nên theo cấu trúc:
 2. Viết song song: **GD-26 Vòng đời nhân vật** (nền tảng nhất), **GD-01 Concept Doc**, **GD-24 Camera & Điều khiển**, **LR-01 World Bible** (kèm bản đồ đại lục), **TD-01 TDD**, **TD-12 World & Map Architecture**, **AR-01 Art Bible**.
 3. Làm **prototype giấy vòng đời một mạng** để kiểm chứng sớm cảm giác roll thiên phú, cơ duyên, đột phá, cái chết.
 4. Artist làm **mẫu phong cách** (1 nhân vật + 1 góc môi trường + 1 VFX) ở đúng góc camera, để chốt Q13.
-5. Dev **đánh giá T5C trước** (3–5 ngày) để quyết định fork hay dựng từ đầu trên Colyseus (D-19), vì kết quả quyết định cách làm các spike còn lại (camera 2.5D, netcode skillshot, va chạm 2D, Babylon.js Editor, Ink, recast).
+5. Dev **dựng repo mới** theo TD-10 bằng starter chính thức (D-23), đọc T5C 1–2 ngày để ghi các phần đáng mượn; làm trước các spike còn lại (camera 2.5D, netcode skillshot, va chạm 2D, Babylon.js Editor, Ink, recast).
 6. Trả lời các câu hỏi còn mở ở 11.4, ưu tiên **Q10** (ngân sách hạ tầng).
-

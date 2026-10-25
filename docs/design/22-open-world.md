@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-21 |
 | Owner | Content Designer |
-| Trạng thái | 🟡 Bản nháp v0.4 |
+| Trạng thái | 🟡 Bản nháp v0.10 |
 | Cần trước | Phase 1 |
 | Liên quan | [PLAN.md](../../PLAN.md) §2.2, §4.6, §4.7 · GD-16 Level Design · GD-22 Cơ duyên · GD-23 Sự kiện thế giới · GD-26 Vòng đời nhân vật · GD-28 Hiểm địa · TD-12 World & Map Architecture · TD-13 Map Format |
 
@@ -32,7 +32,7 @@
 ## 2. Tổng quan
 
 ```
-ĐẠI LỤC (Thiên Huyền Giới)
+HUYỀN HOANG ĐẠI LỤC (Huyền Hoang Giới)
  └── VỰC (region)          = 1 chương cốt truyện, 1 dải cảnh giới, 6–9 bản đồ
       └── BẢN ĐỒ (map)     = 1 MapInstance trên server (× N kênh), 250–400m
            └── KHU (area)  = 5–8 khu con theo chủ đề, mỗi khu ~50–100m
@@ -82,22 +82,37 @@ Bốn lớp hệ thống chạy trên khung đó:
 **Dải cảnh giới:** Luyện Khí 1 → Trúc Cơ sơ kỳ. **Chủ đề:** núi rừng thanh tú, thôn trấn phàm nhân, dấu tích cổ chiến trường ở rìa phía bắc.
 
 ```
-                 [F05 Lạc Hà Cốc]────────[F06 Cổ Chiến Nguyên]══► Cổng Vực 2 (Trúc Cơ)
-                   │  ◆BC02                │  ◆BC03   ☠HD02
-                   │                       │
- [F01 Thanh Trúc Lâm]──[HUB Thanh Vân Trấn]──[F02 Bích Thủy Hà Bạn]
-                   │                       │
-                   │                       │
-                 [F03 Hoang Thạch Khoáng]──[F04 Vụ Ẩn Trạch]
-                      ◆BC01                   ☠HD01
+                      [F05 Lạc Hà Cốc]────────[F06 Cổ Chiến Nguyên]══► Cổng Vực 2 (Trúc Cơ)
+                              │  ◆BC02              │  ◆BC03   ☠HD02
+                              │                     │
+[F01 Thanh Trúc Lâm]──[HUB Thanh Vân Trấn]──[F02 Bích Thủy Hà Bạn]
+     │ biên Nam F01 (s_f03)                         │
+     │                                              │
+[F03 Hoang Thạch Khoáng]────────────────────[F04 Vụ Ẩn Trạch]
+     ◆BC01                                          ☠HD01
 
-  ── biên nối      ══ cổng vực (khóa cảnh giới)      ◆ bí cảnh      ☠ hiểm địa
+  ── │ biên nối      ══ cổng vực (khóa cảnh giới)      ◆ bí cảnh      ☠ hiểm địa
 ```
+
+**Kết nối đã chốt** (cặp nối hai chiều; chốt toàn bộ Vực 1 ngày 2026-10-25 — OW-6):
+
+| Cặp | Đoạn nối |
+|-----|----------|
+| `V1_F01` ↔ `V1_HUB` | Biên Đông `V1_F01` (`e_hub`) ↔ biên Tây `V1_HUB` (`w_f01`) — TD-13 §8 |
+| `V1_F01` ↔ `V1_F03` | Biên **Nam** `V1_F01` (`s_f03`) ↔ biên Bắc `V1_F03` (`n_f01`) — chốt 2026-10-25 (GD-16 `V1_F01` §5.2); `V1_F01` không nối bản đồ nào khác |
+| `V1_HUB` ↔ `V1_F02` | Biên Nam `V1_HUB` (`s_f02`) ↔ biên Bắc `V1_F02` (`n_hub`) — chốt 2026-10-25 (OW-6) |
+| `V1_F03` ↔ `V1_F04` | Biên Nam `V1_F03` (`s_f04`) ↔ biên Bắc `V1_F04` (`n_f03`) — chốt 2026-10-25 |
+| `V1_F02` ↔ `V1_F04` | Biên Tây `V1_F02` (`w_f04`) ↔ biên Đông `V1_F04` (`e_f02`) — chốt 2026-10-25 |
+| `V1_F04` ↔ `V1_F05` | Biên Nam `V1_F04` (`s_f05`) ↔ biên Bắc `V1_F05` (`n_f04`) — chốt 2026-10-25 |
+| `V1_F05` ↔ `V1_F06` | Biên Nam `V1_F05` (`s_f06`) ↔ biên Bắc `V1_F06` (`n_f05`) — chốt 2026-10-25 |
+| `V1_F06` → Vực 2 | `REGION_GATE` (mở sau Trúc Cơ, Beta 2 — D-25); miễn quy tắc 3 |
+
+> **Đồ thị Vực 1 (chốt OW-6):** vòng kín **HUB–F01–F03–F04–F02–HUB**; nhánh **F04–F05–F06 → Vực 2**. Số kết nối: F01 2 · F02 2 · F03 2 · F04 3 · F05 2 · F06 2 (gồm cổng vực) — đạt quy tắc 1. Chênh tầng cảnh giới thấp nhất giữa hai bản đồ kề ≤ 2 — đạt quy tắc 3. Hướng biên và tên đoạn nối (`{hướng}_{bản đồ kề}`) là tạm, chốt vị trí cụ thể khi viết GD-16 của từng bản đồ.
 
 | ID | Tên | Cảnh giới | Chủ đề / Đặc sản | Nội dung đặc biệt |
 |----|-----|-----------|------------------|-------------------|
-| `V1_HUB` | Thanh Vân Trấn | — | Thị trấn chân núi, cổng Thanh Vân Tông | Đan phòng, lò rèn, sàn giao dịch, Khâm Thiên Đài (dự báo thời tiết), truyền tống trận trung tâm |
-| `V1_F01` | Thanh Trúc Lâm | LK 1–3 | Rừng trúc; linh thảo cơ bản | Bản đồ hướng dẫn; mật độ quái thấp; 1 linh mạch nhỏ |
+| `V1_HUB` | Thanh Vân Trấn | — | Thị trấn chân núi, cổng Thanh Vân Tông | Đan phòng, lò rèn, sàn giao dịch, Khâm Thiên Đài (dự báo thời tiết), truyền tống trận trung tâm; **phân đường Chấp Pháp Đường** (Beta 1): POI `NPC` (TD-13 §4) `npcId: NPC_V1_ENFORCER_CHIEF`, `role: QUEST` (nhiệm vụ Sám hối, GD-32 PK-R-031) đặt cạnh **Bảng Truy Nã** (POI `NPC`, `role: BOUNTY_BOARD`, PK-R-052) — LR-02 CHR-NPC-035 |
+| `V1_F01` | Thanh Trúc Lâm | LK 1–3 | Rừng trúc; linh thảo cơ bản; **không PvP** (lore: Trúc Thần che chở — LR-01) | Bản đồ hướng dẫn; mật độ quái thấp; 1 linh mạch nhỏ |
 | `V1_F02` | Bích Thủy Hà Bạn | LK 2–4 | Bờ sông, làng chài; linh thảo hệ Thủy | Linh thảo theo thời tiết mưa; cơ duyên "ngư ông" |
 | `V1_F03` | Hoang Thạch Khoáng | LK 3–5 | Mỏ bỏ hoang; khoáng thạch | Cửa **BC01 Phế Khoáng Động** (solo) |
 | `V1_F04` | Vụ Ẩn Trạch | LK 4–6 | Đầm lầy **luôn có sương**; linh thảo độc | Cửa **HD01 Vạn Độc Đầm** (hiểm địa nhất giai, LK 5+) |
@@ -120,7 +135,7 @@ Bốn lớp hệ thống chạy trên khung đó:
 
 **Quy tắc thiết kế đồ thị (bắt buộc với mọi vực):**
 1. Mỗi bản đồ dã ngoại có **2–4 kết nối** với bản đồ khác (không tính truyền tống trận).
-2. Đồ thị của vực có **ít nhất 1 vòng kín** để người chơi không phải quay lại đường cũ (Vực 1: HUB–F02–F04–F03 hoặc HUB–F05–F06–F02).
+2. Đồ thị của vực có **ít nhất 1 vòng kín** để người chơi không phải quay lại đường cũ (Vực 1: HUB–F01–F03–F04–F02–HUB — chốt OW-6).
 3. **Chênh lệch cảnh giới** giữa hai bản đồ kề nhau ≤ 2 tầng nhỏ, trừ cổng vực.
 4. Từ **bất kỳ điểm đi được nào**, chạy tới truyền tống trận gần nhất mất ≤ 90 giây.
 5. Mỗi điểm vào bản đồ có **vùng đệm an toàn bán kính 20m**: không spawn quái, quái không đuổi vào.
@@ -289,7 +304,7 @@ Bộ bách khoa về thế giới, **gắn với tài khoản và giữ qua mọ
 | Giông bão (lôi bạo) | 7% | Công pháp Lôi +15%; cơ duyên hệ Lôi; quái hệ Lôi hoạt động |
 | Sương mù | 8% | Bán kính thần thức −30%; quái phục kích; cơ duyên "lạc lối" |
 | **Linh vũ** (mưa linh khí) | 2% | Hiếm. Toàn vực: đả tọa +25%, linh thảo làm mới nhanh ×2. Thông báo toàn server |
-| Tuyết / Bão cát | 0% | Dành cho các vực sau (Vực 2+, Huyết Sa) |
+| Tuyết / Bão cát | 0% | Dành cho các vực sau (Vực 2+ — Xích Viêm Vực, Hàn Băng Vực theo LR-01) |
 
 **Nguyên tắc:** mức ảnh hưởng nhỏ (±10–15%), đủ để người chơi có lý do lên kế hoạch nhưng không khiến ai thấy bị phạt vì thời tiết.
 
@@ -303,7 +318,7 @@ Bộ bách khoa về thế giới, **gắn với tài khoản và giữ qua mọ
 Linh thảo **thường** (Ẩn cấp 0–1) như cũ: chung, làm mới 5–15 phút. Linh thảo **hiếm** (Ẩn cấp ≥ 2, hoặc phẩm ≥ `BAO`) là **tài nguyên chung của kênh bản đồ** — ai phát hiện và hái trước thì được. "Tranh" bằng **phát hiện, tốc độ, chuẩn bị và sức chiến đấu** (thủ hộ); nếu server bật PvP dã ngoại thì còn bằng đánh nhau, theo luật sát nghiệp ([GD-32](31-pvp-infamy.md)).
 
 - <a id="ow-r-100"></a>**OW-R-100** **Một phiên bản chung mỗi kênh:** mỗi điểm linh thảo hiếm tồn tại một lần trong `MapInstance` (bản đồ × kênh). Hái xong → biến mất với **mọi người** trong kênh đó. (Bỏ quy tắc cũ "hiển thị riêng theo người", §8.)
-- <a id="ow-r-101"></a>**OW-R-101** **Thấy được = đã phát hiện:** linh thảo hiếm vẫn theo Ẩn cấp (§3.7): chỉ người đã phát hiện (mắt trong tầm, hoặc quét với `senseLevel ≥` Ẩn cấp) mới nhận thực thể (TD-02 NW-R-042). Thần thức cao = thấy trước người khác — lợi thế chính đáng của build thần thức.
+- <a id="ow-r-101"></a>**OW-R-101** **Thấy được = đã phát hiện:** linh thảo hiếm vẫn theo Ẩn cấp (§3.7): chỉ người đã phát hiện (mắt trong tầm, hoặc quét với `senseLevel ≥` Ẩn cấp) mới nhận thực thể (TD-02 NW-R-042). Thần thức cao = thấy trước người khác — lợi thế chính đáng của build thần thức. Khi ngự kiếm: bán kính mở fog ×1,5 (36m); không kích hoạt cơ duyên theo di chuyển (GD-31).
 - <a id="ow-r-102"></a>**OW-R-102** **Hái là vận pháp có khóa:** hái linh thảo hiếm vận `rareGatherSec` (4s; thường 1,5s), di chuyển / bị đánh trúng thì hủy. Trong lúc một người đang vận, điểm đó **bị khóa** với người khác (thanh tiến độ hiển thị cho mọi người thấy điểm đó). Hủy → mở khóa ngay; người đó phải chờ `rareGatherRetrySec` (2s) mới thử lại (người khác có thể chen vào — đó là "tranh đoạt"). Nếu server bật PvP (GD-32), người khác có thể đánh ngắt người đang hái — đó là một cách tranh đoạt (theo luật sát nghiệp).
 - <a id="ow-r-103"></a>**OW-R-103** **Thủ hộ:** linh thảo Ẩn cấp ≥ 3 hoặc phẩm ≥ `TIEN` có **thủ hộ linh thú** (nhóm spawn `SG_HERB_GUARDIAN_*`, GD-12): xuất hiện khi người chơi đầu tiên tới trong 8m; điểm **không hái được** khi thủ hộ còn sống trong 15m. Ai cũng đánh được thủ hộ (tính công GD-12 EN-R-100, mỗi người nhận phần thưởng quái của mình). Thủ hộ chết → mở hái cho tất cả; ai vận xong trước thì được.
 - <a id="ow-r-104"></a>**OW-R-104** **Làm mới và di chuyển:** hái xong, điểm đó tắt `rareRespawnMin` (30–90 phút thực, theo phẩm); khi làm mới, server rút **vị trí mới** trong tập ứng viên của nhóm (`rareHerbGroups`, `serverOnly`, GD-29 RF-R-041) và vẫn phải thỏa điều kiện giờ / thời tiết. Không thể "cắm" một chỗ cố định.
@@ -398,29 +413,26 @@ Tất cả tham số nằm trong `shared/gamedata/world/world.json` (toàn cục
 
 ## 7. Yêu cầu kỹ thuật
 
-**Dữ liệu bản đồ** (`shared/maps/{mapId}.json`, xuất từ map editor — định dạng chuẩn ở [TD-13](../tech/12-map-editor.md); vận hành room / kênh / chuyển bản đồ ở [TD-12](../tech/11-world-maps.md); bảng DB ở [TD-03](../tech/02-database.md) §6). Ví dụ rút gọn:
+**Dữ liệu bản đồ** (`shared/maps/{mapId}.json`, xuất từ map editor — định dạng chuẩn ở [TD-13](../tech/12-map-editor.md); vận hành room / kênh / chuyển bản đồ ở [TD-12](../tech/11-world-maps.md); bảng DB ở [TD-03](../tech/02-database.md) §6). Ví dụ rút gọn — **định dạng chuẩn: TD-13 `MapDef` (§3, ví dụ đầy đủ §8)**; khi vênh, TD-13 thắng:
 ```jsonc
 {
-  "id": "V1_F01",
-  "type": "F",
-  "region": "V1",
-  "size": [300, 300],
+  "id": "V1_F01", "type": "F", "region": "V1", "nameKey": "map.v1_f01", "size": [300, 300],
   "realmRange": ["LK1", "LK3"],
-  "areas": [{ "id": "V1_F01_A01", "name": "Trúc Ảnh Kính", "polygon": [...], "spawnTable": "..." }],
-  "connections": [
-    { "type": "seam", "to": "V1_HUB", "segment": [[300, 120], [300, 145]], "arrival": "V1_HUB:west" }
-  ],
-  "safeZones": [{ "center": [290, 132], "radius": 20 }],
+  "flags": { "pvpDisabled": true, "fog": true, "weatherOverride": null },
+  "areas": [{ "id": "V1_F01_A01", "nameKey": "area.v1_f01_a01", "polygon": [...] }],
+  "zones": [{ "id": "z_entry_hub", "kind": "SAFE", "shape": { "circle": { "c": [290, 132], "r": 20 } } }],
+  "connections": [{ "type": "SEAM", "id": "e_hub", "to": "V1_HUB", "toConnectionId": "w_f01", "segment": [[300, 120], [300, 145]] }],
   "pois": [{ "id": "V1_F01_HERB_012", "kind": "HERB", "pos": [55, 210], "hiddenLevel": 1,
-             "conditions": { "phase": ["NIGHT"], "weather": ["RAIN"] } }],      // định dạng đầy đủ: TD-13 §3
-  "secretCandidates": [{ "group": "chest_a", "positions": [[...], [...]] }],
-  "landmark": { "pos": [150, 160] },
-  "weatherOverride": null
+             "conditions": { "phase": ["NIGHT"] }, "props": { "herbId": "ITM_HERB_NGUYET_QUANG", "tier": "LINH" } }],
+  "spawnAreas": [{ "id": "SP_V1_F01_A01", "polygon": [...], "spawnPoints": [[...], [...]] }],   // id = SpawnTable (GD-12)
+  "secretCandidates": [{ "group": "chest_a", "positions": [[...], [...]], "poiTemplate": "CHEST_SMALL_V1" }],
+  "landmark": { "pos": [150, 160] }
+  // các trường bắt buộc khác (ambient, collision, respawnPoints, rareHerbGroups, chunks): TD-13 §3
 }
 ```
 
 **Server:**
-- **World Clock & Weather Service:** một nguồn duy nhất tính canh giờ và thời tiết từng vực, phát qua Redis pub/sub; `MapInstance` chỉ nhận, không tự tính. Khởi động lại server không làm lệch giờ (tính từ epoch + tham số).
+- **World Clock & Weather Service:** một nguồn duy nhất tính canh giờ và thời tiết từng vực, phát qua Valkey pub/sub; `MapInstance` chỉ nhận, không tự tính. Khởi động lại server không làm lệch giờ (tính từ epoch + tham số).
 - **Fog:** tính phía server từ vị trí nhân vật; bitmap giữ trong RAM của `MapInstance`, ghi DB theo `persistSec`.
 - **Lọc thực thể ẩn** trong interest management: chỉ gửi vật thể có `hiddenLevel` > 0 cho người chơi đã phát hiện.
 - **Handoff:** theo TD-12; ticket một lần, TTL 60 giây; kiểm tra combat lock trước khi cấp ticket.
@@ -457,6 +469,8 @@ Tất cả tham số nằm trong `shared/gamedata/world/world.json` (toàn cục
 ---
 
 ## 9. Telemetry cần ghi
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 
 | Sự kiện | Trường chính | Dùng để |
 |---------|-------------|---------|
@@ -504,6 +518,7 @@ Tất cả tham số nằm trong `shared/gamedata/world/world.json` (toàn cục
 - [ ] **OW-3:** Ban đêm có nên giảm nhẹ tầm nhìn (bán kính khám phá fog) để tăng không khí hay giữ nguyên vì khả năng đọc gameplay?
 - [x] **OW-4:** Truyền tống trận có nên miễn phí trong kiếp đầu (bảo hộ tân thủ) không? **→ Đã trả lời ở GD-13 EC-R-023: miễn phí ở kiếp đầu khi cảnh giới < LK4.**
 - [x] **OW-5:** *(Đã chốt 2026-10-23: linh thảo hiếm **hiển thị chung, tranh đoạt** — §3.10: khóa khi đang vận hái, thủ hộ, làm mới đổi vị trí, chống đổi kênh, dị tượng thông báo trong bản đồ.)* Linh thảo hiếm hiển thị riêng theo người có làm giảm cảm giác "thế giới chung" không?
+- [x] **OW-6:** *(Đã chốt 2026-10-25: vòng HUB–F01–F03–F04–F02–HUB, nhánh F04–F05–F06 → Vực 2 — §3.2.)* Các cặp nối còn lại của Vực 1 (ngoài `V1_F01` ↔ `V1_HUB`, `V1_F01` ↔ `V1_F03`) chưa chốt; vòng kín "HUB–F05–F06–F02" ở quy tắc 2 chứa cặp `V1_F06` (LK7–9) ↔ `V1_F02` (LK2–4) chênh > 2 tầng (quy tắc 3, MF-V-07). *Mặc định:* sơ đồ §3.2 là minh họa; mỗi file GD-16 chốt kết nối của bản đồ đó, sửa vòng kín nếu vi phạm quy tắc 3.
 
 ---
 
@@ -511,8 +526,13 @@ Tất cả tham số nằm trong `shared/gamedata/world/world.json` (toàn cục
 
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
+| v0.10 | 2026-10-25 | — | Chốt OW-6: toàn bộ kết nối Vực 1 (vòng HUB–F01–F03–F04–F02–HUB, nhánh F04–F05–F06 → Vực 2) |
+| v0.9 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: §3.2 vẽ lại sơ đồ Vực 1 + bảng kết nối đã chốt — `V1_F01` nối `V1_F03` qua biên Nam (`s_f03` ↔ `n_f01`), vòng kín HUB–F01–F03–F04–F02; OW-6 (cặp nối còn lại, F06 ↔ F02 vướng quy tắc 3); ví dụ §7: `HERB_012` dùng `ITM_HERB_NGUYET_QUANG`, chỉ `NIGHT`; `spawnAreas` theo TD-13 v0.9 (`spawnPoints`, bỏ `spawnGroupIds`) |
+| v0.8 | 2026-10-25 | — | Đợt rà nhất quán: ví dụ JSON §7 sửa theo TD-13 `MapDef` (`SEAM` chữ hoa, `zones` thay `safeZones`, `weatherOverride` trong `flags`, ghi chú định dạng chuẩn); `V1_HUB` thêm POI phân đường Chấp Pháp Đường + Bảng Truy Nã (loại `NPC` có sẵn, LR-02 CHR-Q-8) |
+| v0.7 | 2026-10-25 | — | Tên vực theo LR-01; sửa ví dụ đại lục |
+| v0.6 | 2026-10-25 | — | F01 không PvP (lore); Fog khi bay; Trỏ telemetry chuẩn GD-20 |
+| v0.5 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
 | v0.4 | 2026-10-23 | — | Ví dụ §7 theo định dạng TD-13 (`kind` chữ hoa); trỏ TD-12 / TD-13 / TD-03 |
 | v0.3 | 2026-10-23 | — | OW-R-102 / §3.10: tương tác với PvP dã ngoại (GD-32); vùng an toàn quanh truyền tống trận / lối nối dùng cho PvP |
 | v0.2 | 2026-10-23 | — | Chốt OW-5: **linh thảo hiếm là tài nguyên chung tranh đoạt** (§3.10, OW-R-100..108): khóa vận hái 4s, thủ hộ linh thú, làm mới đổi vị trí, `ST_QI_UNSETTLED` chống đổi kênh, thông báo dị tượng trong bản đồ; message hái; OW-AC-100..107 |
 | v0.1 | 2026-10-19 | — | Bản nháp đầu: cấu trúc thế giới, Vực 1, quy tắc nối bản đồ, chuẩn mật độ, fog of war, Vạn Giới Lục, thần thức quét, ngày/đêm, thời tiết, tham số, kỹ thuật, telemetry, phạm vi |
-

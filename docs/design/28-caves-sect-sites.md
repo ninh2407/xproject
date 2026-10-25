@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-30 · Prefix ID: `HM` |
 | Owner | Game Designer + Content Designer (đặt vị trí) + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.1 |
+| Trạng thái | 🟡 Bản nháp v0.3 |
 | Cần trước | Beta (cùng tông môn tự lập) |
 | Quyết định nền | PLAN D-01, D-02, D-03 · Quyết định 2026-10-22: **tầng 1 + 2** (vị trí trên bản đồ, bên trong là instance; không xây tự do trên bản đồ chung) |
 | Liên quan | [PLAN §4.18](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-21 Open World](22-open-world.md) · [GD-14 Xã hội](20-social.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-10 Luyện đan](16-alchemy.md) · [GD-11 Luyện khí](17-forging.md) · [GD-13 Kinh tế](19-economy.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-22 Cơ duyên](23-encounters.md) · GD-15 Nhiệm vụ · GD-19 Monetization · GD-23 Sự kiện thế giới · TD-12, TD-13 |
@@ -154,7 +154,7 @@ interface SectPrestigeWeek {            // Uy vọng theo tuần
 - <a id="hm-r-022"></a>**HM-R-022** Chủ có thể "Truyền tống về động phủ" từ bất kỳ đâu (không trong chiến đấu, không trong hiểm địa / bí cảnh), vận 5s, hồi chiêu 30 phút, miễn phí; ra khỏi động phủ thì xuất hiện ở cửa động.
 
 ### 5.3. Công trình trong động phủ
-- <a id="hm-r-030"></a>**HM-R-030** Bốn công trình, cấp 0–3, xây / nâng cấp bằng linh thạch + nguyên liệu (§6.2):
+- <a id="hm-r-030"></a>**HM-R-030** Năm công trình (khớp enum `CaveBuilding` §3), cấp 0–3, xây / nâng cấp bằng linh thạch + nguyên liệu (§6.2; Linh Thú Viên theo GD-25 §5.6):
 
 | Công trình | Cấp 1 | Cấp 2 | Cấp 3 | Yêu cầu cảnh giới nhân vật để dùng |
 |------------|-------|-------|-------|-----------------------------------|
@@ -162,6 +162,7 @@ interface SectPrestigeWeek {            // Uy vọng theo tuần
 | **Linh Điền** (`LINH_DIEN`) | 2 ô trồng | 4 ô | 6 ô; trồng được Bách Niên Linh Thảo | LK1 / LK4 / LK7 |
 | **Đan Thất** (`DAN_THAT`) | Trạm `ALCHEMY_STATION` (GD-10) | + thành công +2, phẩm chất +2 | +4 / +4 | — |
 | **Khí Thất** (`KHI_THAT`) | Trạm `FORGE_STATION` (GD-11) | +2 / +2 | +4 / +4 | — |
+| **Linh Thú Viên** (`THU_VIEN`, Beta — cùng linh thú, GD-25 §16) | 4 ô giữ thú, ấp 1, lai tạo ≤ HUYEN | 6 ô, ấp 2, lai tạo ≤ DIA | 8 ô, ấp 3, lai tạo mọi phẩm | Theo GD-25 SB-R-060 (nguồn sự thật của công trình này) |
 
 - <a id="hm-r-031"></a>**HM-R-031** Thưởng của công trình chỉ áp dụng khi nhân vật hiện tại của chủ đạt yêu cầu cảnh giới của **cấp đó**; chưa đạt thì dùng hiệu ứng của cấp cao nhất đã đạt yêu cầu. (Kiếp mới không hưởng ngay toàn bộ lợi thế của kiếp trước.)
 - <a id="hm-r-032"></a>**HM-R-032** **Linh Điền:** gieo hạt giống (`SeedDef`) vào ô trống; cây lớn theo **thời gian thực** (kể cả offline); `readyAt = plantedAt + growHours`. Thu hoạch: `randInt(yield)` linh thảo vào `BAG` (`HARVEST`); cây chín không héo. Vật phẩm `dangerZoneExclusive` (Ngưng Cơ Thảo...) **không có hạt giống** (giữ giá trị hiểm địa, GD-28).
@@ -241,6 +242,7 @@ Ví dụ: Tĩnh Thất cấp 3, cửa động phẩm 3 → `min(1 + 0,10 + 0,10,
 | Tĩnh Thất | 2.000 | 8.000 + 10 Xích Đồng | 25.000 + 10 Huyền Thiết |
 | Linh Điền | 3.000 | 10.000 + 20 Thanh Diệp Thảo | 30.000 + 5 Bách Niên Linh Thảo |
 | Đan Thất / Khí Thất | 5.000 | 15.000 + 10 Huyền Thiết | 40.000 + 2 Tinh Kim |
+| Linh Thú Viên | 3.000 + 10 Linh Mộc | 12.000 + vật liệu TC | 40.000 + vật liệu KD |
 
 Sink `CAVE_BUILD`. Phá bỏ công trình không hoàn tiền.
 
@@ -439,6 +441,8 @@ Mã lý do tiền tệ mới (GD-13): `CAVE_CLAIM_FEE`, `CAVE_RELOCATE_FEE`, `CA
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `cave_claimed` / `cave_relocated` | gatePoiId, gateGrade, realmCode | Cửa động nào được ưa chuộng; phẩm có quá quyết định |
@@ -514,4 +518,6 @@ Mã lý do tiền tệ mới (GD-13): `CAVE_CLAIM_FEE`, `CAVE_RELOCATE_FEE`, `CA
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-22 | — | Bản nháp đầu theo quyết định "tầng 1 + 2": cửa động trên bản đồ + động phủ instance (phasing, thuộc tài khoản, 4 công trình, Linh Điền), địa điểm sơn môn trên bản đồ + mặt tiền theo cấp, chiếm / duy trì, Uy vọng, Sơn Môn Đại Hội, phế tích; hệ số đả tọa có trần dưới linh mạch; công thức + ví dụ, API, DB, nghiệm thu |
+| v0.2 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.3 | 2026-10-25 | — | Đợt rà nhất quán: HM-R-030 thành **năm** công trình khớp enum `CaveBuilding` (thêm Linh Thú Viên `THU_VIEN` vào bảng §5.3 và §6.2, số liệu theo GD-25 SB-R-060) |
 

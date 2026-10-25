@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-14 · Prefix ID: `SO` |
 | Owner | Game Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.7 |
+| Trạng thái | 🟡 Bản nháp v0.15 |
 | Cần trước | Phase 2 (tổ đội, chat, bạn bè, Thanh Vân Tông), Beta (tông môn tự lập) |
 | Quyết định nền | PLAN D-03, D-12 · PLAN §4.15 |
 | Liên quan | [PLAN §4.15](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-13 Kinh tế](19-economy.md) · [GD-21 Open World](22-open-world.md) · [GD-10 Luyện đan](16-alchemy.md) · [GD-11 Luyện khí](17-forging.md) · GD-15 Nhiệm vụ |
@@ -228,11 +228,14 @@ interface PlayerSectEdicts { sectId: string; edictIds: string[]; changedAt: stri
 | Phúc lợi (khi `ACTIVE`) | Đả tọa ở linh mạch +5% tu vi; −10% thời gian ấp phiên luyện đan | Phí vào hiểm địa −20%; pha `CALM` của hiểm địa +10% thời gian (GD-28); bán vật phẩm độc quyền hiểm địa cho **Hắc Thị** (NPC trong trại) +10% giá | **Song tu:** đả tọa cùng 1 đồng đội cũng đang đả tọa trong 5m → cả hai +10% tu vi (không cộng dồn nhiều người); tâm cảnh hồi phục +20% (GD-04) |
 | Tâm pháp đặc trưng (Bảo Khố, `NOI_MON`) | `TEC_THANH_VAN_KIEM` (Kim, kiếm, cân bằng) | `TEC_TAC_THIEN_CUONG` (Thổ / Kim, sát thương tăng khi máu thấp) | `TEC_HOP_HOAN_MI` (Mộc / Thủy, quạt, gây `ST_CHARMED` — quái mất mục tiêu 1,5s) |
 | Bảo Khố riêng | `SHOP_V1_SECT_TREASURY` | `SHOP_V1_TAC_THIEN_TREASURY` (+ Hắc Thị `SHOP_V1_BLACK_MARKET`) | `SHOP_V1_HOP_HOAN_TREASURY` |
-| Thử thách gia nhập (nhánh `QC_MAIN_V1_JOIN_SECT`) | Hạ Trúc Vương Thử hoặc vượt Trận Thử Tâm | **Đầu danh trạng:** hạ Khoáng Ma Bạo Chúa (BC01) hoặc nộp 3 vật phẩm từ hiểm địa | **Trận Mị Tâm:** thử thách tâm cảnh (một phiên `HEART_TRIAL` rút gọn, GD-22) — không cần chiến đấu |
+| Thử thách gia nhập (nhánh `QC_MAIN_V1_JOIN_SECT`) | Vượt Trận Thử Tâm (đường chính, Lâm Thanh Phong chủ trì) hoặc hạ Trúc Vương Thử (tùy chọn — GD-15 §5.8) | **Đầu danh trạng:** hạ Khoáng Ma Bạo Chúa (BC01) hoặc nộp 3 vật phẩm từ hiểm địa | **Trận Mị Tâm:** thử thách tâm cảnh (một phiên `HEART_TRIAL` rút gọn, GD-22) — không cần chiến đấu |
 | Nhiệm vụ hằng ngày tiêu biểu | Tuần tra, hái thuốc, luyện đan nộp tông | Áp tải hàng lậu (hộ tống), đoạt bảo trong hiểm địa nhất giai, thu "phí bảo kê" từ quái mỏ | Hái hoa đào linh, hộ tống đồng môn (tổ đội), luyện đan tâm cảnh |
 | Pha nội dung | MVP | **Beta** | **Beta** |
+| NPC lãnh đạo ([LR-02](../lore/characters.md) §3.2–§3.4) | Chưởng môn Vân Hạc Chân Nhân `NPC_THANH_VAN_CHIEF`; Truyền Công Trưởng Lão Hà Tri Viễn `NPC_V1_SECT_ELDER` (lễ bái sư); Giới Luật Trưởng Lão Lục Trọng Sơn `NPC_V1_DISCIPLINE_ELDER` | Bang chủ "Tạc Thiên Đại Đế" `NPC_TAC_THIEN_CHIEF`; Đường chủ Tần Ngạo `NPC_TAC_THIEN_ELDER_TAN_NGAO` (Chí Tôn), Liễu Tam Nương `NPC_TAC_THIEN_ELDER_LIEU` (Tôn Giả, Hắc Thị), Cung Bất Hối `NPC_TAC_THIEN_ELDER_CUNG` (Tôn Giả, lễ nhập bang) | Tông chủ Mộng Hoa Phu Nhân `NPC_HOP_HOAN_CHIEF`; Truyền Công Trưởng Lão Diệp Tịnh Liên `NPC_HOP_HOAN_ELDER_DIEP` (Trận Mị Tâm, lễ bái sư); Thánh nữ Tô Vãn Ca `NPC_HOP_HOAN_SAINTESS` |
 
-- <a id="so-r-045b"></a>**SO-R-045B** **NPC lãnh đạo mang danh hiệu phe** (lưu ý nội dung): Tạc Thiên Bang — Bang chủ mang *"Tạc Thiên Đại Đế"*, Trưởng lão / Đường chủ mang *"Tạc Thiên Chí Tôn"* / *"Tạc Thiên Tôn Giả"* (chính là các danh hiệu người chơi có thể đạt, GD-32 PK-R-056) để người chơi có mục tiêu và cảm giác thành tựu; lời thoại NPC phản ứng theo danh hiệu của người chơi. Thanh Vân Tông và Hợp Hoan Tông áp dụng cùng nguyên tắc khi các danh hiệu phe của họ được thiết kế.
+> Mã NPC lãnh đạo ngoài `NPC_V1_SECT_ELDER`, `NPC_TAC_THIEN_CHIEF` là **đề xuất** của LR-02 — cần đăng ký glossary §19–§21 trước khi dùng trong gamedata (LR-02 CHR-R-002, CHR-Q-1).
+
+- <a id="so-r-045b"></a>**SO-R-045B** **NPC lãnh đạo mang danh hiệu phe** (lưu ý nội dung): Tạc Thiên Bang — Bang chủ mang *"Tạc Thiên Đại Đế"*, Trưởng lão / Đường chủ mang *"Tạc Thiên Chí Tôn"* / *"Tạc Thiên Tôn Giả"* (chính là các danh hiệu người chơi có thể đạt, GD-32 PK-R-056) để người chơi có mục tiêu và cảm giác thành tựu; lời thoại NPC phản ứng theo danh hiệu của người chơi (LR-02 CHR-R-036). Danh hiệu phe của Thanh Vân Tông và Hợp Hoan Tông **chưa thiết kế** (SO-Q-8): tới khi có, NPC hai tông chỉ mang **chức vị** (Chưởng môn, Tông chủ, Trưởng lão, Thánh nữ…), không mang danh hiệu phe (LR-02 CHR-R-014); khi thiết kế thì áp dụng cùng nguyên tắc. Danh hiệu thành tích / phe **không bao giờ bán** (GD-19 MZ-R-020).
 - <a id="so-r-046"></a>**SO-R-046** **Đường tới Trúc Cơ luôn mở ở mọi tông:** Bảo Khố cấp 1 của **cả ba** tông đều bán đan phương `RCP_TRUC_CO_DAN` (600 cống hiến, GD-10 AL-R-071). Chọn tông là chọn **phong cách**, không phải bẫy tiến trình.
 - <a id="so-r-047"></a>**SO-R-047** **Một tông mỗi kiếp; phản môn:** nhân vật chỉ có một tư cách `ACTIVE`. Rời tông (tại tổng đàn, xác nhận 2 bước): mất bậc và toàn bộ số dư cống hiến, `state = LEFT`, hồi chiêu 7 ngày thực trước khi gia nhập tông khác (vào ở `NGOAI_MON`, phải làm thử thách gia nhập của tông mới), **không** quay lại tông cũ trong kiếp này. Tông cũ ghi nhân vật là "phản đồ" (NPC tông cũ đổi lời thoại; không có truy sát ở MVP).
 - <a id="so-r-048"></a>**SO-R-048** **Phe** (`alignment` của nhân vật = phe của tông `ACTIVE`, `NONE` nếu chưa gia nhập / đã rời) là điều kiện dùng được trong cơ duyên và nhiệm vụ (GD-22 `conditions.alignment`, GD-15): một số cơ duyên chỉ phe chính / tà / ma gặp, lựa chọn đạo đức trong cơ duyên có thể khác. Phe **không** tự động thù địch nhau; PvP giữa người chơi theo chế độ PK cá nhân ([GD-32](31-pvp-infamy.md)); ý tưởng giảm sát nghiệp khi giết người khác phe: PK-Q-2.
@@ -261,7 +264,7 @@ interface PlayerSectEdicts { sectId: string; edictIds: string[]; changedAt: stri
 - <a id="so-r-04h"></a>**SO-R-04H** Qua kiếp: danh vọng thuộc kiếp (mất khi hết kiếp); **Bia Vạn Cổ** ghi bậc cao nhất mỗi phe. Phần thưởng phe **không** chạm tỷ lệ đột phá / thọ nguyên / tỷ lệ chế tác (giống SO-R-049).
 
 ### 5.4d. Bảng Chiến Lực (dùng cho thông báo, chốt SO-Q-5)
-- <a id="so-r-04i"></a>**SO-R-04I** **Thiên Bảng Chiến Lực**: xếp hạng các nhân vật `ALIVE` trên server theo `combatPower` (GD-06 §6.8). Game Server báo `combatPower` về API khi chỉ số đổi (gom tối đa 1 lần / 60s / nhân vật; giá trị do server tính bằng `shared/sim`, không nhận từ client); API giữ sorted set Redis `rank:cp:{server}` + cột `character.combat_power`. Bảng hiển thị top 100, làm mới 10 phút; xem được hạng của mình kể cả ngoài top.
+- <a id="so-r-04i"></a>**SO-R-04I** **Thiên Bảng Chiến Lực**: xếp hạng các nhân vật `ALIVE` trên server theo `combatPower` (GD-06 §6.8). Game Server báo `combatPower` về API khi chỉ số đổi (gom tối đa 1 lần / 60s / nhân vật; giá trị do server tính bằng `shared/sim`, không nhận từ client); API giữ sorted set Valkey `rank:cp:{server}` + cột `character.combat_power`. Bảng hiển thị top 100, làm mới 10 phút; xem được hạng của mình kể cả ngoài top.
 - <a id="so-r-04j"></a>**SO-R-04J** Nhân vật **chết thật / tọa hóa** khi đang ở **top 100** (theo bản chụp gần nhất) → thông báo toàn server ưu tiên 3 (SO-R-060), kèm hạng: *"Thiên Bảng hạng 37 — {tên} ({cảnh giới}) đã tọa hóa, hưởng thọ 182 năm."* Ngoài top 100: **không** thông báo toàn server; chỉ báo cho bạn bè, đồng môn tông môn tự lập và tổ đội hiện tại (kênh `SYSTEM` riêng).
 
 ### 5.4e. Gói phúc lợi môn phái (không cộng dồn)
@@ -276,7 +279,7 @@ interface PlayerSectEdicts { sectId: string; edictIds: string[]; changedAt: stri
   Người chơi chọn gói trong bảng tông môn; đổi gói tối đa **mỗi 7 ngày thực** (`benefitSwitchCooldownDays`). Mặc định: `NPC_SECT` nếu có sư môn, `PLAYER_SECT` nếu chỉ có tông tự lập, ngược lại `WANDERER`. Gói không còn hợp lệ (rời tông) → tự chuyển về gói hợp lệ, không tính hồi chiêu.
 - <a id="so-r-04l"></a>**SO-R-04L** **Tán tu tự tại** (gói `WANDERER`, chỉ khi **không** có sư môn NPC): (1) mua ở thương nhân NPC thường −10%; (2) danh vọng đối nghịch chính ↔ ma chỉ trừ 0,25 thay vì 0,5 (SO-R-04E) — tán tu dễ giữ quan hệ với mọi phe; (3) mở nhóm cơ duyên "tán tu" (`conditions.alignment: [NONE]`, GD-22). Không có Bảo Khố / tâm pháp đặc trưng — đổi lại không bị ràng buộc phe và phản môn.
 - <a id="so-r-04m"></a>**SO-R-04M** **Thứ không thuộc gói** (luôn dùng được nếu đủ điều kiện, không loại trừ nhau): Bảo Khố & nhiệm vụ hằng ngày của sư môn NPC; Tông Khố, nhiệm vụ hằng tuần và **công trình trú địa** của tông tự lập (Đan Phòng, Luyện Khí Các, Linh Mạch Điện — tiện ích theo địa điểm, đã có trần, GD-30 HM-R-004); danh vọng phe. Chỉ **phúc lợi chỉ số / kinh tế bị động** (`perks`, Tông quy, Tán tu tự tại) bị giới hạn một gói.
-- <a id="so-r-04n"></a>**SO-R-04N** **Đường tới Trúc Cơ luôn mở** với mọi lựa chọn (mở rộng SO-R-046): đan phương `RCP_TRUC_CO_DAN` có ở (a) Bảo Khố cấp 1 của mọi tông NPC — 600 cống hiến; (b) **Tông Khố** tông tự lập từ cấp 2 — 300 `merit` (SO-R-05B); (c) **Tạp Hóa** `SHOP_V1_GENERAL` — 3.000 linh thạch, yêu cầu `LK7` (cho tán tu; GD-13); (d) rơi ở boss BC03.
+- <a id="so-r-04n"></a>**SO-R-04N** **Đường tới Trúc Cơ luôn mở** với mọi lựa chọn (mở rộng SO-R-046): đan phương `RCP_TRUC_CO_DAN` có ở (a) Bảo Khố cấp 1 của mọi tông NPC — 600 cống hiến; (b) **Tông Khố** tông tự lập từ cấp 2 — 300 `merit` (SO-R-05B); (c) **Tạp Hóa** `SHOP_V1_GENERAL` — 2.000 linh thạch, yêu cầu `LK7` (cho tán tu; GD-13); (d) rơi ở boss BC03.
 
 ### 5.5. Tông môn tự lập (Beta)
 - <a id="so-r-050"></a>**SO-R-050** **Lập tông môn:** người lập có nhân vật `ALIVE` cảnh giới ≥ `TC1`, không thuộc tông môn tự lập nào; phí 10.000 linh thạch (sink `SECT_CREATE_FEE`); tên 2–8 ký tự, duy nhất, qua bộ lọc; chọn huy hiệu.
@@ -412,6 +415,7 @@ Mục tiêu Alpha: ≥ 50% người chơi có ít nhất 1 bạn bè sau 3 giờ
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -455,7 +459,7 @@ Mục tiêu Alpha: ≥ 50% người chơi có ít nhất 1 bạn bè sau 3 giờ
 ## 10. Lưu trữ
 
 ```sql
--- Tổ đội, lời mời, Chiêu Mộ: Redis (TTL), khôi phục được sau khởi động lại; không cần bảng lâu dài.
+-- Tổ đội, lời mời, Chiêu Mộ: Valkey (TTL), khôi phục được sau khởi động lại; không cần bảng lâu dài.
 
 CREATE TABLE npc_sect_membership (                -- khóa sửa theo TD-03 §8 (phản môn cần lịch sử)
   character_id UUID NOT NULL REFERENCES character(id),
@@ -556,11 +560,13 @@ Mã lý do tiền tệ mới (bổ sung GD-13 `CurrencyReason`): `SECT_CREATE_FE
 | Bạn bè tọa hóa rồi tạo kiếp mới tên khác | Vẫn trong danh sách (theo tài khoản), hiển thị tên mới |
 | Chưởng môn tông môn tự lập hết kiếp | Vẫn là Chưởng môn (theo tài khoản) |
 | Tông khố không đủ phí duy trì | Công trình ngừng hiệu lực, không mất cấp (SO-R-057) |
-| Server khởi động lại | Tổ đội khôi phục từ Redis; lời mời đang chờ bị hủy |
+| Server khởi động lại | Tổ đội khôi phục từ Valkey; lời mời đang chờ bị hủy |
 
 ---
 
 ## 14. Telemetry
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
@@ -606,7 +612,7 @@ Mã lý do tiền tệ mới (bổ sung GD-13 `CurrencyReason`): `SECT_CREATE_FE
 | SO-AC-013n | Thành viên Hợp Hoan Tông kiêm tông tự lập có `EDICT_CULTIVATION`, gói `NPC_SECT` | Đả tọa song tu ở linh mạch | Chỉ +10% song tu (Hợp Hoan); **không** cộng +5% tông quy |
 | SO-AC-013o | Như trên, đổi gói sang `PLAYER_SECT` | Đổi lại sau 3 ngày | Từ chối (hồi chiêu 7 ngày) |
 | SO-AC-013p | Gói `NPC_SECT` | Dùng Đan Phòng trú địa tông tự lập | Vẫn được (+2 thành công, SO-R-04M) |
-| SO-AC-013q | Tán tu `LK7` | Xem Tạp Hóa | Có `RCP_TRUC_CO_DAN` giá 3.000 linh thạch |
+| SO-AC-013q | Tán tu `LK7` | Xem Tạp Hóa | Có `RCP_TRUC_CO_DAN` giá 2.000 linh thạch |
 | SO-AC-013r | Tán tu nhận `CHINH +100`, đang có `MA` 200 | Áp dụng | `MA` 200 − 25 = 175 |
 | SO-AC-013s | Tông tự lập cấp 3 | Chưởng môn chọn 3 tông quy | Từ chối (tối đa 2) |
 | SO-AC-013t | Rời Thanh Vân Tông khi đang gói `NPC_SECT`, vẫn ở tông tự lập | Sau đó | Tự chuyển `PLAYER_SECT`, không tính hồi chiêu |
@@ -645,12 +651,13 @@ Mã lý do tiền tệ mới (bổ sung GD-13 `CurrencyReason`): `SECT_CREATE_FE
 ---
 
 ## 17. Câu hỏi mở
-- [ ] **SO-Q-1:** Kênh `WORLD` yêu cầu `LK3` + 2 giờ có đủ chặn spam tài khoản mới? Cân nhắc thêm yêu cầu xác minh số điện thoại cho kênh này.
+- [ ] **SO-Q-1** (xem thêm TD-08 SEC-Q-1): Kênh `WORLD` yêu cầu `LK3` + 2 giờ có đủ chặn spam tài khoản mới? Cân nhắc thêm yêu cầu xác minh số điện thoại cho kênh này.
 - [ ] **SO-Q-2:** Có cho tông môn tự lập "chiêu mộ" tự động qua Bảng Chiêu Mộ không?
 - [x] **SO-Q-3:** *(Đã chốt 2026-10-23: thêm **Tạc Thiên Bang** (tà / giang hồ) và **Hợp Hoan Tông** (ma đạo) ngay từ Vực 1, chọn khi bái sư chương 1, nội dung ở Beta — §5.4b.)* Thanh Vân Tông có nên có thêm 1–2 đại tông NPC khác?
 - [x] **SO-Q-6:** *(Đã duyệt 2026-10-23: `BG_TAC_THIEN_GANG`, `BG_HOP_HOAN_DISCIPLE` — SO-R-04B, GD-27.)* Có thêm hai xuất thân "Bang chúng Tạc Thiên" và "Hợp Hoan đệ tử"?
 - [x] **SO-Q-7:** *(Đã duyệt 2026-10-23: ba thanh danh vọng, chính ↔ ma đối nghịch, tà trung lập, 5 bậc, cửa hàng phe Vực 2 — §5.4c.)* Danh vọng chính / tà / ma có nên thành thanh điểm?
 - [ ] **SO-Q-4:** Bạn bè có nên thấy vị trí bản đồ mặc định, hay mặc định ẩn?
+- [ ] **SO-Q-8:** Danh hiệu phe của Thanh Vân Tông và Hợp Hoan Tông (tương đương Tạc Thiên Tôn Giả / Chí Tôn / Đại Đế, SO-R-045B) — điều kiện đạt, tên, khi nào thiết kế? Tới lúc đó NPC hai tông chỉ mang chức vị (LR-02 CHR-R-014, CHR-Q-11). Cần Game Designer quyết.
 - [x] **SO-Q-5:** *(Đã chốt 2026-10-23: chỉ thông báo toàn server cho nhân vật trong **top 100 Thiên Bảng Chiến Lực**; còn lại báo bạn bè / tông môn / tổ đội — SO-R-04I, SO-R-04J.)* Thông báo tọa hóa ưu tiên 3 cho mọi nhân vật ≥ `TC1` có làm kênh hệ thống quá ồn khi server đông?
 
 ---
@@ -659,6 +666,14 @@ Mã lý do tiền tệ mới (bổ sung GD-13 `CurrencyReason`): `SECT_CREATE_FE
 
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
+| v0.15 | 2026-10-25 | — | Trận Thử Tâm do Lâm Thanh Phong chủ trì |
+| v0.14 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01` / GD-15 v0.10: thử thách gia nhập Thanh Vân — Trận Thử Tâm là đường chính, hạ Trúc Vương Thử tùy chọn |
+| v0.13 | 2026-10-25 | — | Đợt rà nhất quán: §5.4b thêm hàng NPC lãnh đạo ba tông (mã theo LR-02); SO-R-045B ghi rõ danh hiệu phe Thanh Vân / Hợp Hoan chưa thiết kế (NPC chỉ mang chức vị); thêm SO-Q-8 |
+| v0.12 | 2026-10-25 | — | Giá Tạp Hóa 2.000 (GD-03 C6) |
+| v0.11 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.10 | 2026-10-25 | — | Danh hiệu không bán (GD-19) |
+| v0.9 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
+| v0.8 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
 | v0.7 | 2026-10-23 | — | Sửa khóa `npc_sect_membership` thành `(character_id, sect_id)` + `state` / `left_at` (TD-03 §8) |
 | v0.6 | 2026-10-23 | — | D-21: SO-R-005, SO-R-048 cập nhật theo PvP dã ngoại (GD-32) |
 | v0.5 | 2026-10-23 | — | **Gói phúc lợi môn phái** (§5.4e): ở được cả tông NPC và tông tự lập nhưng chỉ hưởng 1 gói (`NPC_SECT` / `PLAYER_SECT` / `WANDERER`), đổi mỗi 7 ngày; **Tông quy** 8 lựa chọn theo cấp tông (SO-R-05A); gói **Tán tu tự tại**; Tông Khố đổi thưởng bằng merit; Trúc Cơ Đan mở ở mọi con đường |
@@ -666,4 +681,3 @@ Mã lý do tiền tệ mới (bổ sung GD-13 `CurrencyReason`): `SECT_CREATE_FE
 | v0.3 | 2026-10-23 | — | Chốt SO-Q-3: **ba đại tông NPC** — thêm **Tạc Thiên Bang** (tà, Tạc Thiên Trại F03: hiểm địa, hắc thị) và **Hợp Hoan Tông** (ma, Hợp Hoan Cốc F05: song tu, mị thuật) (§5.4b); `NpcSectId`, `Alignment`, `NpcSectDef`; một tông mỗi kiếp + phản môn; Trúc Cơ Đan ở mọi Bảo Khố; giới hạn phúc lợi; định hướng nội dung; SO-Q-6, SO-Q-7 |
 | v0.2 | 2026-10-22 | — | Linh Mạch Điện hạ hệ số xuống trần 1,35 (trước: 1,5–1,75, mạnh hơn linh mạch ngoài đồng mà tuổi chỉ ×0,25); trú địa vào từ sơn môn (GD-30) |
 | v0.1 | 2026-10-21 | — | Bản nháp đầu: bất biến (tách Thanh Vân Tông NPC / tông môn tự lập), tổ đội & Chiêu Mộ, chat 6 kênh + lọc + kiểm duyệt, bạn bè & chặn theo tài khoản, Thanh Vân Tông (bậc, cống hiến, chuyển thế đệ tử), tông môn tự lập (Beta: chức vụ, tông khố, trú địa, công trình, duy trì), hàng đợi thông báo chung, phần thưởng hộ pháp, xem thông tin, công thức, API, DB, nghiệm thu; sửa lỗi đánh số GD-15 → GD-14 |
-

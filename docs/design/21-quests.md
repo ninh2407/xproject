@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-15 · Prefix ID: `QS` |
 | Owner | Content Designer (nội dung) + Game Designer (hệ thống) + Server Dev (engine) |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.11 |
 | Cần trước | Phase 2 (engine, hướng dẫn, 15–20 nhiệm vụ chương 1), Phase 3 (hoàn thiện chương 1, nhiệm vụ hệ thống) |
 | Quyết định nền | PLAN §4.1 (cốt truyện theo cảnh giới), §4.16 · D-03 (một mạng) |
 | Liên quan | [PLAN §4.16](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-22 Cơ duyên](23-encounters.md) (dùng chung runtime Ink) · [GD-04 Tu luyện](10-cultivation.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-13 Kinh tế](19-economy.md) · [GD-14 Xã hội](20-social.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-27 Thiên phú](04-talents.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-21 Open World](22-open-world.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-30 Động phủ & Sơn môn](28-caves-sect-sites.md) · LR-03 Story Outline |
@@ -31,7 +31,7 @@
 **Trụ cột:** P1 *Mỗi kiếp một câu chuyện*, P5 *Thế giới đáng khám phá*.
 
 - Nhiệm vụ chính **dẫn đường qua thế giới** (bản đồ, hệ thống, cốt truyện) nhưng không khóa cứng; người chơi được tự đi lang thang (GD-21).
-- Nhiệm vụ **dạy hệ thống** đúng lúc: luyện đan trước khi cần Trúc Cơ Đan, hiểm địa có hướng dẫn trong lúc còn bảo hộ tân thủ.
+- Nhiệm vụ **dạy hệ thống** đúng lúc: luyện đan trước khi cần Trúc Cơ Đan, hiểm địa có hướng dẫn trong lúc còn bảo hộ tân thủ. Kịch bản 30 phút đầu (bước, thời lượng, gợi ý): [GD-18 §3](41-onboarding.md).
 - Kiếp sau **không bắt chơi lại** toàn bộ: lược truyện nhanh, vẫn giữ các mở khóa cần thiết.
 - Nhiệm vụ hằng ngày **ngắn và không tích lũy**: bỏ một ngày không mất gì đáng kể (tránh nghĩa vụ hóa, PLAN §4.16).
 - **Dữ liệu hoàn toàn:** content designer viết nhiệm vụ bằng YAML + Ink, không cần dev.
@@ -82,6 +82,7 @@ interface QuestDef {
   chapter?: number;                   // MAIN: chương 1, 2, 3...
   titleKey: string; summaryKey: string;
   giverNpcId?: string;                // null = tự động bắt đầu
+  giverNpcBySect?: Partial<Record<NpcSectId, string>>;   // QS-R-055: NPC giao / trả theo tông NPC của nhân vật; không khớp → dùng giverNpcId
   autoStart?: QuestTrigger;
   prerequisites: QuestConditions;
   recommendedRealm: string;           // RealmCode → dải thưởng (§6.1)
@@ -110,6 +111,7 @@ interface QuestConditions {           // tất cả trường tùy chọn
   backgrounds?: string[]; talentsAny?: string[];
   lifeFlagsAll?: string[]; lifeFlagsNone?: string[]; accountFlagsAll?: string[]; accountFlagsNone?: string[];
   npcSectRankMin?: NpcSectRank; playerSectMember?: boolean;
+  npcSectAny?: NpcSectId[];           // nhân vật đang ACTIVE ở một trong các tông NPC này (GD-14 NpcSectMembership)
   statusAny?: string[];               // vd. ST_HEART_DEMON
   warningLevels?: WarningLevel[];
 }
@@ -118,7 +120,8 @@ interface QuestStep {
   stepId: string;
   objectives: Objective[];
   objectiveMode: 'ALL' | 'ANY';       // ANY: một mục tiêu bất kỳ là xong bước (tạo nhánh)
-  dialogueKnot?: string;              // knot Ink chạy khi bắt đầu bước (hoặc khi nói chuyện với NPC của bước)
+  dialogueKnot?: string;              // knot Ink chạy khi bắt đầu bước, hoặc khi nói chuyện với dialogueNpcId nếu có
+  dialogueNpcId?: string;             // QS-R-056: NPC chủ trì knot của bước; có thì knot chỉ chạy khi TALK với NPC này (marker trỏ NPC)
   onComplete?: QuestActionRef[];      // hành động khi xong bước (trước khi sang bước sau)
   hintKey?: string;
   markers?: { mapId: string; position?: [number, number]; poiId?: string; radius?: number }[];
@@ -142,6 +145,12 @@ type Objective =
   | { type: 'DANGER_EXTRACT'; dzId?: string; count: number }
   | { type: 'ENCOUNTER_RESOLVED'; encounterId?: string; minTier?: EncounterTier; count: number }
   | { type: 'CHOICE'; key: string };                                               // lựa chọn trong Ink gán nhánh
+// Mọi Objective có thêm các trường chung tùy chọn (QS-R-053, QS-R-054):
+interface ObjectiveCommon {
+  branch?: string;                    // bước ANY: hoàn thành mục tiêu này → QuestProgress.branch = branch (UPPER_SNAKE, vd. THANH_VAN)
+  branchIn?: string[];                // chỉ hiệu lực khi QuestProgress.branch thuộc danh sách (thử thách riêng của nhánh ở bước sau)
+  requires?: QuestConditions;         // chỉ hiệu lực khi nhân vật thỏa điều kiện (vd. { npcSectAny: [SECT_TAC_THIEN] })
+}
 type QuestActionRef = string;         // khóa vào QuestDef.actions
 
 interface QuestProgress {             // một bản ghi mỗi (nhân vật, nhiệm vụ, chu kỳ)
@@ -219,6 +228,10 @@ Nhiệm vụ `DAILY` / `WEEKLY` / `ON_CONDITION` có bản ghi mới cho mỗi c
 ### 5.5. Trả nhiệm vụ và phần thưởng
 - <a id="qs-r-050"></a>**QS-R-050** Phần thưởng (`rewards`) áp dụng **một lần** trong một transaction khi `COMPLETED` (khóa idempotent `characterId:questId:periodKey`). Túi đầy → vật phẩm vào `MAIL` (`overflow = MAIL`, GD-09).
 - <a id="qs-r-051"></a>**QS-R-051** Tu vi và linh thạch thưởng theo §6.1 trừ khi nhiệm vụ ghi đè; tu vi qua GD-04 `cultivation/exp` với `source = QUEST`, **không** nhân `cultivationSpeed` (GD-04 CU-R-055), chặn bởi bình cảnh.
+- <a id="qs-r-053"></a>**QS-R-053** **Mục tiêu theo nhánh:** trong bước `objectiveMode = ANY`, mục tiêu có `branch` khi hoàn thành sẽ ghi `QuestProgress.branch` (ghi một lần; nhiệm vụ đã có `branch` thì không đổi). Khóa `branch` trong một bước là duy nhất; `CHOICE` / `SET_BRANCH` (QS-R-041) dùng cùng không gian khóa.
+- <a id="qs-r-054"></a>**QS-R-054** **Mục tiêu không hiệu lực** (không thỏa `branchIn` hoặc `requires`): server **không** hiển thị, không gắn marker, không đếm tiến độ — vd. `TALK` với NPC của tông khác không làm gì (nhân vật nhánh khác không thể hoàn thành thay). Bước chỉ còn mục tiêu không hiệu lực → validator báo lỗi dữ liệu (QS-V). Hồ sơ Alpha loại các mục tiêu `requires.npcSectAny` chứa tông Beta 1.
+- <a id="qs-r-055"></a>**QS-R-055** `giverNpcBySect`: NPC giao và trả nhiệm vụ chọn theo tông NPC `ACTIVE` của nhân vật lúc nhận; đổi tông giữa chừng không đổi NPC đã chọn (lưu trong `QuestProgress`). Dùng cho `QC_MAIN_V1_05`, `QC_MAIN_V1_11`; `QC_MAIN_V1_07` §5.10a S2 dùng `requires.npcSectAny` trên từng `TALK`.
+- <a id="qs-r-056"></a>**QS-R-056** `QuestStep.dialogueNpcId`: knot `dialogueKnot` của bước chỉ chạy khi nhân vật `TALK` với NPC này (trong bán kính tương tác POI `NPC`, TD-13 §4); HUD đặt marker vào NPC. Không có `dialogueNpcId` → knot chạy khi bắt đầu bước như cũ. Mục tiêu `CHOICE` của knot chỉ hoàn thành qua hội thoại đó.
 - <a id="qs-r-052"></a>**QS-R-052** Nhiệm vụ có nhánh (`CHOICE`, `objectiveMode = ANY`) có thể có `rewards` khác nhau theo `branch` (khóa `rewards` dạng `"branch:<key>"`).
 
 ### 5.6. Thanh Vân Tông: nhiệm vụ hằng ngày
@@ -229,18 +242,18 @@ Nhiệm vụ `DAILY` / `WEEKLY` / `ON_CONDITION` có bản ghi mới cho mỗi c
 
 ### 5.7. Tông môn tự lập: nhiệm vụ hằng tuần (Beta)
 - <a id="qs-r-070"></a>**QS-R-070** Thành viên tông môn tự lập có 3 nhiệm vụ `QW_*` mỗi tuần (làm mới thứ Hai 05:00), dài hơn (20–40 phút, thường cần tổ đội: bí cảnh, tinh anh, hiểm địa có đường thay thế QS-R-004).
-- <a id="qs-r-071"></a>**QS-R-071** Mỗi nhiệm vụ: kinh nghiệm tông môn +200 (GD-14 SO-R-055), Uy vọng +10 (GD-30 HM-R-080, trần 30 / tuần / thành viên), công trạng `merit` +50, linh thạch / tu vi §6.1.
+- <a id="qs-r-071"></a>**QS-R-071** Mỗi nhiệm vụ: kinh nghiệm tông môn +200 (GD-14 SO-R-055), Uy vọng +10 (GD-30 HM-R-080, trần 30 / tuần / thành viên), công trạng `merit` +50, linh thạch / tu vi §6.1. Nhiệm vụ mùa Vấn Đạo Lệnh: nhóm `QW_SEASON_*` (GD-19 MZ-R-041). Nhiệm vụ mở ngự kiếm `QC_SWORD_FLIGHT` (TC1, Beta): GD-31.
 
 ### 5.8. Chuỗi nhiệm vụ được các tài liệu khác yêu cầu
 
 | ID | Loại | Bắt đầu | Các bước chính | Kết quả bắt buộc | Tài liệu |
 |----|------|---------|----------------|------------------|----------|
-| `QC_TUTORIAL_QI` | TUTORIAL | `CHARACTER_CREATED` | (1) Nói chuyện Lão Đạo ở điểm xuất phát theo xuất thân · (2) Di chuyển, né, đánh: hạ 3 Trúc Thử ở bãi tập · (3) Đả tọa 60s (đủ 100 tu vi) · (4) Chọn vũ khí (`CHOICE`: kiếm / quạt) · (5) Dẫn khí nhập thể | Đạt điều kiện GD-04 CU-R-023 → `LK1`; học & trang bị `TEC_DAN_KHI`; học 2 kỹ năng theo vũ khí (GD-07 SK-R-033, SK-R-045); nhận vũ khí `LK1` phẩm Phàm | GD-04, GD-07 |
-| `QC_MAIN_V1_JOIN_SECT` | MAIN (chương 1) | Sau `QC_TUTORIAL_QI` | (1) Tới Thanh Vân Trấn · (2) Thử thách nhập môn: hạ Trúc Vương Thử (tinh anh F01) hoặc vượt Trận Thử Tâm (`ANY`) · (3) **Chọn tông** (`SET_BRANCH`: `THANH_VAN` / `TAC_THIEN` / `HOP_HOAN`, GD-14 §5.4b) và qua thử thách gia nhập của tông đó — Thanh Vân: như bước (2); Tạc Thiên: đầu danh trạng (hạ boss BC01 hoặc nộp 3 vật phẩm hiểm địa); Hợp Hoan: Trận Mị Tâm (phiên tâm cảnh) — rồi bái sư tại tổng đàn | `JOIN_NPC_SECT {sectId}` + `SET_NPC_SECT_RANK NGOAI_MON`; cờ tài khoản `FLAG_ACC_JOINED_{SECT}` (Beta: nhánh Tạc Thiên / Hợp Hoan bật) | GD-14 SO-R-040 |
+| `QC_TUTORIAL_QI` | TUTORIAL | `CHARACTER_CREATED` | (1) Nói chuyện Lão Đạo (`NPC_V1_LAO_DAO`) ở miếu hoang `V1_F01` — **mọi xuất thân** bắt đầu ở đây (GD-27 TLN-R-032); xuất thân gắn tông chỉ đổi điểm đến sau hướng dẫn · (2) Di chuyển, né, đánh: hạ 3 Trúc Thử ở bãi tập · (3) Đả tọa 60s (đủ 100 tu vi) · (4) Chọn vũ khí (`CHOICE`: kiếm / quạt) · (5) Dẫn khí nhập thể | Đạt điều kiện GD-04 CU-R-023 → `LK1`; học & trang bị `TEC_DAN_KHI`; học 2 kỹ năng theo vũ khí (GD-07 SK-R-033, SK-R-045); nhận vũ khí `LK1` phẩm Phàm | GD-04, GD-07 |
+| `QC_MAIN_V1_JOIN_SECT` | MAIN (chương 1) | Sau `QC_TUTORIAL_QI` | (1) Tới Thanh Vân Trấn (Lão Đạo chỉ đường ra Cửa rừng `V1_F01`; Lâm Thanh Phong đón ở `V1_HUB`) · (2) Thử thách nhập môn (`ANY`): **đường chính** vượt Trận Thử Tâm (`CHOICE trial_of_heart`, mở ngay khi bắt đầu bước); **tùy chọn** hạ Trúc Vương Thử (tinh anh `LK3` ở F01 — tổ đội / quay lại sau), vẫn hoàn thành bước nếu làm được; gợi ý (`hintKey`) chỉ dẫn Trận Thử Tâm, không marker cho tinh anh · (3) **Chọn tông** (`SET_BRANCH`: `THANH_VAN` / `TAC_THIEN` / `HOP_HOAN`, GD-14 §5.4b) và qua thử thách gia nhập của tông đó — Thanh Vân: như bước (2); Tạc Thiên: đầu danh trạng (hạ boss BC01 hoặc nộp 3 vật phẩm hiểm địa); Hợp Hoan: Trận Mị Tâm (phiên tâm cảnh) — rồi bái sư tại tổng đàn | `JOIN_NPC_SECT {sectId}` + `SET_NPC_SECT_RANK NGOAI_MON`; cờ tài khoản `FLAG_ACC_JOINED_{SECT}` (Beta: nhánh Tạc Thiên / Hợp Hoan bật) | GD-14 SO-R-040 |
 | `QC_SECT_SERVANT` | BACKGROUND | Tạo nhân vật xuất thân `BG_SECT_SERVANT` | (1) Gánh nước (nộp 5 Thủy Linh Thảo) · (2) Quét Tàng Kinh Các (`TALK` + `CHOICE`) · (3) Theo sư huynh hạ yêu (`KILL` 5 quái F01, `partyShare`) | `SET_NPC_SECT_RANK NGOAI_MON` (thay cho bước 2–3 của `QC_MAIN_V1_JOIN_SECT`, nhiệm vụ đó tự hoàn thành khi xong chuỗi này); +100 cống hiến | GD-14, GD-27 |
 | `QC_TAC_THIEN_GANG` | BACKGROUND (Beta) | Tạo nhân vật xuất thân `BG_TAC_THIEN_GANG` | (1) Người liên lạc giao việc: thu "phí bảo kê" (`KILL` 5 Dã Trư F01) · (2) Đưa hàng lậu tới Tạc Thiên Trại khi đạt `LK3` (`REACH` POI tổng đàn, `ESCORT` tùy chọn) · (3) Đầu mục thử gan (`CHOICE` + `ROLL_CHECK` luck) | `JOIN_NPC_SECT SECT_TAC_THIEN` đã có từ lúc tạo; `SET_NPC_SECT_RANK NGOAI_MON` (thay nhánh Tạc Thiên của `QC_MAIN_V1_JOIN_SECT`); +100 cống hiến; `CHANGE_REPUTATION TA +100` | GD-14, GD-27 |
 | `QC_HOP_HOAN_DISCIPLE` | BACKGROUND (Beta) | Tạo nhân vật xuất thân `BG_HOP_HOAN_DISCIPLE` | (1) Sứ giả dạy mị thuật cơ bản (`TALK`, dùng quạt hạ 3 quái F01) · (2) Hái 5 Đào Hoa Linh ở F01–F02 · (3) Tới Hợp Hoan Cốc khi đạt `LK3`, song tu cùng sư tỷ (`MEDITATE` 60s tại POI) | `SET_NPC_SECT_RANK NGOAI_MON` (thay nhánh Hợp Hoan); +100 cống hiến; `CHANGE_REPUTATION MA +100` | GD-14, GD-27 |
-| `QC_QUIET_HEART` | SYSTEM | `STATUS_GAINED ST_HEART_DEMON` (nhận ở Tĩnh Tâm Thiền Sư, `HUB`) | (1) Đả tọa 1.800s tại `LEY_LINE` · (2) Hái 3 Nguyệt Quang Thảo (chỉ ban đêm) và nộp · (3) Đối thoại tự vấn (`CHOICE`, nội dung theo cờ kiếp, vd. `FLAG_KILLED_FOX`) | `REMOVE_STATUS ST_HEART_DEMON` (mọi tầng); `heartState` +10. `repeat = ON_CONDITION`, `cooldownRealSec` 259.200 (3 ngày) | GD-04 CU-R-095 |
+| `QC_QUIET_HEART` | SYSTEM | `STATUS_GAINED ST_HEART_DEMON` (nhận ở Tĩnh Tâm Lão Nhân `NPC_V1_QUIET_HEART_MASTER`, `HUB` — LR-02 CHR-NPC-041) | (1) Đả tọa 1.800s tại `LEY_LINE` · (2) Hái 3 Nguyệt Quang Thảo (chỉ ban đêm) và nộp · (3) Đối thoại tự vấn (`CHOICE`, nội dung theo cờ kiếp, vd. `FLAG_KILLED_FOX`) | `REMOVE_STATUS ST_HEART_DEMON` (mọi tầng); `heartState` +10. `repeat = ON_CONDITION`, `cooldownRealSec` 259.200 (3 ngày) | GD-04 CU-R-095 |
 | `QC_GREAT_LIMIT_SEEK` | SYSTEM | `WARNING_LEVEL GREAT_LIMIT` | (1) Gặp Thọ Lão ở `HUB` (gợi ý nơi có diên thọ theo cảnh giới) · (2) `ANY`: dùng 1 vật phẩm `LIFESPAN_EXTENSION` **hoặc** đột phá cảnh giới lớn kế tiếp | `heartState` +10, danh hiệu "Nghịch Mệnh" | GD-26 LC-R-050 |
 | `QC_GREAT_LIMIT_LEGACY` | SYSTEM | `WARNING_LEVEL GREAT_LIMIT` (cùng lúc) | (1) Gặp Thọ Lão · (2) Gửi ít nhất 1 vật phẩm vào Tàng Bảo Các · (3) Viết trước lời trăn trối (`CHOICE` + nhập văn bản, lưu cho `LifeRecord.lastWords`, sửa được khi `ENDING`) | Cờ kiếp `FLAG_LEGACY_PREPARED`: khi tọa hóa nhận thêm 20 điểm Luân Hồi (GD-26 §6.4, mục `achievementPointsThisLife`) | GD-26 |
 
@@ -251,25 +264,48 @@ Nhiệm vụ `DAILY` / `WEEKLY` / `ON_CONDITION` có bản ghi mới cho mỗi c
 
 ### 5.10. Nhiệm vụ chính chương 1 (Vực 1 Thanh Vân)
 
-| # | ID | Tên | Cảnh giới | Nơi | Mục đích / dạy hệ thống |
-|:-:|----|-----|:---:|-----|--------------------------|
-| 1 | `QC_TUTORIAL_QI` | Dẫn khí nhập thể | PN1 | Điểm xuất phát | Điều khiển, đả tọa, vũ khí |
-| 2 | `QC_MAIN_V1_JOIN_SECT` | Thanh Vân bái sư | LK1 | F01 → HUB | Gia nhập Thanh Vân Tông |
-| 3 | `QC_MAIN_V1_03` | Đan Phòng sơ thí | LK2 | HUB | Luyện Hồi Khí Đan đầu tiên (`CRAFT`) (GD-10) |
-| 4 | `QC_MAIN_V1_04` | Bích Thủy dị văn | LK2 | F02 | Thần thức quét (`SCAN`), linh thảo theo thời tiết |
-| 5 | `QC_MAIN_V1_05` | Bảng nhiệm vụ tông môn | LK3 | HUB | Giới thiệu nhiệm vụ hằng ngày, Bảo Khố |
-| 6 | `QC_MAIN_V1_06` | Khoáng tặc hoành hành | LK3–4 | F03 | Chiến đấu nhóm quái, tinh anh |
-| 7 | `QC_MAIN_V1_07` | Phế Khoáng Động | LK5 | BC01 | Bí cảnh solo đầu tiên (`DUNGEON_CLEAR`) |
-| 8 | `QC_MAIN_V1_08` | Sương mù Vụ Ẩn | LK5 | F04 | Quái ẩn thân, Tị Độc Đan |
-| 9 | `QC_MAIN_V1_09` | Vạn Độc Đầm: lần đầu | LK5 | `V1_HD01` | **Hiểm địa có hướng dẫn** (khi còn bảo hộ tân thủ, QS-R-004): thoát với 1 Ngưng Cơ Thảo; đường thay thế: nộp Bách Niên Linh Thảo ×3 nếu người chơi đã hết bảo hộ |
-| 10 | `QC_MAIN_V1_10` | Linh hồ dạ hành | LK6 | F05 | Ban đêm, quái dạ hành |
-| 11 | `QC_MAIN_V1_11` | Hồ Yêu Động | LK7 | BC02 | Bí cảnh tổ đội (có thể đi một mình, khó hơn) |
-| 12 | `QC_MAIN_V1_12` | Cổ chiến nguyên | LK7–8 | F06 | Lore chiến tranh thượng cổ, bia đá (`DISCOVER`) |
-| 13 | `QC_MAIN_V1_13` | Tàn Kiếm Trủng | LK9 | BC03 | Bí cảnh cuối chương, đan phương Trúc Cơ Đan (rơi) |
-| 14 | `QC_MAIN_V1_14` | Trúc Cơ chi đạo | LK9 | HUB | Luyện Trúc Cơ Đan (`CRAFT`, mua đan phương ở Bảo Khố nếu chưa có) |
-| 15 | `QC_MAIN_V1_15` | Phá cảnh | LK9 → TC1 | Linh mạch / HUB | Đột phá Trúc Cơ (`BREAKTHROUGH`), hộ pháp (gợi ý mời đồng đội) |
+> Cột `giverNpcId` / NPC trả theo [LR-02](../lore/characters.md) §4 (hồ sơ NPC: LR-02 §3; cốt truyện: LR-03 §3.1). `—` = tự bắt đầu (`autoStart`). Mã ghi *(đx)* là mã **đề xuất** của LR-02, phải đăng ký glossary §19–§21 trước khi dùng trong gamedata (LR-02 CHR-R-002). Alpha chỉ có nhánh `THANH_VAN`; NPC nhánh `TAC_THIEN` / `HOP_HOAN` là **Beta 1** (GD-14 §5.4b). NPC khác nhau theo nhánh trong cùng một bước / `giverNpcId`: chờ QS-Q-6.
+
+| # | ID | Tên | Cảnh giới | Nơi | Mục đích / dạy hệ thống | `giverNpcId` | NPC trả / liên quan |
+|:-:|----|-----|:---:|-----|--------------------------|--------------|---------------------|
+| 1 | `QC_TUTORIAL_QI` | Dẫn khí nhập thể | PN1 | `V1_F01` (miếu hoang) | Điều khiển, đả tọa, vũ khí | — (`CHARACTER_CREATED`; bước 1 `TALK NPC_V1_LAO_DAO`) | — |
+| 2 | `QC_MAIN_V1_JOIN_SECT` | Thanh Vân bái sư | LK1 | F01 → HUB | Gia nhập Thanh Vân Tông | `NPC_V1_LAO_DAO` | Đón ở `V1_HUB` (khu tông môn): `NPC_V1_LAM_THANH_PHONG` *(đx)*; lễ bái sư theo tông: YAML §7 bước S3 |
+| 3 | `QC_MAIN_V1_03` | Đan Phòng sơ thí | LK2 | HUB | Luyện Hồi Khí Đan đầu tiên (`CRAFT`) (GD-10) | `NPC_ALCHEMY_ELDER` | `NPC_ALCHEMY_ELDER` |
+| 4 | `QC_MAIN_V1_04` | Bích Thủy dị văn | LK2 | F02 | Thần thức quét (`SCAN`), linh thảo theo thời tiết | `NPC_V1_LAM_THANH_PHONG` *(đx)* | `NPC_V1_F02_HEADMAN` *(đx)*; gợi ý `NPC_OLD_FISHERMAN` (nếu mưa, cơ duyên `ENC_V1_NGU_ONG`) |
+| 5 | `QC_MAIN_V1_05` | Bảng nhiệm vụ tông môn | LK3 | HUB | Giới thiệu nhiệm vụ hằng ngày, Bảo Khố | `NPC_V1_SECT_ELDER` (Beta 1: nhánh `TAC_THIEN` → `NPC_TAC_THIEN_ELDER_CUNG` *(đx)*, `HOP_HOAN` → `NPC_HOP_HOAN_ELDER_DIEP` *(đx)* — QS-Q-6) | cùng NPC |
+| 6 | `QC_MAIN_V1_06` | Khoáng tặc hoành hành | LK3–4 | F03 | Chiến đấu nhóm quái, tinh anh | `NPC_V1_F03_OLD_MINER` *(đx)* | `NPC_V1_F03_OLD_MINER`; thư của `NPC_V1_F03_BANDIT_CHIEF` *(đx)* (vật phẩm `QUEST`) |
+| 7 | `QC_MAIN_V1_07` | Phế Khoáng Động | LK5 | BC01 | Bí cảnh solo đầu tiên (`DUNGEON_CLEAR`); **lựa chọn nộp chứng cứ** (`CHOICE`, §5.10a) | `NPC_V1_F03_OLD_MINER` *(đx)* | Nộp chứng cứ: `NPC_V1_DISCIPLINE_ELDER` *(đx)* (Thanh Vân) / `NPC_TAC_THIEN_CHIEF` (Tạc Thiên) / `NPC_HOP_HOAN_CHIEF` *(đx)* (Hợp Hoan); `NPC_V1_LAM_THANH_PHONG` |
+| 8 | `QC_MAIN_V1_08` | Sương mù Vụ Ẩn | LK5 | F04 | Quái ẩn thân, Tị Độc Đan | `NPC_ALCHEMY_ELDER` | `NPC_V1_F04_HERB_GATHERER` *(đx)* |
+| 9 | `QC_MAIN_V1_09` | Vạn Độc Đầm: lần đầu | LK5 | `V1_HD01` | **Hiểm địa có hướng dẫn** (khi còn bảo hộ tân thủ, QS-R-004): thoát với 1 Ngưng Cơ Thảo; đường thay thế: nộp Bách Niên Linh Thảo ×3 nếu người chơi đã hết bảo hộ | `NPC_V1_F04_HERB_GATHERER` *(đx)* | `NPC_ALCHEMY_ELDER`; đường thay thế `DELIVER` cho `NPC_V1_F04_HERB_GATHERER` |
+| 10 | `QC_MAIN_V1_10` | Linh hồ dạ hành | LK6 | F05 | Ban đêm, quái dạ hành | `NPC_V1_F05_HUNTER` *(đx)* | `NPC_V1_F05_HUNTER`; nhánh Hợp Hoan: `NPC_HOP_HOAN_SAINTESS` *(đx)* xuất hiện |
+| 11 | `QC_MAIN_V1_11` | Hồ Yêu Động | LK7 | BC02 | Bí cảnh tổ đội (có thể đi một mình, khó hơn) | `NPC_V1_F05_HUNTER` *(đx)* (Beta 1, nhánh `HOP_HOAN` → `NPC_HOP_HOAN_SAINTESS` *(đx)* — QS-Q-6) | Boss `MON_B_FOX_MATRIARCH`; cờ `FLAG_SAVED_FOX` / `FLAG_KILLED_FOX` (GD-22) |
+| 12 | `QC_MAIN_V1_12` | Cổ chiến nguyên | LK7–8 | F06 | Lore chiến tranh thượng cổ, bia đá (`DISCOVER`) | `NPC_V1_SKY_WATCHER` *(đx)* | Bia đá F06 (`STELE`) |
+| 13 | `QC_MAIN_V1_13` | Tàn Kiếm Trủng | LK9 | BC03 | Bí cảnh cuối chương, đan phương Trúc Cơ Đan (rơi) | — (`QUEST_COMPLETED QC_MAIN_V1_12`) | Boss `MON_B_SWORD_SPIRIT` |
+| 14 | `QC_MAIN_V1_14` | Trúc Cơ chi đạo | LK9 | HUB | Luyện Trúc Cơ Đan (`CRAFT`, mua đan phương ở Bảo Khố nếu chưa có) | `NPC_ALCHEMY_ELDER` | `NPC_ALCHEMY_ELDER` (lời kể thêm nếu có cờ `FLAG_MINE_EVIDENCE`, §5.10a) |
+| 15 | `QC_MAIN_V1_15` | Phá cảnh | LK9 → TC1 | Linh mạch / HUB | Đột phá Trúc Cơ (`BREAKTHROUGH`), hộ pháp (gợi ý mời đồng đội) | `NPC_V1_LAM_THANH_PHONG` *(đx)* | Lời chúc: `NPC_THANH_VAN_CHIEF` *(đx)* / `NPC_TAC_THIEN_CHIEF` / `NPC_HOP_HOAN_CHIEF` *(đx)*; dư âm `NPC_VAULT_KEEPER` |
+
+#### 5.10a. `QC_MAIN_V1_07` — lựa chọn nộp chứng cứ (LR-03 PP-1.06, STY-R-009)
+
+Chỉ dùng mục tiêu / hành động đã có (`DUNGEON_CLEAR`, `TALK`, `CHOICE`, `objectiveMode: ANY`; hành động `SET_FLAG`, `CHANGE_KARMA`, `CHANGE_REPUTATION` — §8). Lời thoại ba nhánh: LR-03 §3.1.
+
+| Bước | Mục tiêu | Hành động khi xong bước |
+|------|----------|-------------------------|
+| S1 | `DUNGEON_CLEAR V1_BC01` (hạ Khoáng Ma Bạo Chúa; thấy trận phong in ấn Thanh Vân) | `SET_FLAG LIFE FLAG_MINE_EVIDENCE` (cờ kiếp "đã điều tra vụ sập hầm" — điều kiện lời thoại ở `QC_MAIN_V1_14` và của Vân Hạc Chân Nhân, LR-02) |
+| S2 | Nộp chứng cứ (`objectiveMode: ANY`, theo tông): `TALK NPC_V1_DISCIPLINE_ELDER` (`THANH_VAN`) / `TALK NPC_TAC_THIEN_CHIEF` (`TAC_THIEN`, Beta 1) / `TALK NPC_HOP_HOAN_CHIEF` (`HOP_HOAN`, Beta 1) — gắn NPC theo nhánh: QS-Q-6 | Nhánh Tạc Thiên: `CHANGE_REPUTATION TA`; nhánh Hợp Hoan: `CHANGE_REPUTATION MA` (delta đặt trong YAML, trong giới hạn §8) |
+| S3 | `CHOICE` với Lâm Thanh Phong (`objectiveMode: ANY`): `tell_lam` (kể sự thật về ông nội) / `keep_silent` (giữ im lặng) | `tell_lam`: `SET_FLAG LIFE FLAG_TOLD_LAM_TRUTH` + `CHANGE_KARMA`; `keep_silent`: `CHANGE_KARMA` (dấu và độ lớn đặt trong YAML, −20..20, §8). Lời thoại của Lâm Thanh Phong về sau đổi theo cờ (LR-02 CHR-NPC-002) |
+
+> `FLAG_MINE_EVIDENCE`, `FLAG_TOLD_LAM_TRUTH` là cờ kiếp mới (khai báo trong `quests/params`, đăng ký glossary trước khi dùng). Không lựa chọn nào khóa đường Trúc Cơ (GD-14 SO-R-046) hay chạm thọ nguyên / thiên phú / linh căn (§8).
 
 Mỗi bản đồ dã ngoại thêm 3–6 nhiệm vụ `SIDE` (chuẩn mật độ GD-21 §3.4), tổng ~25 nhiệm vụ phụ chương 1.
+
+### 5.11. Chương 2 — "Đạo Cơ" *(phác thảo, theo LR-03 §3.2)*
+
+> Chỉ là phác thảo để xếp phase; **chưa cấp mã nhiệm vụ cụ thể** (LR-03 STY-Q-4). Phase theo **D-25**: trần `TC4` cho Alpha và Beta 1; Kết Kim Đan cùng Vực 2 ở Beta 2.
+
+| Phần | Phase | Plot point (LR-03) | Hiện thực | Mẫu mã |
+|------|-------|--------------------|-----------|--------|
+| **2A** — Vực 1 sau Trúc Cơ (`TC1–TC4`) | **Alpha** | PP-2.01 Ngộ Đạo · PP-2.02 Dư âm cổ chiến (có đường thay thế ngoài hiểm địa, QS-R-004) · PP-2.03 Lão Đạo và miếu hoang · PP-2.04 Mảnh ngọc giản của Lục Trọng Sơn · PP-2.05 Giang hồ hiểm ác (phần PvP / Chấp Pháp: Beta 1) | Nhiệm vụ `SIDE` + cơ duyên (GD-22); **không** có nhiệm vụ `MAIN` chương 2 ở Alpha / Beta 1 | `QC_SIDE_V1_<map>_*` (§7) |
+| **2B** — Vực 2 *Xích Viêm Vực* (đề xuất, LR-01 WB-Q-1), `TC` → `KD1` | **Beta 2** | PP-2.06 Qua cổng vực · PP-2.07 Tông tu hỏa · PP-2.08 Đoạn Thiên Dư Mạch · PP-2.09 Kết Kim Đan (nhiệm vụ cuối chương: `BREAKTHROUGH` → `KIM_DAN`, LR-03 STY-AC-002) | Nhiệm vụ `MAIN` chương 2 | `QC_MAIN_V2_*` (đề xuất của LR-03; cấp mã khi thiết kế Vực 2) |
 
 ---
 
@@ -327,20 +363,28 @@ steps:
   - stepId: S1
     objectives: [ { type: REACH, mapId: V1_HUB } ]
     objectiveMode: ALL
-    hintKey: q.main.v1.join_sect.s1
+    hintKey: q.main.v1.join_sect.s1                # Lão Đạo chỉ đường ra Cửa rừng (GD-16 V1_F01 §8.1)
+    markers: [ { mapId: V1_HUB } ]                 # HUD chỉ hướng biên e_hub
   - stepId: S2
     objectiveMode: ANY
     objectives:
-      - { type: KILL, monsterIds: [MON_E_BAMBOO_KING], count: 1, partyShare: true }
-      - { type: CHOICE, key: trial_of_heart }       # Trận Thử Tâm: chuỗi lựa chọn Ink
+      - { type: CHOICE, key: trial_of_heart }       # ĐƯỜNG CHÍNH — Trận Thử Tâm: chuỗi lựa chọn Ink (knot join_sect_trial, chạy khi bắt đầu bước)
+      - { type: KILL, monsterIds: [MON_E_BAMBOO_KING], count: 1, partyShare: true }   # TÙY CHỌN — tinh anh LK3 ở V1_F01 (tổ đội / quay lại sau); vẫn hoàn thành bước nếu làm được
     dialogueKnot: join_sect_trial
-  - stepId: S3
-    objectives: [ { type: TALK, npcId: NPC_V1_SECT_ELDER } ]
-    objectiveMode: ALL
-    dialogueKnot: join_sect_ceremony
-rewards: [ join, reward_basic ]
+    dialogueNpcId: NPC_V1_LAM_THANH_PHONG          # Lâm Thanh Phong chủ trì Trận Thử Tâm (QS-R-056, LR-02)
+    hintKey: q.main.v1.join_sect.s2                # chỉ nói về Trận Thử Tâm; marker trỏ Lâm Thanh Phong, không đặt marker cho tinh anh
+  - stepId: S3                                     # chọn tông + thử thách gia nhập của tông + bái sư tại tổng đàn (§5.8, GD-14 §5.4b)
+    objectiveMode: ANY                             # mỗi mục tiêu = một tông; NPC nghi lễ theo LR-02 §4
+    objectives:
+      - { type: TALK, npcId: NPC_V1_SECT_ELDER, branch: THANH_VAN }          # THANH_VAN — Hà Tri Viễn, Truyền Công Điện (V1_HUB)
+      - { type: TALK, npcId: NPC_TAC_THIEN_ELDER_CUNG, branch: TAC_THIEN }   # TAC_THIEN (Beta 1) — Cung Bất Hối, cổng Tạc Thiên Trại (V1_F03), nhận đầu danh trạng
+      - { type: TALK, npcId: NPC_HOP_HOAN_ELDER_DIEP, branch: HOP_HOAN }    # HOP_HOAN (Beta 1) — Diệp Tịnh Liên, Tâm Kính Đình (V1_F05), chủ trì Trận Mị Tâm
+    dialogueKnot: join_sect_ceremony               # knot theo NPC; hồ sơ alpha loại hai mục tiêu Beta (phase BETA)
+    # QS-R-053: TALK ghi branch; thử thách riêng của từng tông đặt ở bước kế với branchIn (QS-R-054)
+rewards: [ join, reward_basic ]                    # nhánh Tạc Thiên / Hợp Hoan: khóa thưởng theo nhánh (QS-R-052)
 actions:
   join:
+    - { type: JOIN_NPC_SECT, sectId: SECT_THANH_VAN }   # §5.8: JOIN_NPC_SECT {sectId}
     - { type: SET_NPC_SECT_RANK, rank: NGOAI_MON }
     - { type: SET_FLAG, scope: LIFE, flag: FLAG_JOINED_SECT }
     - { type: SET_FLAG, scope: ACCOUNT, flag: FLAG_ACC_JOINED_SECT }
@@ -377,6 +421,7 @@ tags: [chapter1, sect]
 | `LEARN_TECHNIQUE` | `refId` (`TEC_*` / `SKL_*`), `equipMain?`, `slot?` | GD-07 (không qua vật phẩm ngọc giản) |
 | `LEARN_RECIPE` | `recipeId` | GD-10 / GD-11 |
 | `SET_NPC_SECT_RANK` | `rank` | GD-14 (chỉ tăng bậc) |
+| `JOIN_NPC_SECT` | `sectId` | GD-14 §5.4b (gia nhập tông NPC — nhánh của `QC_MAIN_V1_JOIN_SECT`) |
 | `ADVANCE_TUTORIAL_REALM` | — | Đánh dấu hoàn thành hướng dẫn cho GD-04 CU-R-023 (PN1 → LK1) |
 | `REMOVE_STATUS` | `statusId`, `allStacks` | GD-06 |
 | `CHANGE_HEART_STATE` | `delta` (−20..20) | GD-04 |
@@ -507,6 +552,8 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `quest_funnel` | questId, stepIndex, minutesInStep | **Bước nào người chơi bỏ cuộc** (chương 1) |
@@ -536,7 +583,7 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 | QS-AC-013 | Hoàn thành 3 nhiệm vụ hằng ngày | Tổng cống hiến hôm đó | 300 |
 | QS-AC-014 | Đổi ô lần 2 trong ngày | Đổi | Từ chối |
 | QS-AC-015 | Nhiệm vụ hằng ngày làm dở lúc 05:00 | Làm mới | `FAILED`, không bù |
-| QS-AC-016 | Nhận `ST_HEART_DEMON` | Theo dõi | `QC_QUIET_HEART` khả dụng ở Tĩnh Tâm Thiền Sư; xong → gỡ mọi tầng, tâm cảnh +10; làm lại trong 3 ngày bị chặn |
+| QS-AC-016 | Nhận `ST_HEART_DEMON` | Theo dõi | `QC_QUIET_HEART` khả dụng ở Tĩnh Tâm Lão Nhân; xong → gỡ mọi tầng, tâm cảnh +10; làm lại trong 3 ngày bị chặn |
 | QS-AC-017 | Thọ còn ≤ 10% | `warning_level_changed` → `GREAT_LIMIT` | `QC_GREAT_LIMIT_SEEK` và `QC_GREAT_LIMIT_LEGACY` cùng `ACTIVE` |
 | QS-AC-018 | Hoàn thành `QC_GREAT_LIMIT_LEGACY` rồi tọa hóa | GD-26 tính điểm | +20 điểm Luân Hồi |
 | QS-AC-019 | `QC_MAIN_V1_09` khi nhân vật kiếp 2 (hết bảo hộ) | Xem bước | Có đường thay thế nộp Bách Niên Linh Thảo ×3 (QS-R-004) |
@@ -545,6 +592,11 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 | QS-AC-022 | Nhiệm vụ `SIDE` | Thử lược truyện | Không có nút |
 | QS-AC-023 | Kết thúc kiếp | GD-26 bước 4 | Mọi `quest_progress` của nhân vật bị đóng; vật phẩm `QUEST` bị hủy cùng túi |
 | QS-AC-024 | (Beta) Hoàn thành 4 nhiệm vụ `QW_*` trong tuần | Uy vọng | +30 (trần), kinh nghiệm tông môn +600 cho 3 nhiệm vụ đầu |
+| QS-AC-025 | `QC_MAIN_V1_JOIN_SECT` bước S3 | TALK `NPC_TAC_THIEN_ELDER_CUNG` | `branch = TAC_THIEN`; TALK NPC tông khác sau đó không đổi `branch` (QS-R-053) |
+| QS-AC-026 | Nhân vật thuộc `SECT_THANH_VAN` ở `QC_MAIN_V1_07` S2 | TALK `NPC_TAC_THIEN_CHIEF` | Không tiến độ, không marker (QS-R-054) |
+| QS-AC-027 | Nhân vật `SECT_HOP_HOAN` nhận `QC_MAIN_V1_11` | Mở nhiệm vụ | NPC giao / trả = `giverNpcBySect.SECT_HOP_HOAN` (QS-R-055) |
+| <a id="qs-ac-028"></a>QS-AC-028 | `QC_MAIN_V1_JOIN_SECT` vừa sang S2 | (a) chọn xong `trial_of_heart`; (b) thay vào đó tổ đội hạ `MON_E_BAMBOO_KING` (`partyShare`) | Cả (a) và (b) đều hoàn thành S2 (`ANY`); khi S2 bắt đầu, knot `join_sect_trial` chạy và HUD chỉ hiện gợi ý `q.main.v1.join_sect.s2` (Trận Thử Tâm), không có marker tới tinh anh |
+| <a id="qs-ac-029"></a>QS-AC-029 | `QC_MAIN_V1_JOIN_SECT` ở bước S2 | Nhân vật vào `V1_HUB` nhưng chưa nói chuyện với Lâm Thanh Phong | Knot `join_sect_trial` chưa chạy; marker trỏ `NPC_V1_LAM_THANH_PHONG`; TALK → knot chạy (QS-R-056) |
 
 ---
 
@@ -559,7 +611,8 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 | Lược truyện / bỏ qua hướng dẫn | | ✅ | | |
 | ~25 nhiệm vụ phụ Vực 1 | | ✅ | | |
 | Nhiệm vụ tông môn tự lập hằng tuần | | | ✅ | |
-| Chương 2 (Vực 2) | | | ✅ | |
+| Chương 2 phần 2A (`SIDE` / cơ duyên Vực 1 sau Trúc Cơ, §5.11) | | ✅ | | |
+| Chương 2 phần 2B (Vực 2, `MAIN`) — Beta 2 (D-25) | | | ✅ | |
 | Tháp thí luyện (PLAN §4.16) | | | | ✅ (tài liệu riêng) |
 
 ---
@@ -570,6 +623,7 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 - [ ] **QS-Q-3:** Nhiệm vụ hằng ngày có nên cho làm bù tối đa 1 ngày (bận một hôm) không? Mâu thuẫn QS-R-005. *Mặc định: không.*
 - [ ] **QS-Q-4:** Có lồng tiếng / thoại có âm thanh cho nhiệm vụ chính không (chi phí lớn)? *Mặc định: không, chỉ chữ + hiệu ứng âm thanh.*
 - [ ] **QS-Q-5:** `QC_MAIN_V1_09` (hiểm địa có hướng dẫn) có nên đặt sớm hơn (LK4) để người chơi trải nghiệm trước khi bảo hộ có thể kết thúc?
+- [x] **QS-Q-6:** *(Đã chốt 2026-10-25: `Objective.branch` / `branchIn` / `requires`, `QuestConditions.npcSectAny`, `QuestDef.giverNpcBySect` — QS-R-053..055.)* `QuestDef` chưa có cách gắn **NPC / mục tiêu theo nhánh tông**: bước S3 `QC_MAIN_V1_JOIN_SECT` (ba NPC nghi lễ + ba thử thách gia nhập khác nhau), `giverNpcId` của `QC_MAIN_V1_05` / `_11`, NPC nộp chứng cứ `QC_MAIN_V1_07` (§5.10a). Chưa rõ: mục tiêu `TALK` trong bước `ANY` ghi `branch` bằng khóa nào; làm sao chặn nhân vật nhánh khác hoàn thành mục tiêu của tông khác. Cần Game Designer + Server Dev chọn cách (vd. trường `branch` tùy chọn trên `Objective`, nhiều `giverNpcId` theo nhánh, hoặc tách nhiệm vụ theo nhánh). Liên quan LR-02 CHR-Q-2.
 
 ---
 
@@ -580,4 +634,12 @@ CREATE TABLE quest_reward_log (                    -- idempotency phần thưở
 | v0.1 | 2026-10-22 | — | Bản nháp đầu: bất biến, kiểu dữ liệu (nhiệm vụ / bước / 17 loại mục tiêu), máy trạng thái, nguồn sự kiện, hội thoại Ink dùng chung GD-22, thưởng, Thanh Vân Tông hằng ngày, tông môn tự lập hằng tuần, 6 chuỗi được tài liệu khác yêu cầu, lược truyện cho kiếp sau, 15 nhiệm vụ chính chương 1, công thức thưởng + kiểm tra tỷ trọng, định dạng YAML, danh sách trắng hành động, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | `QC_MAIN_V1_JOIN_SECT` có 3 nhánh tông (GD-14 §5.4b); hành động `JOIN_NPC_SECT` |
 | v0.3 | 2026-10-23 | — | Chuỗi xuất thân `QC_TAC_THIEN_GANG`, `QC_HOP_HOAN_DISCIPLE`; hành động `CHANGE_REPUTATION` (GD-14 §5.4c) |
+| v0.4 | 2026-10-25 | — | Nhóm nhiệm vụ mùa `QW_SEASON_*` (GD-19) |
+| v0.5 | 2026-10-25 | — | `QC_SWORD_FLIGHT`; Trỏ telemetry chuẩn GD-20 |
+| v0.6 | 2026-10-25 | — | Trỏ kịch bản onboarding GD-18 §3 |
+| v0.7 | 2026-10-25 | — | Bổ sung `JOIN_NPC_SECT` vào danh sách trắng §8 (đã ghi ở v0.2 nhưng thiếu); NPC giao nhiệm vụ đề xuất ở LR-02 §4 |
+| v0.8 | 2026-10-25 | — | Đợt rà nhất quán: §5.10 thêm cột `giverNpcId` / NPC trả cho `QC_TUTORIAL_QI`..`QC_MAIN_V1_15` theo LR-02 §4; §5.10a lựa chọn nộp chứng cứ `QC_MAIN_V1_07` (cờ `FLAG_MINE_EVIDENCE`, `FLAG_TOLD_LAM_TRUTH`); §5.11 phác thảo chương 2 (2A Alpha, 2B Beta 2 — D-25); YAML `QC_MAIN_V1_JOIN_SECT` bước S3 có NPC nghi lễ ba tông + `JOIN_NPC_SECT`; `QC_TUTORIAL_QI` bắt đầu ở `V1_F01` cho mọi xuất thân; đổi "Tĩnh Tâm Thiền Sư" → "Tĩnh Tâm Lão Nhân" (WB-R-008); thêm QS-Q-6 |
+| v0.9 | 2026-10-25 | — | Chốt QS-Q-6: mục tiêu theo nhánh (`branch`, `branchIn`, `requires`), `npcSectAny`, `giverNpcBySect` (QS-R-053..055, QS-AC-025..027) |
+| v0.10 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: `QC_MAIN_V1_JOIN_SECT` S2 — Trận Thử Tâm (`CHOICE trial_of_heart`) là đường chính, hạ Trúc Vương Thử là tùy chọn vẫn được tính (YAML: thứ tự mục tiêu, `hintKey` S2, không marker tinh anh; S1 `markers` `V1_HUB`); Lâm Thanh Phong đón ở `V1_HUB` (LR-02 CHR-R-045 — một vị trí cố định); QS-AC-028 |
+| v0.11 | 2026-10-25 | — | Lâm Thanh Phong chủ trì Trận Thử Tâm: trường `QuestStep.dialogueNpcId` (QS-R-056, QS-AC-029) |
 

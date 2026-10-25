@@ -687,4 +687,3 @@ CREATE TABLE boss_kill_log (
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, kiểu dữ liệu (quái, archetype, spawn, tinh anh, nhóm cơ duyên, boss, bảng rơi đồ), máy trạng thái AI, chỉ số, spawn, nhận biết & threat, dây xích, hành vi chiến đấu, cảnh báo tối thiểu, bao vây công bằng, boss, tính công & rơi đồ cá nhân, quái cơ duyên, môi trường, ẩn thân, hiểm địa, công thức + ví dụ, bestiary Vực 1, ví dụ boss, API, nghiệm thu |
-

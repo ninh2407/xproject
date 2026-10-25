@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-04 · Prefix ID: `CU` |
 | Owner | Game Designer |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.6 |
 | Cần trước | Phase 1 (tu vi, tầng nhỏ), Phase 2 (đả tọa, đan độc), Phase 3 (đột phá bằng vật phẩm, thiên kiếp) |
 | Quyết định nền | PLAN D-03, D-05, D-11 |
 | Liên quan | [PLAN §4.4](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-27 Thiên phú](04-talents.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-21 Open World](22-open-world.md) · GD-06 Chỉ số · GD-07 Kỹ năng · GD-10 Luyện đan · GD-12 Quái · GD-28 Hiểm địa |
@@ -49,10 +49,10 @@
 
 ```
                   NGUỒN TU VI (§5.3–5.5)                          tỷ trọng mục tiêu
-   đan dược ────────────── × cultivationSpeed, × hiệu quả đan độc ── 35–40%
-   đả tọa / bế quan ────── × cultivationSpeed, × địa điểm / giờ ──── 20–25%
+   đan dược ────────────── × cultivationSpeed, × hiệu quả đan độc ── 30–35%
+   đả tọa / bế quan ────── × cultivationSpeed, × địa điểm / giờ ──── 10–15%
    thiên tài địa bảo, cơ duyên ── % yêu cầu tầng ──────────────────── 15–20%
-   đánh quái ───────────── chênh cảnh giới, mệt mỏi 24h ──────────── ~15%
+   đánh quái ───────────── chênh cảnh giới, mệt mỏi 24h ──────────── 20–25%
    nhiệm vụ ────────────── cố định ───────────────────────────────── ~5%
                           │
                           ▼
@@ -69,6 +69,8 @@
 ```
 
 ---
+
+> Tỷ trọng mục tiêu chỉnh lại 2026-10-25 theo đối chiếu GD-03 (C3–C5, LOOP-R-010); Balance Simulator kiểm chứng ở Phase 3.
 
 ## 3. Thực thể & kiểu dữ liệu
 
@@ -178,7 +180,7 @@ interface BreakthroughAttempt {
 |-----------|----|:----:|:------------------:|------------------|
 | Phàm nhân | `PN` | 1 | 80 | Hướng dẫn; chưa có kỹ năng công pháp |
 | Luyện Khí | `LK` | 9 | 120 | Combat cơ bản, 4 ô kỹ năng, hiểm địa nhất giai |
-| Trúc Cơ | `TC` | 4 (Sơ · Trung · Hậu · Viên Mãn) | 250 | Ô kỹ năng thứ 5, khinh công (né lướt 2 lần), luyện đan cấp 2, chế công pháp Hoàng – Huyền ([GD-08 TF-R-011](14-technique-crafting.md#tf-r-011)), ngự kiếm (Beta), hiểm địa nhị giai |
+| Trúc Cơ | `TC` | 4 (Sơ · Trung · Hậu · Viên Mãn) | 250 | Ô kỹ năng thứ 5, khinh công (né lướt 2 lần), luyện đan cấp 2, chế công pháp Hoàng – Huyền ([GD-08 TF-R-011](14-technique-crafting.md#tf-r-011)), ngự kiếm (Beta, + nhiệm vụ `QC_SWORD_FLIGHT` — GD-31), hiểm địa nhị giai |
 | Kim Đan | `KD` | 4 | 500 | Pháp bảo bản mệnh, chế công pháp phẩm Địa, ô tuyệt kỹ, hiểm địa tam giai |
 | Nguyên Anh | `NA` | 4 | 1.000 | Nguyên Anh xuất khiếu (sau launch) |
 | Hóa Thần | `HT` | 4 | 2.000 | Hướng tới Phi Thăng (sau launch) |
@@ -499,6 +501,7 @@ Balance Simulator (PLAN §6.5) chạy các hồ sơ người chơi (chỉ đánh
 | `POST /internal/v1/breakthrough/{attemptId}/tribulation-result` | `{ survived, hpPctEnd, timedOutDisconnect: boolean }` | `{ state }` | CU-R-074..077 |
 
 ### 9.2. API công khai (Client → API Service)
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -642,6 +645,8 @@ CREATE UNIQUE INDEX ux_bt_one_open ON breakthrough_attempt(character_id)
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `exp_gain` (gộp theo giờ) | source, applied, wasted, realmCode | **Tỷ trọng nguồn tu vi thực tế** so với mục tiêu §2 |
@@ -727,4 +732,7 @@ CREATE UNIQUE INDEX ux_bt_one_open ON breakthrough_attempt(character_id)
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, cảnh giới & tầng, tu vi & bình cảnh, đả tọa, đan độc, tu vi từ quái, đột phá (điều kiện, tỷ lệ, vận công, tâm ma, thiên kiếp, thành công / thất bại), tâm cảnh & tâm ma (chuẩn), công thức + ví dụ, gamedata, API, DB, nghiệm thu |
 | v0.2 | 2026-10-20 | — | Cooldown sau thất bại 3600s → **900s**; thêm CU-R-083 (trong hồi quang phản chiếu được thử lại ngay, thất bại thì tọa hóa) và CU-R-084 (hoãn tọa hóa khi đang đột phá); CU-AC-027..030 |
 | v0.3 | 2026-10-23 | — | CU-R-071: binh giải trong thiên kiếp lethal (GD-26 §5.16) |
+| v0.4 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.5 | 2026-10-25 | — | Ngự kiếm cần `QC_SWORD_FLIGHT`; Trỏ telemetry chuẩn GD-20 |
+| v0.6 | 2026-10-25 | — | Tỷ trọng nguồn tu vi chỉnh theo GD-03 (đan 30–35%, đả tọa 10–15%, quái 20–25%) |
 

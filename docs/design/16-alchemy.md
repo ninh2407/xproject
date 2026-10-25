@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-10 · Prefix ID: `AL` |
 | Owner | Game Designer + Client Dev (minigame) |
-| Trạng thái | 🟡 Bản nháp v0.2 |
+| Trạng thái | 🟡 Bản nháp v0.7 |
 | Cần trước | Phase 3 (PLAN: "Luyện Đan đầy đủ"); bản thô minigame ở Phase 2 |
 | Quyết định nền | PLAN D-05 (tu luyện dựa vào đan dược), D-17 · PLAN §4.12 |
 | Liên quan | [PLAN §4.12](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-13 Kinh tế](19-economy.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-27 Thiên phú](04-talents.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-21 Open World](22-open-world.md) · [GD-06 Chỉ số](12-stats-formulas.md) · GD-11 Luyện khí |
@@ -198,7 +198,7 @@ interface CraftSession {
 | Giải độc / tâm | `DETOX`, `HEART_DEMON_CURE` | Lượng giải độc × hệ số; tâm ma: Cực phẩm gỡ thêm 1 tầng | Giải Độc Đan, Thanh Tâm Đan |
 | Diên thọ | `LIFESPAN_EXTENSION` | `baseYears` × hệ số phẩm chất, rồi giảm dần theo GD-26 §6.3 | Diên Thọ Đan (Beta) |
 
-- <a id="al-r-071"></a>**AL-R-071** **Đan phương Trúc Cơ Đan** (`RCP_TRUC_CO_DAN`) luôn mua được ở mọi con đường (GD-14 SO-R-04N): Bảo Khố cấp 1 của mọi đại tông NPC (600 cống hiến), Tông Khố tông tự lập cấp 2 (300 merit), Tạp Hóa `SHOP_V1_GENERAL` (3.000 linh thạch, `LK7`) và rơi ở BC03; nguyên liệu chính `ITM_NGUNG_CO_THAO` chỉ có ở hiểm địa `V1_HD01` (GD-28). Đây là vòng lặp "hiểm địa → luyện đan → đột phá" của Vực 1.
+- <a id="al-r-071"></a>**AL-R-071** **Đan phương Trúc Cơ Đan** (`RCP_TRUC_CO_DAN`) luôn mua được ở mọi con đường (GD-14 SO-R-04N): Bảo Khố cấp 1 của mọi đại tông NPC (600 cống hiến), Tông Khố tông tự lập cấp 2 (300 merit), Tạp Hóa `SHOP_V1_GENERAL` (2.000 linh thạch, `LK7`) và rơi ở BC03; nguyên liệu chính `ITM_NGUNG_CO_THAO` chỉ có ở hiểm địa `V1_HD01` (GD-28). Đây là vòng lặp "hiểm địa → luyện đan → đột phá" của Vực 1.
 
 ### 5.6. Đan lô và hỏa chủng
 - <a id="al-r-080"></a>**AL-R-080** Đan lô là vật phẩm (category `TOOL`, GD-09) nằm trong `BAG`, không tiêu hao, không hỏng. Hỏa chủng (category `MATERIAL`, tag `fire`) tiêu 1 mỗi lần luyện (không phụ thuộc số mẻ).
@@ -343,7 +343,7 @@ Luyện đan sư cấp 3, `RCP_TRUC_CO_DAN` (`baseSuccess` 45, `levelReq` 3), T�
 |----|-----|------|-----|-------------------------|
 | `ITM_HERB_THANH_DIEP` | Thanh Diệp Thảo | PHAM | `herb`, `herb_moc` | F01, F02 |
 | `ITM_HERB_HUYET_LINH` | Huyết Linh Chi | PHAM | `herb`, `herb_hoa` | F02, F05 |
-| `ITM_HERB_NGUYET_QUANG` | Nguyệt Quang Thảo | LINH | `herb`, `herb_thuy` | F02, F05; chỉ `NIGHT` |
+| `ITM_HERB_NGUYET_QUANG` | Nguyệt Quang Thảo | LINH | `herb`, `herb_thuy` | F01 (vài điểm ven suối — GD-16 `V1_F01` §7), F02, F05; chỉ `NIGHT` |
 | `ITM_HERB_DUONG_VIEM` | Dương Viêm Hoa | LINH | `herb`, `herb_hoa` | F03, F06; chỉ giờ Ngọ |
 | `ITM_HERB_THUY_LINH` | Thủy Linh Thảo | LINH | `herb`, `herb_thuy` | F02, F04; chỉ `RAIN` |
 | `ITM_HERB_DOC_TAM` | Độc Tâm Liên | LINH | `herb`, `herb_doc` | F04 |
@@ -401,6 +401,7 @@ Luyện đan sư cấp 3, `RCP_TRUC_CO_DAN` (`baseSuccess` 45, `levelReq` 3), T�
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -523,6 +524,8 @@ Mã lý do mới: `item_log` `CRAFTING_REFUND`; `lifespan_ledger` `CRAFTING_REFU
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `craft_session` | recipeId, mode, score, success, quality, pattern, batches, level | Phân phối điểm, tỷ lệ thành công thực tế, chế độ phổ biến |
@@ -588,7 +591,7 @@ Mã lý do mới: `item_log` `CRAFTING_REFUND`; `lifespan_ledger` `CRAFTING_REFU
 
 ## 17. Câu hỏi mở
 - [x] **AL-Q-1:** *(Đã chốt 2026-10-23: **ký ức nghề + khảo hạch theo giai đoạn** Sơ / Trung / Cao — §5.9, áp dụng cả luyện khí.)* Cấp luyện đan sư mất khi hết kiếp có quá nặng với người chơi chuyên nghề?
-- [ ] **AL-Q-2:** Minigame dùng chuột trái giữ lửa có xung đột thao tác không? Phương án: phím W/S.
+- [ ] **AL-Q-2** (phím minigame là ngữ cảnh riêng — GD-24 CAM-R-020): Minigame dùng chuột trái giữ lửa có xung đột thao tác không? Phương án: phím W/S.
 - [ ] **AL-Q-3:** MVP không có giao dịch: người không thích luyện đan vẫn bắt buộc luyện Trúc Cơ Đan. Có nên cho NPC "luyện thuê" (đưa nguyên liệu + phí cao, điểm tự động) không?
 - [ ] **AL-Q-4:** Có hiển thị nhiễu hỏa khí trước 0,5s (gợi ý) để người chơi phản ứng kịp, hay giữ bất ngờ?
 - [ ] **AL-Q-5:** Đan văn ×1,2 có làm đan Cực phẩm + đan văn quá mạnh với đan đột phá? (đan đột phá hiện chỉ dùng phẩm chất, đan văn không cộng thêm tỷ lệ).
@@ -601,4 +604,9 @@ Mã lý do mới: `item_log` `CRAFTING_REFUND`; `lifespan_ledger` `CRAFTING_REFU
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-21 | — | Bản nháp đầu: bất biến, khung `RecipeDef` / `CraftSession` dùng chung với GD-11, máy trạng thái phiên, minigame hỏa hầu tất định (server mô phỏng lại), thành / bại, phẩm chất, đan văn, bạo đan, chi phí (phí, thọ nguyên), loại đan, đan lô & hỏa chủng, cấp luyện đan sư & thuần thục, học đan phương, công thức + ví dụ Trúc Cơ Đan, 11 nguyên liệu, 10 đan phương, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Chốt AL-Q-1: **ký ức nghề** cấp tài khoản + **khảo hạch theo giai đoạn** Sơ / Trung / Cao (§5.9) — khôi phục cấp và đan phương kiếp trước bằng minigame kỹ năng, không roll; bảng `profession_memory`, `profession_trial`; AL-AC-024..030 |
+| v0.3 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.4 | 2026-10-25 | — | AL-Q-2 trỏ GD-24 CAM-R-020 |
+| v0.5 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.6 | 2026-10-25 | — | Giá Tạp Hóa 2.000 (GD-03 C6) |
+| v0.7 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: `ITM_HERB_NGUYET_QUANG` mọc thêm ở F01 (vài điểm ven suối, chỉ `NIGHT`) |
 

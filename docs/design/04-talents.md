@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-27 · Prefix ID: `TLN` |
 | Owner | Game Designer |
-| Trạng thái | 🟡 Bản nháp v0.2 |
+| Trạng thái | 🟡 Bản nháp v0.5 |
 | Cần trước | Phase 1 (bản thô 10–15 thiên phú), Phase 2 (đầy đủ) |
 | Quyết định nền | PLAN D-04, D-12, D-17 |
 | Liên quan | [PLAN §4.3](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-21 Open World](22-open-world.md) · GD-04 Tu luyện · GD-06 Chỉ số & Công thức · GD-07 Kỹ năng · GD-29 RNG |
@@ -140,7 +140,7 @@ interface Background {
   rootRules?: { gradeWeightsOverride?: Partial<Record<RootGrade, number>> };
   talentRules?: { guaranteedHidden?: { minRarity: TalentRarity; revealOn: 'TC1' } };
   start: {
-    mapId: string; poiId: string;
+    mapId: string; poiId: string;   // điểm xuất hiện: mọi xuất thân = { mapId: "V1_F01", poiId: "V1_F01_LM_001" } (miếu hoang, TLN-R-032)
     items: { itemId: string; qty: number }[];
     spiritStones: number;
     knownRecipes: string[];     // RCP_* (đan phương / khí phổ)
@@ -224,14 +224,14 @@ Attempt **không hết hạn**: người chơi thoát game giữa chừng, lần
 | `BG_SMITH_APPRENTICE` | Thợ rèn tiểu tử | Mặc định | constitution +5, comprehension −5 | 50 linh thạch, 1 khí phổ (`RCP_THIET_KIEM`), búa rèn | Tag `smith` |
 | `BG_NOBLE` | Thế gia công tử | `UNL_BG_NOBLE` | comprehension +5, luck −10 | 1.000 linh thạch, kiếm phẩm Linh (`requiredRealm` LK3), áo gấm | Cờ `FLAG_FAMILY_ENEMY` (cơ duyên ám sát / tranh đoạt gia tộc) |
 | `BG_ORPHAN` | Cô nhi lưu lạc | `UNL_BG_ORPHAN` | luck +15, constitution −5, comprehension −5 | 0 linh thạch, áo rách | karma +10; tag `orphan` |
-| `BG_SECT_SERVANT` | Tông môn tạp dịch | `UNL_BG_SECT_SERVANT` | constitution +5, comprehension −5 | Thành viên ngoại môn Thanh Vân Tông, 30 linh thạch | Bắt đầu ở khu tông môn trong `V1_HUB`; chuỗi `QC_SECT_SERVANT` |
-| `BG_TAC_THIEN_GANG` | Bang chúng Tạc Thiên | `UNL_BG_TAC_THIEN_GANG` | luck +5, comprehension −5 | Lâu la (`TAP_DICH`) của Tạc Thiên Bang, 30 linh thạch, 1 Truyền Tống Phù sơ cấp | Bắt đầu ở `V1_HUB` (người liên lạc của bang); karma −5; tag `outlaw`; chuỗi `QC_TAC_THIEN_GANG` (Beta) |
-| `BG_HOP_HOAN_DISCIPLE` | Hợp Hoan đệ tử | `UNL_BG_HOP_HOAN_DISCIPLE` | spiritSense +5, constitution −5 | Tạp dịch (`TAP_DICH`) của Hợp Hoan Tông, 30 linh thạch, quạt gỗ (`FAN`) | Bắt đầu ở `V1_HUB` (sứ giả của tông); tag `charm`; chuỗi `QC_HOP_HOAN_DISCIPLE` (Beta) |
+| `BG_SECT_SERVANT` | Tông môn tạp dịch | `UNL_BG_SECT_SERVANT` | constitution +5, comprehension −5 | Thành viên ngoại môn Thanh Vân Tông, 30 linh thạch | Sau hướng dẫn ở `V1_F01`, đến khu tông môn trong `V1_HUB` (TLN-R-032); chuỗi `QC_SECT_SERVANT` |
+| `BG_TAC_THIEN_GANG` | Bang chúng Tạc Thiên | `UNL_BG_TAC_THIEN_GANG` | luck +5, comprehension −5 | Lâu la (`TAP_DICH`) của Tạc Thiên Bang, 30 linh thạch, 1 Truyền Tống Phù sơ cấp | Sau hướng dẫn ở `V1_F01`, đến `V1_HUB` gặp người liên lạc của bang (TLN-R-032); karma −5; tag `outlaw`; chuỗi `QC_TAC_THIEN_GANG` (Beta) |
+| `BG_HOP_HOAN_DISCIPLE` | Hợp Hoan đệ tử | `UNL_BG_HOP_HOAN_DISCIPLE` | spiritSense +5, constitution −5 | Tạp dịch (`TAP_DICH`) của Hợp Hoan Tông, 30 linh thạch, quạt gỗ (`FAN`) | Sau hướng dẫn ở `V1_F01`, đến `V1_HUB` gặp sứ giả của tông (TLN-R-032); tag `charm`; chuỗi `QC_HOP_HOAN_DISCIPLE` (Beta) |
 | `BG_OUTCAST` | Phế vật bị trục xuất | `UNL_BG_OUTCAST` | — | 0 linh thạch | Linh căn chỉ ra `QUAD`/`PENTA`; **đảm bảo 1 thiên phú ẩn ≥ LEGENDARY**, lộ khi lên `TC1` (TLN-R-062) |
 
 - <a id="tln-r-030"></a>**TLN-R-030** `statOffsets` cộng **sau** khi roll chỉ số (§6.1); kết quả chặn trong `[params.innateCreationMin (5), params.innateCreationMax (95)]`.
 - <a id="tln-r-031"></a>**TLN-R-031** Vật phẩm khởi đầu vào `BAG`; đan phương / khí phổ ghi vào `recipe_known`; cờ ghi `character_flag`; tất cả trong transaction tạo nhân vật.
-- <a id="tln-r-032"></a>**TLN-R-032** Mọi xuất thân bắt đầu ở `PN1` và đi qua phần hướng dẫn chung; xuất thân chỉ đổi điểm xuất hiện, hội thoại mở đầu và các cờ.
+- <a id="tln-r-032"></a>**TLN-R-032** Mọi xuất thân bắt đầu ở `PN1`, **xuất hiện ở miếu hoang `V1_F01`** — `start.mapId = "V1_F01"`, `start.poiId = "V1_F01_LM_001"` (POI `LANDMARK` miếu hoang, GD-16 `V1_F01` LV1F01-R-001) cho **mọi** xuất thân (cảnh mở đầu, GD-18 §3) và đi qua phần hướng dẫn chung `QC_TUTORIAL_QI` (Lão Đạo, bãi tập Trúc Thử, cơ duyên `ENC_V1_FIRST_OMEN` — đều ở `V1_F01`); xuất thân chỉ đổi **điểm đến sau hướng dẫn** (NPC đón ở bước đầu của `start.questChain`, vd. người liên lạc / sứ giả ở `V1_HUB`), hội thoại mở đầu và các cờ.
 
 ### 5.3. Linh căn
 - <a id="tln-r-040"></a>**TLN-R-040** Roll **số hệ** theo `rootGradeWeights` (xuất thân có thể ghi đè):
@@ -649,6 +649,8 @@ CREATE TABLE account_talent_seen (
 
 ## 13. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `creation_roll` | idx, backgroundId, rootGrade, rarities[], locked | Phân bố thực tế khớp lý thuyết? |
@@ -726,4 +728,7 @@ CREATE TABLE account_talent_seen (
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, quy trình tạo nhân vật, xuất thân, linh căn, chỉ số bẩm sinh tổng cố định, thần thức, roll thiên phú + bảo hiểm, 34 thiên phú, thay đổi trong kiếp, hook, thức tỉnh, dung hợp, tâm ma, công thức, gamedata, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Thêm xuất thân `BG_TAC_THIEN_GANG` (Bang chúng Tạc Thiên) và `BG_HOP_HOAN_DISCIPLE` (Hợp Hoan đệ tử), theo GD-14 SO-Q-6 |
+| v0.3 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.4 | 2026-10-25 | — | Đợt rà nhất quán: TLN-R-032 — mọi xuất thân xuất hiện ở miếu hoang `V1_F01` và qua hướng dẫn chung; ba xuất thân gắn tông chỉ đổi điểm đến sau hướng dẫn (`V1_HUB`), khớp GD-18 / GD-15 `QC_TUTORIAL_QI` |
+| v0.5 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: TLN-R-032 ghi rõ `start = { mapId: "V1_F01", poiId: "V1_F01_LM_001" }` cho mọi xuất thân; điểm này cũng là nơi hồi sinh khi chưa kích hoạt truyền tống trận (GD-26 LC-R-061) |
 

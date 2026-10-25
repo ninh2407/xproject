@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-13 · Prefix ID: `EC` |
 | Owner | Game Designer (kinh tế) + Server Dev (dashboard) |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.7 |
 | Cần trước | Phase 2 (linh thạch, cửa hàng NPC, phí), Phase 4 (dashboard trước Alpha), Beta (giao dịch, Vạn Bảo Lâu) |
 | Quyết định nền | PLAN D-03, D-17 · PLAN §4.14 |
 | Liên quan | [PLAN §4.14](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-21 Open World](22-open-world.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-27 Thiên phú](04-talents.md) · GD-10 Luyện đan · GD-11 Luyện khí · [GD-14 Xã hội](20-social.md) · GD-15 Nhiệm vụ · GD-19 Monetization |
@@ -39,7 +39,7 @@
 
 | Mã | Bất biến |
 |----|----------|
-| <a id="ec-r-001"></a>**EC-R-001** | Không có quy đổi `JADE` ↔ `SPIRIT_STONE` dưới bất kỳ hình thức nào (kể cả qua vật phẩm trung gian bán được). Vật phẩm mua bằng `JADE` luôn `bind = ACCOUNT` và không bán NPC được. |
+| <a id="ec-r-001"></a>**EC-R-001** | Không có quy đổi `JADE` ↔ `SPIRIT_STONE` dưới bất kỳ hình thức nào (kể cả qua vật phẩm trung gian bán được). Vật phẩm mua bằng `JADE` luôn `bind = ACCOUNT` và không bán NPC được. Mã lý do ví `JADE`: danh mục riêng ở [GD-19 §10](50-monetization.md) (`JADE_*`). |
 | <a id="ec-r-002"></a>**EC-R-002** | NPC **không bán** vật phẩm độc quyền hiểm địa, đan đột phá, Diên Thọ Đan, Thế Thân Phù, Truyền Tống Phù, đan phẩm chất trên `HA`, trang bị trên phẩm `PHAM`. Những thứ này chỉ đến từ khám phá, chế tác, rơi đồ (và giao dịch người chơi ở Beta). |
 | <a id="ec-r-003"></a>**EC-R-003** | Mọi nguồn sinh linh thạch (faucet) và mọi nơi tiêu (sink) có `reasonCode` riêng trong `currency_ledger`, để dashboard đo được (§5.9). |
 | <a id="ec-r-004"></a>**EC-R-004** | Mọi giá, phí, tỷ lệ rơi linh thạch là tham số gamedata, chỉnh được không cần deploy code (đòn bẩy điều tiết, §5.10). |
@@ -213,7 +213,7 @@ hệ số khan hiếm: phổ biến 0,5 · thường 1,0 · hiếm 1,5 · độc
 |----|-----|---------|--------|
 | `SHOP_V1_PHARMACY` | Dược Điếm | Linh thạch | Đan hồi phục Hạ phẩm, Giải Độc Đan, Tị Độc Đan (`dailyLimit` 5), đan lô sơ cấp, đan phương cơ bản |
 | `SHOP_V1_ARMORY` | Binh Khí Phường | Linh thạch | Trang bị phẩm `PHAM` mọi ô, các dải `LK1`, `LK4`, `LK7`, `TC1` (theo `realmMin`) |
-| `SHOP_V1_GENERAL` | Tạp Hóa | Linh thạch | Nguyên liệu phổ biến (linh thảo thường, khoáng thường), búa rèn, ngọc giản Hoàng phẩm Hạ; **đan phương `RCP_TRUC_CO_DAN` 3.000 linh thạch, yêu cầu `LK7`** (đường cho tán tu, GD-14 SO-R-04N) |
+| `SHOP_V1_GENERAL` | Tạp Hóa | Linh thạch | Nguyên liệu phổ biến (linh thảo thường, khoáng thường), búa rèn, ngọc giản Hoàng phẩm Hạ; **đan phương `RCP_TRUC_CO_DAN` 2.000 linh thạch, yêu cầu `LK7`** (hạ từ 3.000 theo GD-03 C6) (đường cho tán tu, GD-14 SO-R-04N) |
 | `SHOP_V1_SECT_TREASURY` | Tông Môn Bảo Khố | Cống hiến tông môn | Ngọc giản tâm pháp / kỹ năng Hoàng – Huyền phẩm (GD-07), `ITM_AF_HO_THAN_KINH`, đan phương trung cấp |
 
 - <a id="ec-r-043"></a>**EC-R-043** Validator chặn mọi `ShopEntry` vi phạm EC-R-002 và EC-R-001.
@@ -347,6 +347,7 @@ Balance Simulator (PLAN §6.5) bổ sung mô-đun kinh tế: 1.000 nhân vật �
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Ghi chú |
 |----------|----------|---------|
@@ -450,6 +451,8 @@ Bảng `auction_listing` ở PLAN §5.4 được thay bằng định nghĩa trê
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện / chỉ số | Câu hỏi trả lời |
 |------------------|-----------------|
 | `currency_flow` (GD-09) theo `reasonCode` × dải | Tỷ trọng faucet thực tế so với EC-R-021 |
@@ -518,4 +521,7 @@ Bảng `auction_listing` ở PLAN §5.4 được thay bằng định nghĩa trê
 | v0.1 | 2026-10-21 | — | Bản nháp đầu: bất biến (không đổi Tiên Ngọc ↔ linh thạch, NPC không bán hàng khóa), IPH theo dải, faucet / sink cụ thể, định giá theo giờ công, giá trị trang bị theo phẩm, cửa hàng NPC, cống hiến tông môn, chuyển kiếp (trần 5.000), giao dịch trực tiếp + Vạn Bảo Lâu (Beta), giám sát & đòn bẩy, công thức + ví dụ, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Tạp Hóa bán đan phương Trúc Cơ Đan 3.000 linh thạch (`LK7`) cho tán tu (GD-14 SO-R-04N) |
 | v0.3 | 2026-10-23 | — | Đánh số lại câu hỏi phí giải ấn thành EC-Q-6 (trùng EC-Q-5) và chốt: phí theo tầng, `REMNANT_TRIAL_FEE` |
-
+| v0.4 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.5 | 2026-10-25 | — | Mã lý do ví JADE ở GD-19 §10 |
+| v0.6 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.7 | 2026-10-25 | — | Đan phương Trúc Cơ ở Tạp Hóa 2.000 linh thạch (GD-03 C6) |

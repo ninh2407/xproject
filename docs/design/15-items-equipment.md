@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-09 · Prefix ID: `IT` |
 | Owner | Game Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.2 |
+| Trạng thái | 🟡 Bản nháp v0.5 |
 | Cần trước | Phase 1 (túi đồ, trang bị cơ bản, vũ khí), Phase 2 (thuộc tính phụ, kho, thư, cửa hàng NPC, ô nhanh) |
 | Quyết định nền | PLAN D-01 (gắn trang bị vào bone), D-12, D-17 · PLAN §4.11, §5.4 |
 | Liên quan | [PLAN §4.11](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-27 Thiên phú](04-talents.md) · GD-10 Luyện đan · GD-11 Luyện khí · GD-13 Kinh tế · GD-19 Monetization |
@@ -43,7 +43,7 @@
 | <a id="it-r-002"></a>**IT-R-002** | Mọi thay đổi vị trí khác chủ / khác loại container, đổi chủ, tạo, hủy đều ghi `item_log` với `reasonCode` thuộc danh mục §5.10. |
 | <a id="it-r-003"></a>**IT-R-003** | Mẫu vật phẩm (`ItemTemplate`) nằm trong gamedata; DB chỉ lưu instance. |
 | <a id="it-r-004"></a>**IT-R-004** | Roll ngẫu nhiên (phẩm, thuộc tính phụ, mở rương) chạy trên server, seed ghi `rng_audit`. | Tên kind chuẩn: `ITEM_GRADE`, `ITEM_AFFIX`, `CONTAINER_OPEN` ([TD-01 §9.3](../tech/00-tdd.md)).
-| <a id="it-r-005"></a>**IT-R-005** | Tiên Ngọc (`JADE`) chỉ mua được ngoại hình và tiện ích không ảnh hưởng sức mạnh hay rủi ro chết (D-17). Không mẫu vật phẩm sức mạnh nào có giá `JADE`. |
+| <a id="it-r-005"></a>**IT-R-005** | Tiên Ngọc (`JADE`) chỉ mua được ngoại hình và tiện ích không ảnh hưởng sức mạnh hay rủi ro chết (D-17). Không mẫu vật phẩm sức mạnh nào có giá `JADE`. Danh mục đóng được phép / cấm bán: [GD-19 MZ-R-010](50-monetization.md). |
 | <a id="it-r-006"></a>**IT-R-006** | Không có độ bền / sửa đồ. Trang bị không hỏng theo thời gian. |
 
 ---
@@ -319,7 +319,7 @@ Chuyển vị trí hợp lệ (mọi chuyển khác bị từ chối):
 
 | Nhóm | Mã | Tài liệu sở hữu |
 |------|----|-----------------|
-| Tạo / nhận | `CHARACTER_CREATION`, `MONSTER_DROP`, `BOSS_DROP`, `ENCOUNTER`, `QUEST_REWARD`, `NPC_BUY`, `CONTAINER_OPENED`, `CRAFT_OUTPUT`, `MAIL_CLAIM`, `GM_GRANT`, `LEGACY_CLAIMED`, `BEAST_SOUL_GRANTED`, `BEAST_UNSEALED` | GD-27, GD-12, GD-22, GD-15, GD-09, GD-10/11, GD-26, GD-25 |
+| Tạo / nhận | `CHARACTER_CREATION`, `MONSTER_DROP`, `BOSS_DROP`, `ENCOUNTER`, `QUEST_REWARD`, `NPC_BUY`, `CONTAINER_OPENED`, `CRAFT_OUTPUT`, `MAIL_CLAIM`, `GM_GRANT`, `LEGACY_CLAIMED`, `BEAST_SOUL_GRANTED`, `BEAST_UNSEALED`, `GATHERED` (hái / khai khoáng, GD-21 / TD-04), `EVENT_REWARD` (GD-23) | GD-27, GD-12, GD-22, GD-15, GD-09, GD-10/11, GD-26, GD-25 |
 | Tiêu hao | `PILL_CONSUMED`, `TREASURE_CONSUMED`, `BREAKTHROUGH_CONSUMED`, `SCROLL_CONSUMED`, `FUSION_CONSUMED`, `DEATH_WARD_CONSUMED`, `ESCAPE_TALISMAN_CONSUMED`, `CRAFT_INPUT`, `DISMANTLE`, `QUEST_TAKE`, `ITEM_USED`, `BEAST_HATCH_CONSUMED`, `BEAST_SEALED` | GD-04, GD-07, GD-27, GD-26, GD-28, GD-10/11, GD-08, GD-15, GD-09, GD-25 |
 | Chuyển vị trí | `MOVE` (BAG ↔ WAREHOUSE), `VAULT_DEPOSIT`, `VAULT_WITHDRAW`, `ENDING_VAULT_DEPOSIT`, `MAIL_SEND`, `MAIL_OVERFLOW`, `DANGER_PICKUP`, `DANGER_EXTRACTED`, `CORPSE_LOOTED`, `MOVED_TO_CORPSE`, `MOVED_TO_LEGACY`, `AUCTION_LIST`, `AUCTION_CANCEL`, `AUCTION_SOLD`, `LIFE_ENDED_SEALED`, `SEAL_RELEASED` | GD-09, GD-26, GD-28, GD-13 |
 | Hoàn | `CRAFTING_REFUND` (GD-10 hủy phiên trong thời gian ân hạn) | GD-10 |
@@ -395,7 +395,7 @@ dangerBagEstimate = Σ value × qty (hiển thị, GD-28 HUD)
 ```jsonc
 // params.json
 {
-  "bagBaseSlots": 40, "bagMaxExpansion": 40, "warehouseSlots": 60,
+  "bagBaseSlots": 40, "bagMaxExpansion": 40,   /* 20 mua bằng Tiên Ngọc + 20 đạt trong game (GD-19 MZ-R-030, GD-26 UNL_BAG_SLOTS) */ "warehouseSlots": 60,
   "mailMaxCount": 50, "mailMaxItems": 5, "systemMailExpireDays": 14, "playerMailExpireDays": 30,
   "defaultStackMax": { "MATERIAL": 99, "PILL": 20, "TALISMAN": 10, "TREASURE": 10, "EQUIPMENT": 1, "ARTIFACT": 1, "TECHNIQUE_SCROLL": 1 },
   "quickSlots": 4,
@@ -483,6 +483,7 @@ Mỗi dải có đủ 9 ô (vũ khí 2 loại): `LK1` · `LK4` · `LK7` · `TC1`
 | `POST /internal/v1/loot/grant` | (GD-12 §9.1) | | **Bí danh** của `inventory/grant` với `reasonCode = MONSTER_DROP \| BOSS_DROP`, giữ để tương thích GD-12 / GD-28 |
 
 ### 9.2. API công khai (Client → API Service)
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -639,6 +640,8 @@ Bảng `item_instance`, `item_log` ở PLAN §5.4 được thay bằng định n
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `item_granted` (gộp) | templateId, grade, reasonCode, realmCode | Phân bố phẩm thực tế theo nguồn |
@@ -718,4 +721,6 @@ Bảng `item_instance`, `item_log` ở PLAN §5.4 được thay bằng định n
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, kiểu dữ liệu (mẫu, instance, container), bảng chuyển vị trí hợp lệ, sức chứa & cộng chồng, 9 ô trang bị, chỉ số cơ bản & trang bị chuẩn +30%, phẩm & 15 thuộc tính phụ, 3 bộ, ánh xạ độ hiếm ↔ phẩm & trần theo cơ duyên, dùng vật phẩm (13 loại), ràng buộc, tiền tệ, **danh mục mã lý do `item_log` hợp nhất**, công thức, pháp bảo, API cổng inventory, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Cột `item_instance.seal_band` cho Di Tàng (TD-03 §8) |
-
+| v0.3 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.4 | 2026-10-25 | — | Mở rộng túi 20 Tiên Ngọc + 20 trong game; trỏ GD-19 |
+| v0.5 | 2026-10-25 | — | Mã lý do `EVENT_REWARD` (GD-23); Trỏ telemetry chuẩn GD-20 |

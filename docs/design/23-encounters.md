@@ -4,10 +4,10 @@
 |------------|---------|
 | Mã tài liệu | GD-22 · Prefix ID: `ENC` |
 | Owner | Content Designer (nội dung) + Game Designer (hệ thống) |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.7 |
 | Cần trước | Phase 1 (engine), Phase 2–3 (nội dung) |
 | Quyết định nền | PLAN D-03, D-04, D-14, D-17 · Đánh giá Ink: Q23 |
-| Liên quan | [PLAN §4.7](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-21 Open World](22-open-world.md) · [GD-26 Vòng đời](03-lifecycle.md) · GD-27 Thiên phú · GD-28 Hiểm địa · GD-29 RNG & Công bằng · GD-12 Quái |
+| Liên quan | [PLAN §4.7](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-21 Open World](22-open-world.md) · [GD-26 Vòng đời](03-lifecycle.md) · GD-27 Thiên phú · GD-28 Hiểm địa · GD-29 RNG & Công bằng · GD-12 Quái · [AR-04 VFX Guidelines](../art/vfx-guidelines.md) §8.2, §11 (ID `presentation.vfx`) |
 
 > Đọc [docs/README.md §3](../README.md) trước khi triển khai. Tham số nằm ở `shared/gamedata/encounters/params.json`; nội dung cơ duyên ở `shared/encounters/` (§7).
 
@@ -98,12 +98,13 @@ interface EncounterDef {
   weight: number;                     // > 0
   cooldown?: { perCharacterRealSec?: number; perCharacterGameDays?: number };
   uniqueness: Uniqueness;
+  scripted?: boolean;                 // cơ duyên dàn dựng (GD-18 OB-R-030): bỏ qua roll xảy ra ENC-R-030, không tính pity / giới hạn tần suất ENC-R-011; kích hoạt theo điều kiện của GD sở hữu
   ink: { file: string; knot: string };            // shared/encounters/ink/{file}.{lang}.ink
   checks?: Record<string, CheckDef>;              // §6.3
   outcomes: Record<string, OutcomeSpec[]>;        // khóa → danh sách outcome (§8)
   spawnGroups?: Record<string, SpawnGroupRef>;    // cho START_COMBAT; SpawnGroupRef = { groupId: SG_* } trỏ tới SpawnGroupDef (GD-12 §3, §5.10)
   instanceMapId?: string;                         // cho OPEN_INSTANCE (type INSTANCE)
-  presentation: { cue: CueKind; npcModel?: string; vfx?: string; offerTtlSec?: number };
+  presentation: { cue: CueKind; npcModel?: string; vfx?: string; offerTtlSec?: number };   // vfx: ID VfxEffectDef trong vfx/effects.json (V-15), vd. VFX_WLD_ENCOUNTER_GLOW
   chain?: { chainId: string; stepId: string };    // chỉ với type CHAIN_STEP
   broadcast?: 'AUTO' | 'NEVER' | 'ALWAYS';        // mặc định AUTO (§5.10)
 }
@@ -452,6 +453,22 @@ outcomes:
 ```
 Luồng Ink: 5 cột đá, chọn thứ tự kích hoạt theo vòng tương sinh, bắt đầu từ cột đang sáng (Mộc → Hỏa → Thổ → Kim → Thủy). Sai 2 lần thì `failed`.
 
+**`ENC_V1_FIRST_OMEN` (Điềm Báo): phẩm PHAM, cơ duyên dàn dựng của onboarding (GD-18 OB-R-030, LR-03 PP-0.03)**
+```yaml
+id: ENC_V1_FIRST_OMEN
+tier: PHAM
+type: DIALOGUE
+scripted: true                                   # GD-18 OB-R-030: bỏ qua roll ENC-R-030, không tính pity / giới hạn tần suất
+trigger: { type: AREA_ENTER, areaIds: [V1_F01_A04] }        # vào Gò Linh Mạch — GD-16 V1_F01 §9.1 (mọi lộ trình ra Cửa rừng đều qua khu này)
+conditions: { maps: [V1_F01], realmMin: LK1, questStates: [ { questId: QC_TUTORIAL_QI, state: DONE } ] }
+weight: 1
+uniqueness: ONCE_PER_ACCOUNT
+presentation: { cue: OBJECT, vfx: VFX_WLD_ENCOUNTER_GLOW }  # mảnh đá hoa văn giống ngọc giản phát sáng (LR-03 PP-0.03)
+# ink, checks, outcomes: CHỜ VIẾT — yêu cầu: 2–3 lựa chọn, đúng 1 lựa chọn ROLL_CHECK (OB-R-030); mở mục Vạn Giới Lục đầu tiên của mạch ngọc giản (LR-03 PP-0.03)
+```
+
+**Điểm cơ duyên `V1_F01_ENC_001..004`** (POI `ENCOUNTER_POINT`, vị trí ở GD-16 `V1_F01` §9.1): cơ duyên `POI_PROXIMITY` cho các điểm này **chờ viết**; V-13 cảnh báo tới khi có.
+
 **`CHAIN_V1_KIEM_TRUNG` (Tàn kiếm cổ mộ): chuỗi phẩm DIA, 3 bước**
 ```yaml
 id: CHAIN_V1_KIEM_TRUNG
@@ -480,6 +497,7 @@ onFail: [ { type: GRANT_CURRENCY, currency: SPIRIT_STONE, amount: 200 } ]
 | V-11 | `weight > 0`; `realmMin ≤ realmMax`; enum hợp lệ |
 | V-12 | Mọi `titleKey`, `codexHintKey`, `hintKey` có bản dịch `vi` |
 | V-13 | Mỗi bản đồ `FIELD` có ít nhất 1 cơ duyên `POI_PROXIMITY` cho mỗi `ENCOUNTER_POINT` (cảnh báo, không fail) |
+| V-15 | `presentation.vfx` (nếu có) là `id` của một `VfxEffectDef` trong `shared/gamedata/vfx/effects.json` (AR-04 VFX-R-105; domain `vfx` chờ TD-07 đăng ký); không nhận mẫu kỹ năng `VFX_{MẪU}`, lớp phủ `VFXO_*` hay bảng màu |
 
 ---
 
@@ -682,6 +700,8 @@ CREATE INDEX ix_legacy_unclaimed ON legacy_cave(region_id) WHERE claimed_by IS N
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `enc_opportunity` | triggerType, candidates, p, hit | Tỷ lệ trúng thực tế theo loại trigger |
@@ -723,6 +743,7 @@ CREATE INDEX ix_legacy_unclaimed ON legacy_cave(region_id) WHERE claimed_by IS N
 | ENC-AC-022 | File Ink dùng `RANDOM(1, 10)` | CI | Validator V-08 fail |
 | ENC-AC-023 | 15 phiên liên tiếp không có phẩm HUYEN+ | Cơ hội thứ 16 có ứng viên HUYEN | Trọng số HUYEN+ ×3 (ENC-R-034) |
 | ENC-AC-024 | Bước chuỗi quá `expiresGameDays` | Job kiểm tra | Chuỗi `FAILED`, outcome `onFail` được áp dụng một lần |
+| <a id="enc-ac-025"></a>ENC-AC-025 | `presentation.vfx = "VFX_WLD_ENCOUNTER_GLOW"` / `"VFX_XYZ"` (không có trong `vfx/effects.json`) | CI | Pass / Validator V-15 fail (AR-04 VFX-AC-023) |
 
 ---
 
@@ -734,7 +755,7 @@ CREATE INDEX ix_legacy_unclaimed ON legacy_cave(region_id) WHERE claimed_by IS N
 | Ink chạy trên server, biến, hàm ngoài, tag lựa chọn | ✅ | | |
 | Loại `DIALOGUE`, `COMBAT`, `PUZZLE` (bằng lựa chọn Ink) | ✅ | | |
 | 20–30 cơ duyên Vực 1, 2 chuỗi | ✅ | | |
-| Validator V-01..V-13 trong CI | ✅ | | |
+| Validator V-01..V-15 trong CI | ✅ | | |
 | Thông báo toàn server, Vạn Giới Lục mục Cơ duyên | ✅ (cơ bản) | ✅ (nhánh đã thấy) | |
 | Encounter Previewer (chạy thử trong game, PLAN §6.5) | ✅ | | |
 | Loại `INSTANCE` (động phủ cổ, map `KN`) | | ✅ | |
@@ -763,4 +784,8 @@ CREATE INDEX ix_legacy_unclaimed ON legacy_cave(region_id) WHERE claimed_by IS N
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, pipeline, kiểu dữ liệu, máy trạng thái phiên, cơ hội / lọc / pity / trọng số, đặt chỗ & cooldown, Ink (biến, hàm ngoài, tag), outcome & danh sách trắng & trần phẩm cấp, chuỗi, động phủ truyền thừa, định dạng nội dung + ví dụ, validator, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Điều kiện `alignment`, `reputationMin`; outcome `CHANGE_REPUTATION` (GD-14 §5.4c) |
 | v0.3 | 2026-10-23 | — | Chốt ENC-Q-1: không có cơ duyên độc nhất toàn server |
+| v0.4 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.5 | 2026-10-25 | — | Cờ `scripted` cho cơ duyên dàn dựng; `ENC_V1_FIRST_OMEN` thuộc GD-18 OB-R-030 |
+| v0.6 | 2026-10-25 | — | Đợt rà nhất quán (AR-04): `presentation.vfx` chỉ nhận ID trong `vfx/effects.json` (validator V-15), ENC-AC-025 |
+| v0.7 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: §7.3 định nghĩa khung `ENC_V1_FIRST_OMEN` (`scripted`, trigger `AREA_ENTER V1_F01_A04`, điều kiện `QC_TUTORIAL_QI` `DONE`; Ink / outcome chờ viết); điểm `V1_F01_ENC_001..004` (`ENCOUNTER_POINT` đã có ở TD-13 §4) chờ nội dung |
 

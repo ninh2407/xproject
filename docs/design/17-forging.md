@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-11 · Prefix ID: `FG` |
 | Owner | Game Designer + Client Dev (minigame) |
-| Trạng thái | 🟡 Bản nháp v0.2 |
+| Trạng thái | 🟡 Bản nháp v0.5 |
 | Cần trước | Phase 4 / Alpha (chế tạo trang bị, phân giải); Beta (cường hóa, tẩy luyện, thăng phẩm, khắc trận văn) |
 | Quyết định nền | PLAN D-17 · PLAN §4.11, §4.13 |
 | Liên quan | [PLAN §4.13](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-10 Luyện đan](16-alchemy.md) (khung chế tác dùng chung) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-13 Kinh tế](19-economy.md) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-28 Hiểm địa](27-danger-zones.md) |
@@ -345,6 +345,7 @@ Một khí phổ cho mỗi ô (kiếm, quạt, áo, mũ, đai, giày, nhẫn, ng
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -447,6 +448,8 @@ Dùng lại `profession` (`kind = FORGING`), `recipe_known`, `craft_session` c�
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `forge_craft` | recipeId, score, success, grade, spiritBorn, catalyst | Phân phối phẩm theo điểm, giá trị của xúc tác |
@@ -509,7 +512,7 @@ Dùng lại `profession` (`kind = FORGING`), `recipe_known`, `craft_session` c�
 ## 17. Câu hỏi mở
 - [ ] **FG-Q-1:** Cường hóa ≥ +8 thất bại tụt 1 cấp có quá gắt? Phương án mềm: không tụt cấp, chỉ mất tài nguyên.
 - [ ] **FG-Q-2:** Trang bị tự rèn `ON_EQUIP` có làm thợ rèn khó bán hàng ở Beta? (Bán được trước khi mặc, nên vẫn ổn.)
-- [ ] **FG-Q-3:** Minigame nhịp cần hiệu chỉnh độ trễ âm thanh / màn hình cho từng máy (bước "căn chỉnh độ trễ" trong tùy chọn)?
+- [ ] **FG-Q-3:** Minigame nhịp cần hiệu chỉnh độ trễ âm thanh / màn hình cho từng máy (bước "căn chỉnh độ trễ" trong tùy chọn)? Xem cue phách và bù độ trễ ở [AU-01 §5](../audio/audio-design.md).
 - [ ] **FG-Q-4:** Dị tượng có nên được "đặt tên" như công pháp tự tạo (GD-08) để tăng cảm giác sở hữu? (GD-08 v0.1 đã có quy trình đặt tên + lọc + GM đổi tên, TF-R-005; có thể tái dùng.)
 - [ ] **FG-Q-5:** Đưa cường hóa +1 → +5 vào MVP (an toàn, không thất bại) để Thợ rèn tiểu tử có thêm việc làm?
 
@@ -521,4 +524,7 @@ Dùng lại `profession` (`kind = FORGING`), `recipe_known`, `craft_session` c�
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-21 | — | Bản nháp đầu: dùng chung khung GD-10, minigame rèn theo nhịp (server chấm lại), chế tạo (phẩm theo Q, xúc tác định hướng, dị tượng), phân giải, luyện đá, cường hóa (không phá hủy), tẩy luyện (giữ cũ / mới), thăng phẩm, khắc trận văn, cấp luyện khí sư, công thức + ví dụ, nguyên liệu & khí phổ Vực 1, API, DB, nghiệm thu; chia phạm vi Alpha / Beta |
 | v0.2 | 2026-10-23 | — | Ký ức nghề & khảo hạch theo giai đoạn (§5.12, theo GD-10 §5.9) |
+| v0.3 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.4 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.5 | 2026-10-25 | — | FG-Q-3 liên kết AU-01 §5 |
 

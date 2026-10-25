@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-28 · Prefix ID: `DZ` |
 | Owner | Game Designer + Content Designer |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.5 |
 | Cần trước | Phase 1 (thử nghiệm vào–lấy–thoát, hấp hối, chưa chết thật), Phase 3 (HD01, HD02 chết thật) |
 | Quyết định nền | PLAN D-03, D-13, D-17 · PLAN §4.5 |
 | Liên quan | [PLAN §4.5](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-12 Quái & AI](18-enemies-ai.md) · [GD-21 Open World](22-open-world.md) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-22 Cơ duyên](23-encounters.md) · GD-09 Vật phẩm · GD-10 Luyện đan · TD-12 World & Map |
@@ -232,7 +232,7 @@ interface Corpse {
 - <a id="dz-r-075"></a>**DZ-R-075** Tài khoản có ≥ `params.dormantAbuseLimit` (3) lần `FORCE_EXTRACTED` trong 7 ngày: thời hạn quy tức của lần sau giảm còn 20s và `damageTaken` chỉ −50%.
 
 ### 5.8. Sự cố server
-- <a id="dz-r-080"></a>**DZ-R-080** Game Server mất instance (sập, khởi động lại) khi lượt đang `ACTIVE`: mọi thành viên còn `IN`/`DOWNED`/`DORMANT_GUARD` được xử lý như **thoát thành công** (giữ `DANGER_BAG`), item_log `DANGER_SERVER_RECOVERY`, gắn `needsReview`. Người chơi không bị phạt vì lỗi của server. Khi **API Service** mất kết nối > 10s, Game Server tạm dừng đếm hấp hối và không phát sinh chết thật mới ([TD-01 §13](../tech/00-tdd.md)).
+- <a id="dz-r-080"></a>**DZ-R-080** Game Server mất instance (sập, khởi động lại) khi lượt đang `ACTIVE`: mọi thành viên còn `IN`/`DOWNED`/`DORMANT_GUARD` được xử lý như **thoát thành công** (giữ `DANGER_BAG`), item_log `DANGER_SERVER_RECOVERY`, gắn `needsReview`. Người chơi không bị phạt vì lỗi của server. Khi **API Service** mất kết nối > 10s, Game Server tạm dừng đếm hấp hối và không phát sinh chết thật mới ([TD-01 §13](../tech/00-tdd.md)). Tài khoản bị khóa khi đang trong hiểm địa → xử lý như `SERVER_RECOVERY` (TD-08).
 - <a id="dz-r-081"></a>**DZ-R-081** Job khởi động quét `danger_run_member` trạng thái mở thuộc instance không còn tồn tại và áp DZ-R-080.
 
 ### 5.9. Phần thưởng
@@ -374,6 +374,7 @@ Balance Simulator mô phỏng lượt hiểm địa với các hồ sơ (an toà
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai (Client → API Service)
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
@@ -519,6 +520,8 @@ ALTER TABLE item_instance ADD COLUMN origin_character_id UUID;     -- di vật (
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `dz_run` | dzId, partySize, layoutId | Tần suất, cỡ đội phổ biến |
@@ -600,4 +603,5 @@ ALTER TABLE item_instance ADD COLUMN origin_character_id UUID;     -- di vật (
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: bất biến, kiểu dữ liệu, máy trạng thái lượt / thành viên, vào hiểm địa, túi hiểm địa, 4 pha thời gian, thoát (lối thoát, Truyền Tống Phù), hấp hối & cứu, di hài, quy tức, sự cố server, phần thưởng & vật phẩm độc quyền, nguy hiểm riêng / bẫy / kinh động, instance chung (Beta), công thức, HD01 + HD02, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | DZ-R-005: hiểm địa không có PvP kể cả khi bật PvP dã ngoại (GD-32) |
 | v0.3 | 2026-10-23 | — | Chốt DZ-Q-5: **Ma Vực** hiểm địa PvP chết thật ở Beta 2 (§5.12, nguyên tắc định trước) |
-
+| v0.4 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.5 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |

@@ -4,9 +4,9 @@
 |------------|---------|
 | Mã tài liệu | GD-06 · Prefix ID: `SF` |
 | Owner | Game Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.5 |
 | Cần trước | Phase 1 (công thức sát thương, poise, thể lực), Phase 2 (bảng chỉ số đầy đủ, status) |
-| Liên quan | [PLAN §4.9](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-22 Cơ duyên](23-encounters.md) · GD-09 Trang bị · GD-12 Quái |
+| Liên quan | [PLAN §4.9](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-27 Thiên phú](04-talents.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-22 Cơ duyên](23-encounters.md) · GD-09 Trang bị · GD-12 Quái · [GD-14 Xã hội](20-social.md) (`TEC_HOP_HOAN_MI` → `ST_CHARMED`) · [AR-03 Animation List](../art/animation-list.md) (clip khóa thời lượng phản ứng / né) |
 
 > Đọc [docs/README.md §3](../README.md) trước khi triển khai. Tham số nằm ở `shared/gamedata/stats/*.json` (§7). **Toàn bộ công thức trong tài liệu này là code dùng chung client/server** (client dùng để dự đoán và hiển thị, server là nguồn sự thật).
 
@@ -204,7 +204,7 @@ Cột "Bị khắc" là chiều ngược của cột "Khắc" (A khắc B ⇔ đ
 - <a id="sf-r-090"></a>**SF-R-090** Mỗi đòn có `poiseDamage` (dữ liệu kỹ năng). Poise mất = `poiseDamage × (1 + attacker.poiseDamage) × (1 + target.poiseDamageTaken)`.
 - <a id="sf-r-091"></a>**SF-R-091** Poise về 0 → **Phá thế** (`POISE_BREAK`): choáng `params.poiseBreakStunSec` (người chơi 1,0s · quái thường 1,5s · tinh anh 2,0s · boss 3,0s); trong thời gian phá thế mục tiêu nhận +20% sát thương; hết phá thế thì poise hồi đầy.
 - <a id="sf-r-092"></a>**SF-R-092** Poise hồi `params.poiseRegenPctPerSec` (20% `maxPoise`/s) sau `params.poiseRegenDelaySec` (3s) không mất poise.
-- <a id="sf-r-093"></a>**SF-R-093** **Phản ứng trúng đòn** (`HitReaction`, theo dữ liệu kỹ năng): `NONE` < `FLINCH` (giật nhẹ, không ngắt hành động) < `STAGGER` (ngắt hành động 0,4s) < `KNOCKBACK` (đẩy lùi `distance` m, ngắt 0,5s) < `KNOCKDOWN` (ngã 1,2s).
+- <a id="sf-r-093"></a>**SF-R-093** **Phản ứng trúng đòn** (`HitReaction`, theo dữ liệu kỹ năng): `NONE` < `FLINCH` (giật nhẹ, không ngắt hành động) < `STAGGER` (ngắt hành động 0,4s) < `KNOCKBACK` (đẩy lùi `distance` m, ngắt 0,5s) < `KNOCKDOWN` (ngã 1,2s, **gồm cả thời gian đứng dậy** — clip `KNOCKDOWN` + `GETUP` của AR-03 phát trong tổng thời lượng này). Thời lượng đọc từ `params.reactionSec` (`STAGGER` 0,4 · `KNOCKBACK` 0,5 · `KNOCKDOWN` 1,2); code và client (co giãn clip, AR-03 ANM-R-021) không hard-code số.
 - <a id="sf-r-094"></a>**SF-R-094** **Giáp hành động** (`armorLevel`, theo trạng thái hiện tại của mục tiêu, GD-07): `NONE` · `LIGHT` (bỏ qua `FLINCH`) · `HEAVY` (bỏ qua tới `KNOCKBACK`) · `IMMUNE`. Phản ứng chỉ áp dụng nếu **cao hơn** giáp hành động; phá thế luôn bỏ qua giáp (trừ `IMMUNE`).
 - <a id="sf-r-095"></a>**SF-R-095** Sau `KNOCKDOWN`, mục tiêu miễn `KNOCKDOWN` và `KNOCKBACK` trong `params.knockdownImmunitySec` (2s), chống khóa liên hoàn.
 
@@ -213,7 +213,7 @@ Cột "Bị khắc" là chiều ngược của cột "Khắc" (A khắc B ⇔ đ
 
 | Hành động | Tiêu thể lực | Ghi chú |
 |-----------|:---:|---------|
-| Né lướt (Space) | 25 | Lướt 4m, i-frame 0,25s, hồi 0,3s; Trúc Cơ+ được né lần 2 trong 0,6s (khinh công, GD-04) |
+| Né lướt (Space) | 25 | Lướt 4m trong `dodge.durationSec` 0,4s (tạm, SF-Q-5), i-frame 0,25s, hồi 0,3s; Trúc Cơ+ được né lần 2 trong 0,6s (khinh công, GD-04) |
 | Đỡ (giữ Shift) | 15 mỗi lần chặn đòn | Giảm 50% sát thương trực diện |
 | Đỡ hoàn hảo | 0 | Bấm Shift trong `params.perfectParryWindowSec` (0,2s) trước khi đòn chạm |
 | Đánh mạnh / tụ lực | 15–30 | Theo vũ khí (GD-07) |
@@ -221,6 +221,7 @@ Cột "Bị khắc" là chiều ngược của cột "Khắc" (A khắc B ⇔ đ
 - <a id="sf-r-101"></a>**SF-R-101** **Đỡ hoàn hảo:** không nhận sát thương; kẻ tấn công cận chiến mất 30% `maxPoise` và bị `STAGGER`; nhận +15 năng lượng tuyệt kỹ. Đạn bay bị chặn (không phản lại).
 - <a id="sf-r-102"></a>**SF-R-102** Đòn **không thể đỡ** (`unblockable = true`, viền đỏ) bỏ qua đỡ / đỡ hoàn hảo; chỉ né được.
 - <a id="sf-r-103"></a>**SF-R-103** Server phán định cửa sổ đỡ / i-frame theo thời điểm server nhận lệnh, có bù trễ: tối đa `params.defenseLagCompMs` (100ms) lùi về theo RTT (chi tiết TD-02). Quy tắc cụ thể (thời điểm hiệu lực, xét lại lượt trúng, hoãn xác nhận hấp hối): [TD-02 §7.2](../tech/01-network.md).
+- <a id="sf-r-104"></a>**SF-R-104** **Thời gian lướt của né:** `ActionState DODGING` (GD-07 §4) kéo dài `params.dodge.durationSec`; quãng `dodge.distance` chia đều theo tick trong khoảng đó (TD-14 GEO-R-031); clip `DODGE_*` co giãn theo `durationSec` (AR-03 ANM-R-021). Giá trị 0,4s là **tạm** (khớp 12 frame tham chiếu của AR-03), chốt bằng Balance Simulator / playtest Phase 1 (SF-Q-5); `durationSec` phải ≥ `iframeSec`.
 
 ### 5.11. Linh lực và năng lượng tuyệt kỹ
 - <a id="sf-r-110"></a>**SF-R-110** Kỹ năng tiêu linh lực theo dữ liệu (GD-07); không đủ thì không thi triển.
@@ -256,6 +257,7 @@ interface StatusDef {
 | `ST_LAST_LIGHT` | BUFF | theo GD-26 | IGNORE | `attack`, `spellPower`, `defense`, `spellResist`, `maxHp` +20% | GD-26 LC-R-051 |
 | `ST_GREAT_LIMIT` | MARKER | — | IGNORE | Không chỉ số; dùng cho điều kiện / UI | GD-26 LC-R-050 |
 | `ST_HEART_DEMON` | MARKER | — | STACK (3) | Không chỉ số chiến đấu; hiệu ứng ở GD-04 CU-R-093 | GD-04 §5.9 |
+| `ST_QI_SURGE` | BUFF | theo sự kiện | REFRESH | Linh khí bùng phát (sự kiện thế giới GD-23): tăng tu vi đả tọa theo GD-23 | GD-23 |
 | `ST_HEAVEN_PUNISHMENT` | DEBUFF (hiển thị) | tới khi hết (GD-32) | REFRESH | Bị Thiên Đạo Hóa Thân truy sát; không ảnh hưởng chỉ số | GD-32 |
 | `ST_QI_UNSETTLED` | DEBUFF (hiển thị) | 120s | REFRESH | Không hái được linh thảo hiếm (GD-21 OW-R-105); không ảnh hưởng chỉ số | GD-21 |
 | `ST_CHILLED` | DEBUFF | theo nguồn | REFRESH | `moveSpeed` −15% | GD-22 ví dụ |
@@ -270,6 +272,7 @@ interface StatusDef {
 | `ST_POISON` | DEBUFF | 6s | STACK (5) | DoT `TRUE`: 0,5% `maxHp` mục tiêu mỗi giây mỗi tầng, giảm theo `poisonResist` | Quái, bẫy |
 | `ST_STUN` | CC | theo nguồn | REFRESH | `STUN` | Kỹ năng |
 | `ST_SILENCE` | CC | theo nguồn | REFRESH | `SILENCE` (không dùng kỹ năng, vẫn đánh thường / né) | Kỹ năng |
+| `ST_CHARMED` | CC (không có trường `cc`; hành vi ở SF-R-124) | theo nguồn (`TEC_HOP_HOAN_MI`: 1,5s) | REFRESH | **Mê hoặc** — chỉ áp lên quái: mất mục tiêu, không tấn công tới khi hết (SF-R-124, GD-12 EN-R-045) | `TEC_HOP_HOAN_MI` (GD-14 §5.4b) |
 | `ST_INVULNERABLE` | BUFF | theo nguồn | REFRESH | Bỏ qua mọi sát thương và phản ứng | Hồi sinh, chuyển bản đồ (GD-21), Thế Thân Phù (GD-26) |
 | `ST_BURNING_LIFE` | BUFF | 20s | REFRESH | `damageBonus` +50 điểm % | Bí pháp `SKL_BURN_LIFE` (GD-07) |
 | `ST_NIGHT_EMPOWER` | BUFF | — (khi `NIGHT`) | IGNORE | `attack`, `spellPower`, `defense`, `spellResist` +X% với X = `nightStatBonusPct` của quái (mặc định 0,15) | Quái dạ hành (GD-12 EN-R-021) |
@@ -281,6 +284,12 @@ interface StatusDef {
 | `ST_KILLING_INTENT` | DEBUFF | — (tới khi xóa) | STACK (10) | `damageTaken` +3% mỗi tầng | Sát khí Cổ Chiến Trường (GD-28 DZ-R-100) |
 | `ST_ANTI_POISON` | BUFF | 300s | REFRESH | `poisonResist` +80 điểm %; nguồn `POISON_FOG` không áp `ST_POISON` khi có status này | Tị Độc Đan (GD-10) |
 | `ST_STAUNCH` | BUFF | 10s (× phẩm chất đan) | REFRESH | `hpRegen` +1 điểm %/s, có hiệu lực cả khi đang chiến đấu | Cầm Huyết Đan (GD-10) |
+
+- <a id="sf-r-124"></a>**SF-R-124** **`ST_CHARMED` (mê hoặc)** — định nghĩa theo cách GD-14 §5.4b dùng ("quái mất mục tiêu 1,5s"); tham số ở `params.charm`, **giá trị tạm, chốt bằng Balance Simulator** (SF-Q-6):
+  1. Chỉ có hiệu lực với quái có `rank` ∈ `charm.affectsRanks` (mặc định `NORMAL`, `ELITE`; boss miễn — cùng tinh thần SF-R-122). Với người chơi (PvP) **không** có hiệu lực khi `charm.affectsPlayers = false` (mặc định).
+  2. Tinh anh chịu thời lượng ×`eliteCcMult` (0,5) như mọi khống chế (§6.7).
+  3. Khi nhận: quái bỏ mục tiêu hiện tại, hủy chiêu đang windup nếu chưa tới lượt trúng (không hoàn hồi chiêu), đứng tại chỗ, không tấn công, không chọn mục tiêu mới tới khi hết status; bảng threat **giữ nguyên** (sát thương nhận vẫn cộng threat); thời gian mê hoặc không tính vào `noTargetResetSec` của GD-12. Hết status → chọn mục tiêu theo GD-12 EN-R-043.
+  4. Sau khi `ST_CHARMED` kết thúc, quái miễn `ST_CHARMED` trong `charm.reapplyImmunitySec` (3s) để không khóa liên hoàn (cùng tinh thần SF-R-095).
 
 ### 5.13. Hệ số quái (tham chiếu cho GD-12)
 - <a id="sf-r-130"></a>**SF-R-130** Chỉ số quái = `base_stats[monsterRealmCode]` × hệ số hạng × hệ số riêng của loài (GD-12):
@@ -432,13 +441,15 @@ combatPower = round(10 × sqrt(DPS_idx × EHP_idx))
   "poiseBreakStunSec": { "PLAYER": 1.0, "NORMAL": 1.5, "ELITE": 2.0, "BOSS": 3.0 },
   "poiseBreakDamageTakenBonus": 0.20, "poiseRegenPctPerSec": 0.20, "poiseRegenDelaySec": 3,
   "knockdownImmunitySec": 2,
+  "reactionSec": { "STAGGER": 0.4, "KNOCKBACK": 0.5, "KNOCKDOWN": 1.2 },   // SF-R-093; KNOCKDOWN gồm cả đứng dậy
   "staminaRegenDelaySec": 0.8,
-  "dodge": { "staminaCost": 25, "distance": 4, "iframeSec": 0.25, "cooldownSec": 0.3, "doubleWindowSec": 0.6 },
+  "dodge": { "staminaCost": 25, "distance": 4, "durationSec": 0.4, "iframeSec": 0.25, "cooldownSec": 0.3, "doubleWindowSec": 0.6 },   // durationSec tạm (SF-R-104, SF-Q-5)
   "block": { "staminaCostPerHit": 15, "damageMult": 0.5 },
   "perfectParryWindowSec": 0.2, "perfectParryPoisePct": 0.30, "perfectParryEnergy": 15,
   "defenseLagCompMs": 100,            // bản sao tham khảo — nguồn duy nhất: world/network.json (TD-02 §13)
   "energy": { "max": 100, "onBigHitTaken": 3, "bigHitPctMaxHp": 0.05, "decayPerSec": 5, "decayDelaySec": 10 },
-  "eliteCcMult": 0.5
+  "eliteCcMult": 0.5,
+  "charm": { "affectsRanks": ["NORMAL", "ELITE"], "affectsPlayers": false, "reapplyImmunitySec": 3 }   // SF-R-124 — tạm, chốt bằng Balance Simulator (SF-Q-6)
 }
 ```
 
@@ -457,13 +468,15 @@ combatPower = round(10 × sqrt(DPS_idx × EHP_idx))
   { "id": "ST_FROST", "kind": "DEBUFF", "durationSec": 3, "stacking": "STACK", "maxStacks": 3,
     "modifiers": [ { "stat": "moveSpeed", "kind": "PCT", "valuePerStack": -0.10 } ],
     "onMaxStacks": { "applyStatusId": "ST_FROZEN", "clearSelf": true },
+    "dispellable": true, "persistOffline": false },
+  { "id": "ST_CHARMED", "kind": "CC", "durationSec": 1.5, "stacking": "REFRESH", "maxStacks": 1, "modifiers": [],
     "dispellable": true, "persistOffline": false }
 ]
 ```
 
 `durationSec: null` với `ST_WEAKENED` vì thời lượng do nguồn áp truyền vào (GD-26: 600s / 1800s; GD-04: theo bảng thất bại).
 
-**Validator (CI):** `base_stats.json` khớp công thức §6.2 (sai lệch ≤ 1 do làm tròn); mọi `StatusDef.modifiers[].stat` thuộc `CombatStat`; không có `PCT` lên stat dạng % (§6.1); `onMaxStacks.applyStatusId` tồn tại; bảng ngũ hành đối xứng (A khắc B ⇔ B bị A khắc).
+**Validator (CI):** `base_stats.json` khớp công thức §6.2 (sai lệch ≤ 1 do làm tròn); mọi `StatusDef.modifiers[].stat` thuộc `CombatStat`; không có `PCT` lên stat dạng % (§6.1); `onMaxStacks.applyStatusId` tồn tại; bảng ngũ hành đối xứng (A khắc B ⇔ B bị A khắc); `reactionSec` có đủ `STAGGER`, `KNOCKBACK`, `KNOCKDOWN`; `dodge.durationSec ≥ dodge.iframeSec`; `charm.affectsRanks` ⊂ `MonsterRank`.
 
 ---
 
@@ -565,6 +578,8 @@ Status ngắn (chiến đấu) chỉ sống trong RAM của `MapInstance`.
 
 ## 14. Telemetry
 
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
+
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
 | `combat_ttk` | attackerRealm, targetId, rank, seconds, hits | Thời gian hạ quái so với §8 |
@@ -600,6 +615,11 @@ Status ngắn (chiến đấu) chỉ sống trong RAM của `MapInstance`.
 | SF-AC-018 | Cùng snapshot đầu vào | Chạy `computeStats` ở client (TS) và server | Kết quả giống hệt (test dùng chung bộ dữ liệu) |
 | SF-AC-019 | `maxHp` tăng từ 400 lên 500 khi HP 200 | Sau cập nhật | HP 250 (giữ 50%) |
 | SF-AC-020 | Quái thường `LK5` | `computeStats` | `maxHp = round(293 × 0,6) = 176`, `maxPoise = 40` |
+| <a id="sf-ac-021"></a>SF-AC-021 | `reactionSec.STAGGER` đổi thành 0,5 trong `params.json` | Mục tiêu trúng đòn `STAGGER` | Bị ngắt 0,5s (đọc từ gamedata, SF-R-093) |
+| <a id="sf-ac-022"></a>SF-AC-022 | Né lướt với `dodge.distance` 4, `dodge.durationSec` 0,4 | Server mô phỏng | `DODGING` kéo dài 8 tick, mỗi tick đi 0,5m (SF-R-104) |
+| <a id="sf-ac-023"></a>SF-AC-023 | Quái thường đang đánh người chơi A (threat cao nhất), windup chưa tới lượt trúng | Nhận `ST_CHARMED` 1,5s | Chiêu bị hủy, quái không tấn công 1,5s, bảng threat giữ nguyên; hết status → lại chọn A (SF-R-124) |
+| <a id="sf-ac-024"></a>SF-AC-024 | Boss / người chơi (PvP) | Nhận `ST_CHARMED` | Không có hiệu lực; tinh anh chỉ chịu 0,75s |
+| <a id="sf-ac-025"></a>SF-AC-025 | Quái vừa hết `ST_CHARMED` 1s trước | Áp lại `ST_CHARMED` | Không có hiệu lực (`charm.reapplyImmunitySec` 3s) |
 
 ---
 
@@ -622,6 +642,8 @@ Status ngắn (chiến đấu) chỉ sống trong RAM của `MapInstance`.
 - [x] **SF-Q-1:** *(Đã chốt 2026-10-23: hệ số **tăng dần theo cảnh giới** — `g` 1,10 → 1,18 mỗi tầng, `J` 1,6 → 2,2 mỗi cảnh giới lớn; LK – TC1 giữ nguyên số cũ; §6.2.)* Hệ số tăng trưởng mỗi cảnh giới lớn `J = 1,6` có tạo đủ cảm giác "lên cảnh giới mạnh hẳn" không?
 - [ ] **SF-Q-2:** Có hiển thị số sát thương của người chơi khác trong tổ đội không (rối mắt)? *Mặc định: chỉ hiện của mình + tổng đội ở boss.*
 - [ ] **SF-Q-3:** Đỡ hoàn hảo có nên phản lại đạn bay (reflect) cho vũ khí kiếm ở mức Viên Mãn kỹ năng không?
+- [ ] **SF-Q-5:** Thời gian lướt của né `dodge.durationSec` (tốc độ lướt = `distance / durationSec`) chưa có trong spec gốc. *Mặc định tạm: 0,4s (khớp 12 frame tham chiếu AR-03 `DODGE_F`); chốt bằng Balance Simulator / playtest Phase 1.* Cần designer quyết.
+- [ ] **SF-Q-6:** Thông số `ST_CHARMED` ngoài "1,5s, quái mất mục tiêu" của GD-14: boss có miễn không, có áp lên người chơi trong PvP không, có phá khi nhận sát thương không, thời gian miễn nhiễm áp lại. *Mặc định tạm (SF-R-124): boss miễn, không áp người chơi, không phá khi nhận sát thương, miễn nhiễm 3s; chốt bằng Balance Simulator.* Cần designer quyết.
 - [x] **SF-Q-4:** *(Đã chốt 2026-10-23: hệ số chung — sát thương ×0,5, khống chế ×0,6 + kháng khống chế, hồi máu sau trúng ×0,7; GD-32 PK-R-060.)* PvP dùng hệ số giảm sát thương chung hay bộ công thức riêng?
 
 ---
@@ -633,4 +655,6 @@ Status ngắn (chiến đấu) chỉ sống trong RAM của `MapInstance`.
 | v0.1 | 2026-10-20 | — | Bản nháp đầu: danh sách chỉ số chuẩn, bảng cơ bản theo cảnh giới, quy đổi bẩm sinh, gộp hiệu ứng, sát thương, ngũ hành 8 hệ, chí mạng, hồi máu, poise & phản ứng, thể lực / né / đỡ, năng lượng, khung status + 17 status lõi (chuẩn hóa ID `ST_*`), hệ số quái, trần / sàn, chiến lực, nghiệm thu |
 | v0.2 | 2026-10-23 | — | Chốt SF-Q-1: `realmScale` với `g` / `J` **tăng dần theo cảnh giới** (g: 1,10 · 1,12 · 1,14 · 1,16 · 1,18; J: 1,6 · 1,8 · 2,0 · 2,2), thêm `majorScale`; LK – TC1 không đổi, TC2+ tăng (TC4 +5,6%, KD1 +21%, KD4 +35%); bảng mốc SF-R-020 cập nhật; ví dụ chênh lệch chiến đấu KD1 / TC4 |
 | v0.3 | 2026-10-23 | — | Chốt SF-Q-4: hệ số PvP chung (GD-32 PK-R-060) |
+| v0.4 | 2026-10-25 | — | Status `ST_QI_SURGE` (GD-23); Trỏ telemetry chuẩn GD-20 |
+| v0.5 | 2026-10-25 | — | Đợt rà nhất quán (AR-03 ANM-Q-7, GD-14): khóa `reactionSec` (STAGGER / KNOCKBACK / KNOCKDOWN, KNOCKDOWN gồm đứng dậy) và `dodge.durationSec` (tạm 0,4s, SF-R-104) trong `stats/params.json`; định nghĩa `ST_CHARMED` (SF-R-124, `params.charm` tạm); SF-AC-021..025; SF-Q-5, SF-Q-6 |
 

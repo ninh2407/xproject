@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-25 · Prefix ID: `SB` |
 | Owner | Game Designer + Content Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.3 |
+| Trạng thái | 🟡 Bản nháp v0.7 |
 | Cần trước | Phase 5 / Beta (theo PLAN §4.17); dữ liệu loài + bảng rơi trứng có thể nhập từ Alpha (ẩn bằng `phase: BETA`, TD-07 DT-R-058) |
 | Quyết định nền | PLAN §4.17, D-03 (một mạng), D-12, D-17 (không bán sức mạnh bằng tiền thật); TD-07, GD-29 |
 | Liên quan | [PLAN §4.17](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-07 Kỹ năng](13-skills.md) (triệu hồi §5.8, ngân sách §6.5) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-26 Vòng đời](03-lifecycle.md) · [GD-27 Thiên phú](04-talents.md) · [GD-29 RNG](05-rng-fairness.md) · [GD-30 Động phủ](28-caves-sect-sites.md) · [GD-10 Luyện đan](16-alchemy.md) · [GD-13 Kinh tế](19-economy.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [TD-14 Geometry](../tech/13-geom2d.md) |
@@ -101,7 +101,7 @@ interface BeastSpeciesDef {                  // shared/gamedata/beasts/species.j
   minBloodline: BloodlineGrade; maxBloodline: BloodlineGrade;
   aptitudeBias: Record<AptitudeKey, number>; // cộng vào trung bình tư chất khi roll (−15..+15)
   basicSkillId: string;                      // SKL_BST_* đòn tự động
-  commandSkillIds: Partial<Record<BloodlineGrade, string>>;   // chiêu lệnh (phím T), mạnh dần theo huyết mạch
+  commandSkillIds: Partial<Record<BloodlineGrade, string>>;   // chiêu lệnh (phím Y), mạnh dần theo huyết mạch
   traitPool: string[];                       // BTR_* thường
   rareTraitPool: string[];                   // BTR_* chỉ có qua biến dị
   hybridOf?: [string, string];               // loài lai: hai loài gốc
@@ -215,9 +215,9 @@ Trọng thương (`injuredUntil > now`) là cờ, không phải state: không xu
 
 ### 5.4. Kết khế và xuất chiến
 - <a id="sb-r-040"></a>**SB-R-040** Nhân vật kết khế tối đa `contractSlots` (3) thú; điều kiện cảnh giới theo huyết mạch: PHAM `LK1` · LINH `LK3` · HUYEN `LK7` · DIA `TC1` · THIEN `KD1`. Kết khế / giải khế tại Ngự Thú Sư hoặc Linh Thú Viên (kiểm tra `CharacterContext`, TD-01 §11).
-- <a id="sb-r-041"></a>**SB-R-041** **Xuất chiến** tối đa 1 thú (phím `G` chọn / gọi / thu, ngoài chiến đấu; trong chiến đấu gọi được nhưng mất 1,5s vận pháp). Thú xuất chiến là thực thể thuộc chủ theo khung triệu hồi GD-07 §5.8, **không** hết hạn theo `durationSec`; biến mất khi chủ chuyển bản đồ (tự gọi lại ở bản đồ mới), vào `CHANNELING`, hoặc thú bị đánh gục.
+- <a id="sb-r-041"></a>**SB-R-041** **Xuất chiến** tối đa 1 thú (phím `U` chọn / gọi / thu, ngoài chiến đấu; trong chiến đấu gọi được nhưng mất 1,5s vận pháp). Thú xuất chiến là thực thể thuộc chủ theo khung triệu hồi GD-07 §5.8, **không** hết hạn theo `durationSec`; biến mất khi chủ chuyển bản đồ (tự gọi lại ở bản đồ mới), vào `CHANNELING`, hoặc thú bị đánh gục. Thú tạm thu khi chủ ngự kiếm, tự gọi lại khi đáp (GD-31).
 - <a id="sb-r-042"></a>**SB-R-042** Hành vi: đi theo chủ (cách 2–4m); khi chủ trong chiến đấu thì đánh mục tiêu chủ đang đánh, nếu không có thì kẻ địch gần chủ nhất trong 8m (GD-07 SK-R-091). Quái **không ưu tiên** nhắm thú (trừ khi chỉ còn thú trong tầm). Vai `GUARDIAN` có chiêu khiêu khích trong `commandSkillIds` (ngoại lệ có chủ đích). Ở PvP dã ngoại, thú đánh người chơi theo chế độ PK của chủ (GD-32 PK-R-063).
-- <a id="sb-r-043"></a>**SB-R-043** **Chiêu lệnh** (phím `T`): thú dùng `commandSkillIds[bloodline]` (một `SkillDef`, hồi chiêu ≥ 15s, thi triển từ vị trí thú hướng vào mục tiêu của chủ / điểm chuột). Chiêu thú tuân ngân sách GD-07 §6.5 theo bậc: PHAM/LINH = budget `HOANG`, HUYEN = `HUYEN`, DIA = `DIA`, THIEN = `THIEN`, với hệ số tính theo chỉ số thú (§6.4).
+- <a id="sb-r-043"></a>**SB-R-043** **Chiêu lệnh** (phím `Y`): thú dùng `commandSkillIds[bloodline]` (một `SkillDef`, hồi chiêu ≥ 15s, thi triển từ vị trí thú hướng vào mục tiêu của chủ / điểm chuột). Chiêu thú tuân ngân sách GD-07 §6.5 theo bậc: PHAM/LINH = budget `HOANG`, HUYEN = `HUYEN`, DIA = `DIA`, THIEN = `THIEN`, với hệ số tính theo chỉ số thú (§6.4).
 - <a id="sb-r-044"></a>**SB-R-044** **Trọng thương thú:** HP thú về 0 → rút về, `injuredUntil = now + 300s` (giảm 50% nếu đang trong thành trấn / động phủ). Không mất gì khác.
 - <a id="sb-r-045"></a>**SB-R-045** Vai `FORAGER`: khi xuất chiến và chủ thu thập (hái thuốc, khai khoáng), có đặc tính thu thập (vd. `BTR_DIGGER`: +10% cơ hội thêm 1 nguyên liệu). Không tự thu thập thay chủ (tránh bot).
 
@@ -445,7 +445,7 @@ Có biến dị → roll loại theo bảng SB-R-080 với gốc tương ứng.
 | `ITM_EGG_BRED` | Trứng lai | `BEAST_EGG` | Lai tạo | Ấp |
 | `ITM_BEAST_SEAL` | Thú Ấn | `MATERIAL` (đặc biệt) | Phong ấn (Beta) | Giao dịch thú |
 
-**Validator (CI):** (SB-V-01) `sourceMonsterId` tồn tại, quái `NORMAL` họ BEAST/SPIRIT; (SB-V-02) `commandSkillIds` mỗi bậc có `powerScore ≤ budget` tương ứng (SB-R-043); (SB-V-03) `hybridOf` hai loài cùng `breedGroup`, loài lai có `maxBloodline ≥` loài gốc; (SB-V-04) đặc tính chỉ dùng type được phép, `OWNER` ≤ 5%; (SB-V-05) trứng sinh đủ cho mọi loài × huyết mạch trong `[minBloodline, maxBloodline]`; (SB-V-06) không có trứng / phù / đan thú trong cửa hàng `JADE` (D-17); (SB-V-07) trọng số Linh chủng, tỷ lệ rơi trứng nằm trong file / trường `serverOnly` (GD-29 RF-R-041); (SB-V-08) khối `capture` chỉ có ở boss (`MON_B_*`), `speciesId` trỏ tới loài có `bossSpecies.sourceBossId` khớp; loài boss không xuất hiện trong `hybridOf`, bảng rơi trứng hay kết quả lai tạo.
+**Validator (CI):** (SB-V-01) `sourceMonsterId` tồn tại, quái `NORMAL` họ BEAST/SPIRIT — **ngoại lệ:** loài có `bossSpecies` (thú boss, §5.2b, vd. `BST_FOX_MATRIARCH`) thì `sourceMonsterId` phải là boss `MON_B_*` và bằng `bossSpecies.sourceBossId`; (SB-V-02) `commandSkillIds` mỗi bậc có `powerScore ≤ budget` tương ứng (SB-R-043); (SB-V-03) `hybridOf` hai loài cùng `breedGroup`, loài lai có `maxBloodline ≥` loài gốc; (SB-V-04) đặc tính chỉ dùng type được phép, `OWNER` ≤ 5%; (SB-V-05) trứng sinh đủ cho mọi loài × huyết mạch trong `[minBloodline, maxBloodline]`; (SB-V-06) không có trứng / phù / đan thú trong cửa hàng `JADE` (D-17); (SB-V-07) trọng số Linh chủng, tỷ lệ rơi trứng nằm trong file / trường `serverOnly` (GD-29 RF-R-041); (SB-V-08) khối `capture` chỉ có ở boss (`MON_B_*`), `speciesId` trỏ tới loài có `bossSpecies.sourceBossId` khớp; loài boss không xuất hiện trong `hybridOf`, bảng rơi trứng hay kết quả lai tạo.
 
 ---
 
@@ -464,6 +464,7 @@ Có biến dị → roll loại theo bảng SB-R-080 với gốc tương ứng.
 ## 9. Hợp đồng giao tiếp
 
 ### 9.1. API công khai
+> **Đường dẫn, method và khóa idempotency chuẩn ở [TD-04 §5](../tech/03-api.md)** (mọi thao tác của nhân vật nằm dưới `/v1/characters/{id}/…`, xem trước dùng `POST`, khóa idempotency qua header `Idempotency-Key`). Bảng dưới mô tả mục đích; khi vênh với TD-04, theo TD-04.
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
 | `GET /v1/accounts/me/beasts` | Danh sách thú (mọi state trừ `DEPARTED`), ô Thú Viên | |
@@ -491,7 +492,7 @@ Có biến dị → roll loại theo bảng SB-R-080 với gốc tương ứng.
 | Message | Hướng | Payload |
 |---------|-------|---------|
 | `C2S_BeastSummon` | C→S | `{ seq, beastId \| null }` (null = thu về) |
-| `C2S_BeastCommand` | C→S | `{ seq, aim }` (phím T) |
+| `C2S_BeastCommand` | C→S | `{ seq, aim }` (phím Y) |
 | `C2S_CaptureStart` / `C2S_CaptureCancel` | C→S | `{ seq, targetId, talismanItemInstanceId }` |
 | `S2C_CaptureChance` | S→C | `ChanceView` (cập nhật 2 Hz khi đang nhắm) |
 | `S2C_CaptureResult` | S→C | `{ success, beastId?, fleeing }` |
@@ -551,7 +552,7 @@ CREATE TABLE beast_log (                                  -- ledger thú (TD-01 
 
 ## 11. UI/UX
 - **Linh chủng:** hào quang + cột sáng mảnh theo màu huyết mạch, tiếng chuông nhẹ khi vào tầm 40m; khung tên vàng; biểu tượng khóa "của bạn 60s".
-- **Ném phù:** giữ phím `F` khi nhắm Linh chủng (HP ≤ 30%): vòng tỷ lệ lớn quanh mục tiêu cập nhật theo HP; thanh vận pháp 2s; kết quả: phù sáng rồi thu thú (thành công) hoặc vỡ (thất bại).
+- **Ném phù:** giữ phím `X` (tương tác theo ngữ cảnh, GD-24) khi nhắm Linh chủng (HP ≤ 30%): vòng tỷ lệ lớn quanh mục tiêu cập nhật theo HP; thanh vận pháp 2s; kết quả: phù sáng rồi thu thú (thành công) hoặc vỡ (thất bại).
 - **Bảng Linh thú (phím `B`):** thẻ thú (model xoay, tên, huyết mạch dạng mây 1–5, tư chất 4 thanh, đặc tính, thọ còn lại, thân mật); nút xuất chiến / kết khế; **gia phả** dạng cây 3 đời với dấu biến dị.
 - **Lai tạo (Linh Thú Viên):** hai ô chọn bố mẹ → khung xem trước: loài có thể ra (ảnh + %), thanh tỷ lệ biến dị và bảng đóng góp (GD-29), phân phối loại biến dị, khoảng tư chất con, chi phí + thọ bố mẹ; nút bắt đầu cần báo giá còn hạn.
 - **Nở trứng:** trứng nứt dần theo thời gian; mở → khoảnh khắc lộ diện (dị sắc / biến dị có hiệu ứng riêng).
@@ -564,7 +565,7 @@ CREATE TABLE beast_log (                                  -- ledger thú (TD-01 
 | Hệ thống | Tương tác |
 |----------|-----------|
 | GD-12 | `beastSpeciesId`, biến thể Linh chủng, trứng trong `LT_*` |
-| GD-07 | Khung triệu hồi (không hết hạn), `SKL_BST_*`, ngân sách chiêu thú, phím `G`/`T` |
+| GD-07 | Khung triệu hồi (không hết hạn), `SKL_BST_*`, ngân sách chiêu thú, phím `U`/`T` |
 | GD-06 | Chỉ số thú tính từ chủ |
 | GD-09 | `BEAST_EGG`, `CAPTURE_BEAST`, `HATCH`, Thú Ấn |
 | GD-10 | Đan phương `RCP_BEAST_PILL`, `RCP_BREED_PILL`, (Linh/Huyền) Ngự Thú Phù |
@@ -599,6 +600,8 @@ CREATE TABLE beast_log (                                  -- ledger thú (TD-01 
 ---
 
 ## 14. Telemetry
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 | Sự kiện | Trường | Câu hỏi |
 |---------|--------|---------|
 | `linh_chung_spawn` / `_seen` / `_captured` | map, bloodline, timeToFind | Tần suất có hợp lý (§8) |
@@ -672,7 +675,7 @@ CREATE TABLE beast_log (                                  -- ledger thú (TD-01 
 - [ ] **SB-Q-2:** Có vật phẩm kéo dài thọ thú (hiếm, từ cơ duyên) không? Ảnh hưởng nhịp lai tạo thế hệ mới.
 - [ ] **SB-Q-3:** Có bảng xếp hạng huyết mạch / "Thần Thú Bảng" (danh tiếng cho người lai tạo) như GD-08 TF-Q-4?
 - [ ] **SB-Q-4:** Có nên cho tổ đội chia sẻ quyền bắt Linh chủng (người bắt được chọn bằng roll trong tổ)?
-- [ ] **SB-Q-6:** World boss (GD-23) có nên là boss đặc biệt với cơ chế "đấu giá quyền ném phù" trong cửa sổ Kiệt Sức (người đóng góp cao nhất được ném) không?
+- [x] **SB-Q-6:** *(Đã trả lời ở GD-23 WE-R-062: world boss thu phục được, chỉ **top 3 đóng góp mỗi kênh** được ném phù, Beta 2.)* World boss (GD-23) có nên là boss đặc biệt với cơ chế "đấu giá quyền ném phù" trong cửa sổ Kiệt Sức (người đóng góp cao nhất được ném) không?
 - [ ] **SB-Q-5:** Linh chủng có nên có cơ chế "đánh động" (bỏ chạy khi thấy người chơi ở xa) để thêm kỹ năng tiếp cận (lén, khống chế)?
 
 ---
@@ -684,4 +687,8 @@ CREATE TABLE beast_log (                                  -- ledger thú (TD-01 
 | v0.1 | 2026-10-23 | — | Bản nháp đầu (tách khỏi GD-25 cũ "Linh thú, Ngự kiếm"; Ngự kiếm chuyển sang GD-31): đánh giá, Linh chủng + bắt (loại A, thần thức, pity theo loài), trứng + ấp, kết khế / xuất chiến / chiêu lệnh / thân mật, sức mạnh tính từ chủ (trần ~17%), Linh Thú Viên, lai tạo + di truyền + biến dị theo độ hiếm + lai loài, thú khi chủ tọa hóa, thọ nguyên thú, Thú Ấn, 9 loài Vực 1, API, DB, nghiệm thu |
 | v0.2 | 2026-10-23 | — | **Bắt boss đặc biệt** (§5.2b, §6.2b): cửa sổ Kiệt Sức 8s khi HP ≤ 10%, phù ≥ Huyền, tỷ lệ 1–15% + pity theo tài khoản, 1 lượt / người / trận và 3 lượt / ngày, **đổi lấy phần rơi đồ boss**, thú boss có đặc tính đặc trưng, con lai không bao giờ ra loài boss; loài `BST_FOX_MATRIARCH` |
 | v0.3 | 2026-10-23 | — | SB-R-042: thú trong PvP (GD-32) |
+| v0.4 | 2026-10-25 | — | Trỏ đường dẫn API chuẩn sang TD-04 §5 |
+| v0.5 | 2026-10-25 | — | Phím theo sơ đồ chuẩn GD-24: chiêu lệnh `Y` (thay `T` trùng tuyệt kỹ), gọi / thu thú `U` (thay `G` trùng quét thần thức), ném phù giữ `X` |
+| v0.6 | 2026-10-25 | — | SB-Q-6 trả lời ở GD-23; Thú khi bay; Trỏ telemetry chuẩn GD-20 |
+| v0.7 | 2026-10-25 | — | Đợt rà nhất quán: SB-V-01 ghi rõ ngoại lệ cho loài `bossSpecies` (`sourceMonsterId` là boss `MON_B_*` = `bossSpecies.sourceBossId`) |
 

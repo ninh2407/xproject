@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-29 · Prefix ID: `RF` |
 | Owner | Lead Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.1 |
+| Trạng thái | 🟡 Bản nháp v0.3 |
 | Cần trước | Phase 1 (trước khi làm hệ thống có roll đầu tiên) |
 | Quyết định nền | PLAN §4.7 "Nguyên tắc ngẫu nhiên công bằng", D-03 (một mạng), D-17 (không bán may rủi giảm rủi ro chết), rủi ro R13; TD-07 DT-Q-3 (đã chốt: **tách dữ liệu bí mật khỏi client**) |
 | Liên quan | [PLAN §4.7](../../PLAN.md) · [Glossary](../lore/glossary.md) · [TD-01 §9](../tech/00-tdd.md) (thuật toán RNG, `rng_audit`) · [TD-07](../tech/06-gamedata.md) (bundle client / server) · [GD-27 Thiên phú](04-talents.md) · [GD-04 Tu luyện](10-cultivation.md) · [GD-10 Luyện đan](16-alchemy.md) · [GD-11 Luyện khí](17-forging.md) · [GD-08 Chế công pháp](14-technique-crafting.md) · [GD-22 Cơ duyên](23-encounters.md) · [GD-12 Quái](18-enemies-ai.md) · [GD-09 Vật phẩm](15-items-equipment.md) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-21 Open World](22-open-world.md) · GD-19 Monetization |
@@ -200,7 +200,7 @@ interface FortuneLogEntry {                  // Thiên Cơ Lục (§5.7)
 ### 5.6. Tiền thật (loại E)
 - <a id="rf-r-060"></a>**RF-R-060** Chỉ áp dụng cho **cosmetic** (ngoại hình, hiệu ứng, trang trí động phủ). Mọi thứ khác bị cấm (RF-R-006).
 - <a id="rf-r-061"></a>**RF-R-061** Hiển thị **tỷ lệ chính xác** từng vật phẩm (2 chữ số thập phân), **bảo hiểm cứng** (vd. chắc chắn nhận vật phẩm hiếm nhất trong ≤ N lần, N công khai, bộ đếm hiển thị), không có vật phẩm trùng vô dụng (trùng → đổi thành tiền tệ cosmetic). Bộ đếm theo **tài khoản**, không mất khi nhân vật chết.
-- <a id="rf-r-062"></a>**RF-R-062** Tuân thủ quy định pháp lý của thị trường phát hành (Việt Nam trước, D-07); chi tiết và danh sách vật phẩm: GD-19. Có thể quyết định **không có loại E** ở launch (GD-19).
+- <a id="rf-r-062"></a>**RF-R-062** Tuân thủ quy định pháp lý của thị trường phát hành (Việt Nam trước, D-07); chi tiết và danh sách vật phẩm: GD-19. Có thể quyết định **không có loại E** ở launch (GD-19). **Chốt ở GD-19 MZ-R-060: loại E tắt ở launch** (mở sau phải có ADR).
 
 ### 5.7. Thiên Cơ Lục: lịch sử may rủi của người chơi
 - <a id="rf-r-070"></a>**RF-R-070** Người chơi xem **50 roll loại A gần nhất** của nhân vật hiện tại: thời điểm, hành động, tỷ lệ đã hiển thị, kết quả (`FortuneLogEntry`), và thống kê "Kỳ vọng: 3,2 lần thành công · Thực tế: 3". Lấy từ `rng_audit` (TD-01 §9) lọc theo kind loại A.
@@ -419,6 +419,8 @@ Bảng `fortune_dispute (id, account_id, character_id, ref_id, note, status, gm_
 ---
 
 ## 14. Telemetry
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 Xem §9.3. KPI: tỷ lệ khiếu nại / 1.000 roll loại A < 0,5; câu khảo sát "May rủi trong game có công bằng không" ≥ 70% đồng ý (khảo sát Alpha, PLAN Phase 4).
 
 ---
@@ -478,4 +480,6 @@ Xem §9.3. KPI: tỷ lệ khiếu nại / 1.000 roll loại A < 0,5; câu khảo
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
 | v0.1 | 2026-10-23 | — | Bản nháp đầu: 5 loại roll + danh mục roll hiện có, `ChanceView` + làm tròn + báo giá, chống save-scum, band độ hiếm cho loại B, **dữ liệu `serverOnly` / hai bundle (chốt TD-07 DT-Q-3)**, tách seed minigame / kết quả, luật loại E, Thiên Cơ Lục + khiếu nại, khí vận được / không được + bảng đăng ký, quy ước điểm phần trăm cho xác suất cộng dồn, 4 dạng pity + bảng đăng ký, giám sát lệch tỷ lệ, nghiệm thu |
+| v0.2 | 2026-10-25 | — | Loại E tắt ở launch (GD-19) |
+| v0.3 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
 

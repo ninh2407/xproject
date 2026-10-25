@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-32 · Prefix ID: `PK` |
 | Owner | Game Designer + Server Dev |
-| Trạng thái | 🟡 Bản nháp v0.4 |
+| Trạng thái | 🟡 Bản nháp v0.6 |
 | Cần trước | Phase 5 / Beta (bật PvP sau khi vòng lặp PvE ổn định; dữ liệu + cờ server có thể làm từ Alpha, mặc định tắt) |
 | Quyết định nền | **D-21** (2026-10-23, thay thế nguyên tắc "không open-world PvP" ở PLAN §2.4), D-03 / LC-R-001 (chỉ chết thật ở hiểm địa / thiên kiếp / hết thọ), D-13 (bảo hộ tân thủ), D-17 |
 | Liên quan | [PLAN](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-26 Vòng đời](03-lifecycle.md) (trọng thương §5.6) · [GD-06 Chỉ số](12-stats-formulas.md) · [GD-07 Kỹ năng](13-skills.md) · [GD-21 Open World](22-open-world.md) · [GD-14 Xã hội](20-social.md) · [GD-28 Hiểm địa](27-danger-zones.md) · [GD-25 Linh thú](26-spirit-beasts.md) · [GD-13 Kinh tế](19-economy.md) · [GD-12 Quái](18-enemies-ai.md) · [TD-02 Network](../tech/01-network.md) |
@@ -91,7 +91,7 @@ interface PvpKillRecord {                 // nhật ký
 | `RED` / `CRIMSON`, hoặc trong Huyết thù, hoặc tự vệ | 0 |
 
   Hệ số (nhân dồn): nạn nhân thấp hơn ≥ 2 tiểu cảnh giới ×1,5; thấp hơn **≥ 1 cảnh giới lớn** ×3 (thay cho ×1,5); giết lại **cùng nạn nhân** trong 30 phút ×2 (và nạn nhân không rơi đồ, PK-R-043). Vd. `KD1` giết `TC2` vô tội: 50 × 3 = **150** → thành ác nhân ngay.
-- <a id="pk-r-031"></a>**PK-R-031** **Giảm sát nghiệp:** khi ác nhân **chết** — bị người chơi giết −`infamyDeathByPlayer` (10), bị NPC Chấp Pháp giết −`infamyDeathByEnforcer` (30); theo thời gian online không giết người −1 mỗi 6 phút (−10 / giờ); làm nhiệm vụ "Sám hối" ở Chấp Pháp Đường (Beta) −20 mỗi lần, tối đa 3 / ngày.
+- <a id="pk-r-031"></a>**PK-R-031** **Giảm sát nghiệp:** khi ác nhân **chết** — bị người chơi giết −`infamyDeathByPlayer` (10), bị NPC Chấp Pháp giết −`infamyDeathByEnforcer` (30); theo thời gian online không giết người −1 mỗi 6 phút (−10 / giờ); làm nhiệm vụ "Sám hối" ở Chấp Pháp Đường (Beta; NPC Phân đường chủ Tiêu Chính Ngôn `NPC_V1_ENFORCER_CHIEF` tại phân đường ở `V1_HUB` — LR-02 CHR-NPC-035, GD-21) −20 mỗi lần, tối đa 3 / ngày.
 - <a id="pk-r-032"></a>**PK-R-032** **Bậc:** `RED` (Ác nhân, ≥ 100): tên đỏ. `CRIMSON` (Đại ác nhân, ≥ 300): tên đỏ thẫm, bị **truy nã** (PK-R-052). Sát nghiệp thuộc kiếp; Bia Vạn Cổ ghi sát nghiệp cao nhất ("Sát thần" nếu ≥ 1.000).
 - <a id="pk-r-033"></a>**PK-R-033** **Hậu quả của ác nhân** (`RED` trở lên):
   - không vào được thành trấn: lính gác tấn công ở cổng; NPC trong vùng an toàn không phục vụ;
@@ -142,7 +142,8 @@ interface PvpKillRecord {                 // nhật ký
   - chết vì Hóa Thân vẫn là **trọng thương**, không phải chết thật (PK-R-001).
 - <a id="pk-r-056"></a>**PK-R-056** **Tạc Thiên Bang và Hóa Thân (chỉ biểu tượng, chốt PK-Q-4):** thành viên `ACTIVE` của Tạc Thiên Bang được tính công khi hạ Thiên Đạo Hóa Thân nhận thêm — (1) **danh hiệu theo bậc** (đếm số lần hạ Hóa Thân trong đời tài khoản, khi đang là thành viên Tạc Thiên Bang): lần 1 **"Tạc Thiên Tôn Giả"** · lần 3 **"Tạc Thiên Chí Tôn"** · lần 10 **"Tạc Thiên Đại Đế"** (bậc cao thay bậc thấp; hào quang sấm sét đậm dần theo bậc; bậc Đại Đế có thông báo toàn server khi đạt); (2) huy hiệu lưu trong Bia Vạn Cổ; (3) lời thoại riêng của NPC trong Tạc Thiên Trại và thông báo trong bản đồ của trại; (4) danh vọng `TA` +50 **tính trong trần ngày** (SO-R-04D). **Không** thêm vật phẩm, linh thạch, cống hiến, chỉ số hay tỷ lệ — phần thưởng sức mạnh giống hệt người khác (PK-R-055).
   > **Lưu ý nội dung (cho Content Designer / LR-02 Nhân vật):** NPC cấp cao của Tạc Thiên Bang **mang sẵn các danh hiệu này** để người chơi thấy mục tiêu và cảm giác thành tựu khi đạt được: **Bang chủ** (`NPC_TAC_THIEN_CHIEF`) — *"Tạc Thiên Đại Đế"*; **các Trưởng lão / Đường chủ** (`NPC_TAC_THIEN_ELDER_*`) — *"Tạc Thiên Chí Tôn"* hoặc *"Tạc Thiên Tôn Giả"*. Hiển thị danh hiệu trên đầu NPC cùng kiểu hào quang như của người chơi. Lời thoại phản ứng theo danh hiệu của người chơi: chưa có → coi thường; ngang bậc một Trưởng lão → gọi "đạo hữu"; đạt **Tạc Thiên Đại Đế** → Bang chủ đối xử **ngang hàng** (lời thoại + cảnh ngắn "đối ẩm" tại Tạc Thiên Trại, chỉ biểu tượng).
-- <a id="pk-r-052"></a>**PK-R-052** **Truy nã** (`CRIMSON`): hiện trên Bảng Truy Nã ở mọi thành trấn (tên, cảnh giới, vực hiện tại). Người hạ đại ác nhân nhận **tiền thưởng** = 10% linh thạch trong ví của đại ác nhân (trần 2.000; chuyển từ ví ác nhân, không sinh tiền mới) + danh vọng `CHINH` +50 (GD-14 §5.4c).
+  > **Ghép NPC (LR-02 §3.3, CHR-R-036):** Bang chủ `NPC_TAC_THIEN_CHIEF` — Tạc Thiên Đại Đế (truyền thuyết của bang: đã hạ **mười** Hóa Thân, khớp ngưỡng lần 10; LR-01 §7); Đường chủ Chiến Đường Tần Ngạo `NPC_TAC_THIEN_ELDER_TAN_NGAO` — Tạc Thiên Chí Tôn; Đường chủ Hắc Thị Liễu Tam Nương `NPC_TAC_THIEN_ELDER_LIEU` (đổi Chấp Pháp Lệnh, PK-R-054) và Đường chủ Tiếp Dẫn Cung Bất Hối `NPC_TAC_THIEN_ELDER_CUNG` — Tạc Thiên Tôn Giả. Mã Đường chủ là đề xuất của LR-02 theo mẫu `NPC_TAC_THIEN_ELDER_*`, cần đăng ký glossary trước khi dùng.
+- <a id="pk-r-052"></a>**PK-R-052** **Truy nã** (`CRIMSON`): hiện trên Bảng Truy Nã ở mọi thành trấn (tên, cảnh giới, vực hiện tại). Người hạ đại ác nhân nhận **tiền thưởng** = 10% linh thạch trong ví của đại ác nhân (trần 2.000; chuyển từ ví ác nhân, không sinh tiền mới) + danh vọng `CHINH` +50 (GD-14 §5.4c). Tiền thưởng truy nã bị **giữ lại chờ kiểm tra** khi nghi thông đồng giữa hai tài khoản (TD-08 SEC-R-055); hạn chế dùng chế độ `SLAUGHTER` có thể là một mức xử phạt (TD-08 §5).
 
 ### 2.6. Cân bằng chiến đấu PvP
 - <a id="pk-r-060"></a>**PK-R-060** Sát thương người chơi → người chơi ×`pvpDamageMult` (0,5); hồi máu nhận được trong 5s sau khi trúng đòn PvP ×0,7; thời gian khống chế (STUN / ROOT / FROZEN / ENTANGLE) lên người chơi ×0,6, và **kháng khống chế** 8s sau mỗi lần bị khống chế (lần sau ×0,5, lần ba miễn). Chí mạng như PvE. (Chốt GD-06 SF-Q-4: hệ số chung, không bộ công thức riêng.)
@@ -241,6 +242,9 @@ interface PvpKillRecord {                 // nhật ký
 
 ---
 
+## 6b. Telemetry
+Danh mục chuẩn ở [GD-20 §4](51-analytics.md): `pvp_kill`, `pvp_mode_change`, `pvp_tier_change`, `pvp_enforcer_fight`, `pvp_heaven_avatar` — trả lời: PvP có quấy người mới không, tỷ lệ ác nhân, Chấp Pháp có quá dễ / khó, Thiên phạt có được đánh bại.
+
 ## 7. Phạm vi
 | Hạng mục | Alpha | Beta | Sau launch |
 |----------|:---:|:---:|:---:|
@@ -263,6 +267,8 @@ interface PvpKillRecord {                 // nhật ký
 
 | Phiên bản | Ngày | Người sửa | Nội dung |
 |-----------|------|-----------|----------|
+| v0.6 | 2026-10-25 | — | Đợt rà nhất quán: ghép NPC Tạc Thiên Bang với danh hiệu (PK-R-056) và NPC nhiệm vụ Sám hối (PK-R-031) theo LR-02 |
+| v0.5 | 2026-10-25 | — | Thêm mục Telemetry (GD-20) |
 | v0.4 | 2026-10-23 | — | `V1_F01` không PvP toàn bản đồ; không mở server hòa bình (PK-Q-1) |
 | v0.3 | 2026-10-23 | — | Chốt PK-Q-4: thưởng **biểu tượng** — danh hiệu theo bậc Tạc Thiên Tôn Giả (1) / Chí Tôn (3) / Đại Đế (10) cho thành viên Tạc Thiên Bang khi hạ Thiên Đạo Hóa Thân (PK-R-056) |
 | v0.2 | 2026-10-23 | — | **Bỏ miễn PvP theo cảnh giới (LK5) và giới hạn chênh cảnh giới** (dễ bị lợi dụng tranh đồ) → sát nghiệp ×3 khi giết người thấp hơn ≥ 1 cảnh giới lớn; **Chấp Pháp đánh bại được nhưng rất khó** (PK-R-051), có thưởng Chấp Pháp Lệnh (PK-R-054); giết Chấp Pháp → Đại ác nhân + **Thiên phạt**, bị **Thiên Đạo Hóa Thân** truy sát (PK-R-055); PK-AC-008/009 sửa, PK-AC-017..022 |

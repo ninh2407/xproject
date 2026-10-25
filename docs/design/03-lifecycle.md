@@ -4,7 +4,7 @@
 |------------|---------|
 | Mã tài liệu | GD-26 · Prefix ID: `LC` |
 | Owner | Director + Game Designer |
-| Trạng thái | 🟡 Bản nháp v0.6 |
+| Trạng thái | 🟡 Bản nháp v0.9 |
 | Cần trước | Phase 0 |
 | Quyết định nền | PLAN D-03, D-11, D-12, D-13, D-14, D-17 |
 | Liên quan | [PLAN §4.2](../../PLAN.md) · [Glossary](../lore/glossary.md) · [GD-21 Open World](22-open-world.md) · [GD-22 Cơ duyên](23-encounters.md) · GD-04 Tu luyện · GD-27 Thiên phú · GD-28 Hiểm địa · GD-13 Kinh tế · TD-03 Database |
@@ -229,7 +229,7 @@ Không có chuyển trạng thái nào khác. Phi thăng (`ASCENDED`) đi `ALIVE
   1. Tiêu thọ nguyên theo bảng LC-R-040 (`SEVERE_INJURY`).
   2. Trừ tu vi `params.severeInjuryExpLossPct` (5%) của **yêu cầu tu vi tầng hiện tại**, không xuống dưới 0 của tầng (không bao giờ tụt tầng).
   3. Thêm status `WEAKENED` trong `params.weakenedSec` (600s thực): −20% công và phòng.
-  4. Hồi sinh tại truyền tống trận đã kích hoạt gần nhất **trong cùng vực**; không có thì về `HUB` của vực.
+  4. Hồi sinh tại truyền tống trận đã kích hoạt gần nhất **trong cùng vực**. Không có: nếu nhân vật **chưa kích hoạt truyền tống trận nào** (tập truyền tống trận đã kích hoạt rỗng — GD-21 §3.5) thì hồi sinh tại điểm xuất hiện của xuất thân `Background.start` (`mapId` + `poiId`, GD-27 TLN-R-032; Vực 1: miếu hoang `V1_F01_LM_001`) để không đứt phần hướng dẫn (GD-18 OB-AC-003); còn lại về `HUB` của vực.
   5. Ghi `severe_injury_log`.
 - <a id="lc-r-062"></a>**LC-R-062** Nếu có ≥ `params.heartDemonInjuryCount` (3) lần trọng thương trong `params.heartDemonWindowSec` (3600s thực), roll `params.heartDemonChance` (30%) nhận status `HEART_DEMON` (hiệu ứng định nghĩa ở GD-04 / GD-27).
 - <a id="lc-r-063"></a>**LC-R-063** Vật phẩm trong túi và trang bị **không mất** khi trọng thương.
@@ -292,6 +292,7 @@ Danh mục MVP:
 | `UNL_BG_SECT_SERVANT` | Mở xuất thân Tông môn tạp dịch | 250 | Từng vào Thanh Vân Tông (`FLAG_ACC_JOINED_SECT`) | 1 |
 | `UNL_BG_TAC_THIEN_GANG` | Mở xuất thân Bang chúng Tạc Thiên | 250 | Từng vào Tạc Thiên Bang (`FLAG_ACC_JOINED_TAC_THIEN`) | 1 |
 | `UNL_BG_HOP_HOAN_DISCIPLE` | Mở xuất thân Hợp Hoan đệ tử | 250 | Từng vào Hợp Hoan Tông (`FLAG_ACC_JOINED_HOP_HOAN`) | 1 |
+| `UNL_BAG_SLOTS` | +5 ô túi (nguồn trong game của mở rộng túi, GD-19) | 150 × (số đã mua + 1) | — | 4 (= 20 ô) |
 | `UNL_BG_OUTCAST` | Mở xuất thân Phế vật bị trục xuất | 500 | `generationCount ≥ 3` | 1 |
 | `UNL_VAULT_SLOT` | +1 ô Tàng Bảo Các | 150 / 300 / 600 | — | 3 (tối đa 6 ô) |
 | `UNL_PAST_LIFE_MEMORY` | Kiếp mới chọn 1 đan phương / khí phổ đã biết ở kiếp trước, bắt đầu với nó ở mức thuần thục 1 | 300 | — | 1 |
@@ -642,7 +643,7 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 | GD-14 Xã hội | Bạn bè, tông môn tự lập giữ thành viên cấp tài khoản; Thanh Vân Tông "chuyển thế đệ tử"; tin tọa hóa | GD-26 → GD-14 |
 | Death Review (PLAN §6.5) | Hồ sơ `needsReview`; GM có thể đảo ngược cái chết (LC-R-150) | |
 
-- <a id="lc-r-150"></a>**LC-R-150** **GM khôi phục nhân vật** (chết do lỗi): chỉ khi `lifeState == ENDING` hoặc `ENDED` chưa quá `params.gmRestoreWindowSec` (7 ngày); đảo ngược bước 3–11 bằng các bản ghi ledger/item_log tương ứng, ghi `GM_ADJUST`. Yêu cầu 2 GM xác nhận.
+- <a id="lc-r-150"></a>**LC-R-150** **GM khôi phục nhân vật** (chết do lỗi): chỉ khi `lifeState == ENDING` hoặc `ENDED` chưa quá `params.gmRestoreWindowSec` (7 ngày); đảo ngược bước 3–11 bằng các bản ghi ledger/item_log tương ứng, ghi `GM_ADJUST`. Yêu cầu 2 GM xác nhận. Khôi phục nhân vật cần **duyệt hai người** (TD-08 SEC-R-023); khóa tài khoản tạm thời không làm nhân vật già / chết (SEC-R-061).
 
 ---
 
@@ -664,6 +665,8 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 ---
 
 ## 13. Telemetry
+
+> **Tên sự kiện chuẩn, trường, lấy mẫu: [GD-20 §4](51-analytics.md)** — bảng dưới giữ cột "câu hỏi trả lời"; khi tên vênh, theo GD-20 (TM-R-020).
 
 | Sự kiện | Trường | Câu hỏi trả lời |
 |---------|--------|-----------------|
@@ -721,6 +724,7 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 | LC-AC-036 | Ngoài thiên kiếp | Tìm nút binh giải | Không có |
 | LC-AC-037 | Đã bế quan offline hôm nay | Bế quan offline lần 2 | Từ chối tới 05:00 |
 | LC-AC-038 | Vào Tàn Hồn Cảnh tầng TC | Phí | Trừ 600 linh thạch (không hoàn khi thua) |
+| <a id="lc-ac-039"></a>LC-AC-039 | Nhân vật kiếp 1 `LK1` ở `V1_F01`, chưa kích hoạt truyền tống trận nào | Hết máu (trọng thương) | `severe-injury` trả `respawn = { mapId: "V1_F01", poiId: "V1_F01_LM_001" }` (`Background.start`), không về `V1_HUB` (LC-R-061 bước 4) |
 
 ---
 
@@ -765,4 +769,7 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 | v0.4 | 2026-10-23 | — | D-21: chết do PvP là trọng thương, người vô tội không mất thọ / tu vi (LC-R-001, LC-R-060) |
 | v0.5 | 2026-10-23 | — | Chốt Q6 (bế quan offline 10 năm / lần, 1 lần / ngày), **Q21 binh giải** (§5.16, `SELF_DISSOLUTION`, ×0,9, ưu đãi như tọa hóa), phí giải ấn Di Tàng theo tầng (EC-Q-6) |
 | v0.6 | 2026-10-23 | — | Trỏ ma trận dữ liệu qua kiếp sang TD-03 §4 |
+| v0.7 | 2026-10-25 | — | Unlock `UNL_BAG_SLOTS` (GD-19) |
+| v0.8 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
+| v0.9 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: LC-R-061 bước 4 — nhân vật chưa kích hoạt truyền tống trận nào hồi sinh tại `Background.start` (Vực 1: miếu hoang `V1_F01_LM_001`) thay vì `HUB`; LC-AC-039 |
 
