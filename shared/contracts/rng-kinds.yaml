@@ -1,0 +1,166 @@
+schemaVersion: 1
+kinds:
+  - kind: CREATION_ROOT
+    class: C
+    source: API_SERVICE
+    owner: GD-27
+  - kind: CREATION_INNATE
+    class: C
+    source: API_SERVICE
+    owner: GD-27
+  - kind: CREATION_TALENT
+    class: C
+    source: API_SERVICE
+    owner: GD-27
+  - kind: AWAKEN_OFFER
+    class: C
+    source: API_SERVICE
+    owner: GD-27
+  - kind: FUSION
+    class: A
+    source: API_SERVICE
+    owner: GD-27
+  - kind: BREAKTHROUGH
+    class: A
+    source: API_SERVICE
+    owner: GD-04
+  - kind: HEART_DEMON_ROLL
+    class: A
+    source: API_SERVICE
+    owner: GD-04
+  - kind: HEART_TRIAL_PICK
+    class: A
+    source: API_SERVICE
+    owner: GD-04
+  - kind: ENC_TRIGGER
+    class: B
+    source: API_SERVICE
+    owner: GD-22
+  - kind: ENC_PICK
+    class: B
+    source: API_SERVICE
+    owner: GD-22
+  - kind: ROLL_CHECK
+    class: A
+    source: API_SERVICE
+    owner: GD-22
+  - kind: ITEM_GRADE
+    class: B
+    source: API_SERVICE
+    owner: GD-09
+  - kind: ITEM_AFFIX
+    class: B
+    source: API_SERVICE
+    owner: GD-09
+  - kind: CONTAINER_OPEN
+    class: B
+    source: API_SERVICE
+    owner: GD-09
+  - kind: MONSTER_LOOT
+    class: B
+    source: API_SERVICE
+    owner: GD-12
+  - kind: ALCHEMY_SUCCESS
+    class: A
+    source: API_SERVICE
+    owner: GD-10
+  - kind: ALCHEMY_QUALITY
+    class: A
+    source: API_SERVICE
+    owner: GD-10
+  - kind: ALCHEMY_PATTERN
+    class: A
+    source: API_SERVICE
+    owner: GD-10
+  - kind: ALCHEMY_YIELD
+    class: A
+    source: API_SERVICE
+    owner: GD-10
+  - kind: ALCHEMY_DISTURB
+    class: A
+    source: API_SERVICE
+    owner: GD-10
+  - kind: FORGE_SUCCESS
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: FORGE_QUALITY
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: FORGE_AFFIX
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: FORGE_SPIRIT
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: FORGE_RHYTHM
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: ENHANCE
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: REROLL
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: UPGRADE
+    class: A
+    source: API_SERVICE
+    owner: GD-11
+  - kind: TECHNIQUE_Q
+    class: A
+    source: API_SERVICE
+    owner: GD-08
+  - kind: TECHNIQUE_MUTATION
+    class: A
+    source: API_SERVICE
+    owner: GD-08
+  - kind: TECHNIQUE_MUTATION_PICK
+    class: A
+    source: API_SERVICE
+    owner: GD-08
+  - kind: BEAST_LINH_CHUNG
+    class: B
+    source: GAME_SERVER
+    owner: GD-25
+  - kind: BEAST_CAPTURE
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_BOSS_CAPTURE
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_HATCH
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_BREED_SPECIES
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_BREED_INHERIT
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_MUTATION
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: BEAST_MUTATION_KIND
+    class: A
+    source: API_SERVICE
+    owner: GD-25
+  - kind: WE_SCHEDULE
+    class: B
+    source: API_SERVICE
+    owner: GD-23
+  - kind: WE_REWARD
+    class: B
+    source: API_SERVICE
+    owner: GD-23

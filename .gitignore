@@ -1,0 +1,15 @@
+node_modules/
+**/node_modules/
+**/dist/
+**/build/
+**/.gradle/
+shared/gamedata-build/
+shared/contracts/generated/
+client/public/gamedata/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+api-service/bin/

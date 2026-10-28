@@ -1,0 +1,59 @@
+[
+  {
+    "name": "GEO-AC-005 wall slide",
+    "world": {
+      "bounds": { "width": 20, "depth": 20 },
+      "shapes": [
+        {
+          "id": "wall",
+          "kind": "POLYGON",
+          "verts": [
+            { "x": 10, "z": 0 },
+            { "x": 11, "z": 0 },
+            { "x": 11, "z": 20 },
+            { "x": 10, "z": 20 }
+          ],
+          "flags": { "move": true }
+        }
+      ]
+    },
+    "pos": { "x": 8, "z": 4 },
+    "radius": 0.4,
+    "delta": { "x": 2, "z": 2 },
+    "expected": { "x": 9.59, "z": 6 }
+  },
+  {
+    "name": "GEO-AC-004 corridor exactly twice the radius",
+    "world": {
+      "bounds": { "width": 20, "depth": 20 },
+      "shapes": [
+        {
+          "id": "lower-wall",
+          "kind": "POLYGON",
+          "verts": [
+            { "x": 0, "z": 4 },
+            { "x": 20, "z": 4 },
+            { "x": 20, "z": 4.5 },
+            { "x": 0, "z": 4.5 }
+          ],
+          "flags": { "move": true }
+        },
+        {
+          "id": "upper-wall",
+          "kind": "POLYGON",
+          "verts": [
+            { "x": 0, "z": 5.3 },
+            { "x": 20, "z": 5.3 },
+            { "x": 20, "z": 5.8 },
+            { "x": 0, "z": 5.8 }
+          ],
+          "flags": { "move": true }
+        }
+      ]
+    },
+    "pos": { "x": 2, "z": 4.9 },
+    "radius": 0.4,
+    "delta": { "x": 4, "z": 0 },
+    "expected": { "x": 6, "z": 4.9 }
+  }
+]

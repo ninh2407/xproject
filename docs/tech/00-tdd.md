@@ -335,7 +335,7 @@ Danh sách đóng trong `shared/contracts/rng-kinds.yaml`; GD thêm kind phải 
 |------|------|----|
 | Tạo nhân vật / thiên phú | `CREATION_ROOT`, `CREATION_INNATE`, `CREATION_TALENT`, `AWAKEN_OFFER`, `FUSION` | GD-27 |
 | Tu luyện | `BREAKTHROUGH`, `HEART_DEMON_ROLL`, `HEART_TRIAL_PICK` | GD-04 |
-| Cơ duyên | `ENC_TRIGGER`, `ENC_PICK` | GD-22 |
+| Cơ duyên | `ENC_TRIGGER`, `ENC_PICK`, `ROLL_CHECK` | GD-22 |
 | Vật phẩm | `ITEM_GRADE`, `ITEM_AFFIX`, `CONTAINER_OPEN`, `MONSTER_LOOT` | GD-09, GD-12 |
 | Luyện đan | `ALCHEMY_SUCCESS`, `ALCHEMY_QUALITY`, `ALCHEMY_PATTERN`, `ALCHEMY_YIELD`, `ALCHEMY_DISTURB` | GD-10 |
 | Luyện khí | `FORGE_SUCCESS`, `FORGE_QUALITY`, `FORGE_AFFIX`, `FORGE_SPIRIT`, `FORGE_RHYTHM`, `ENHANCE`, `REROLL`, `UPGRADE` | GD-11 |
@@ -568,4 +568,3 @@ interface CharacterContext {              // Valkey key ctx:{characterId}, TTL 1
 | v0.6 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
 | v0.7 | 2026-10-25 | — | Trỏ TD-09 / TD-11; module `monetization`; tải 400 người / tiến trình |
 | v0.8 | 2026-10-25 | — | Kind RNG sự kiện thế giới (GD-23) |
-

@@ -60,7 +60,7 @@ Client ──REST──► │  • World Directory (chọn room, cấp vé)    
 | `TD` (trú địa tông môn) | `InstanceRoom` | `SECT~{sectId}` | thành viên + khách | Như `DP` |
 | `TRIAL` (thử thách 1 người) | `InstanceRoom` | `TRIAL~{kind}~{id}` | 1 (thiên kiếp cũng 1 — GD-04 CU-R-073 không nhận hỗ trợ) | Tàn Hồn Cảnh (GD-26), thủ vệ động phủ (GD-30), thiên kiếp (GD-04), Diễn Pháp Tràng (GD-08); đóng khi kết thúc |
 
-- <a id="wm-r-010"></a>**WM-R-010** Mọi room có metadata Colyseus `{ mapId, mapType, channel?, ownerKey?, players, capacity, processId, gamedataVersion }`, được đồng bộ sang Valkey `wd:{roomKey}` mỗi 5s và khi số người đổi (World Directory đọc từ đây).
+- <a id="wm-r-010"></a>**WM-R-010** Mọi room có metadata Colyseus `{ mapId, mapType, channel?, ownerKey?, players, capacity, processId, gamedataVersion }`, được đồng bộ sang Valkey `wd:{roomId}` mỗi 5s và khi số người đổi (World Directory đọc từ đây).
 - <a id="wm-r-011"></a>**WM-R-011** Room nạp dữ liệu bản đồ từ `bundle.server` (TD-07, TD-13): va chạm, POI, spawn, vùng an toàn, cờ PvP; không đọc file lẻ lúc chạy.
 
 ---
@@ -100,7 +100,7 @@ REQUESTED ─validate─► SOURCE_SAVING ─snapshot ok─► TICKET_ISSUED ─
 |------|----|------|
 | 1 | Room nguồn | Phát hiện kích hoạt: chạm đoạn biên / tương tác cổng / truyền tống trận xong vận pháp / cửa instance / kết quả cơ duyên / chết → hồi sinh / gộp kênh. Gọi `POST /internal/v1/world/transfer` `{ transferId, characterId, from, trigger, target }` |
 | 2 | API | **Kiểm tra** (WM-R-041), chọn room đích (WM-R-030 hoặc tạo instance), tính điểm xuất hiện (WM-R-042) |
-| 3 | Room nguồn | Gửi snapshot cuối (vị trí đích ghi luôn vào snapshot), đánh dấu nhân vật `TRANSFERRING` (bất động, bất tử), nhận `{ joinTicket, endpoint, roomKey, arrival }` |
+| 3 | Room nguồn | Gửi snapshot cuối (vị trí đích ghi luôn vào snapshot), đánh dấu nhân vật `TRANSFERRING` (bất động, bất tử), nhận `{ joinTicket, endpoint, roomId, arrival }` |
 | 4 | Client | Nhận `S2C_TransferTicket` (TD-02 NW-R-074), hiện màn mây thủy mặc, rời room nguồn, `joinById` room đích (bản đồ thường đã tải trước, WM-R-050) |
 | 5 | Room đích | `onAuth` kiểm tra vé (TD-01 §14) → `session-load` từ API → đặt ở `arrival` → bất tử `transfer.spawnInvulnSec` (2s; 10s với PvP, GD-32) → `charlock` chuyển sang room đích → `COMPLETED` |
 
@@ -165,7 +165,7 @@ REQUESTED ─validate─► SOURCE_SAVING ─snapshot ok─► TICKET_ISSUED ─
 
 | Loại | Tên | Mục đích |
 |------|-----|----------|
-| Nội bộ | `POST /internal/v1/world/transfer` | §5; trả `{ joinTicket, endpoint, roomKey, arrival }` hoặc lỗi `IN_COMBAT` / `COOLDOWN` / `REALM_LOCKED` / `NOT_ALLOWED` |
+| Nội bộ | `POST /internal/v1/world/transfer` | §5; trả `{ joinTicket, endpoint, roomId, arrival }` hoặc lỗi `IN_COMBAT` / `COOLDOWN` / `REALM_LOCKED` / `NOT_ALLOWED` |
 | Nội bộ | `POST /internal/v1/world/rooms/heartbeat` | Tiến trình báo danh sách room + tải (5s) |
 | Nội bộ | `POST /internal/v1/world/fog` | WM-R-081 |
 | Nội bộ | `POST /internal/v1/world/instances` | Tạo instance (WM-R-060) |
@@ -231,4 +231,3 @@ REQUESTED ─validate─► SOURCE_SAVING ─snapshot ok─► TICKET_ISSUED ─
 | v0.2 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
 | v0.3 | 2026-10-25 | — | Sức chứa tiến trình 400 mềm / 600 cứng (TD-11) |
 | v0.4 | 2026-10-25 | — | Thiên kiếp sức chứa 1 theo GD-04 CU-R-073 (bỏ "hộ pháp") |
-

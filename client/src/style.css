@@ -1,0 +1,40 @@
+:root {
+  color: #eef0f4;
+  background: #141821;
+  font-family: system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.app-shell {
+  width: 100%;
+  height: 100%;
+}
+
+.render-surface {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.boot-panel {
+  position: fixed;
+  inset: auto auto 2rem 2rem;
+  padding: 1rem 1.5rem;
+  background: rgb(20 24 33 / 90%);
+  border: 1px solid #495163;
+  border-radius: 0.5rem;
+}

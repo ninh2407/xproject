@@ -1,0 +1,34 @@
+ErrorResponse:
+  type: object
+  additionalProperties: false
+  required: [error, requestId]
+  properties:
+    error:
+      type: object
+      additionalProperties: true
+      required: [code, message, messageKey]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        messageKey:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    requestId:
+      type: string
+      format: uuid
+JoinTicket:
+  type: object
+  additionalProperties: false
+  required: [endpoint, roomId, joinTicket]
+  properties:
+    endpoint:
+      type: string
+      format: uri
+    roomId:
+      type: string
+    joinTicket:
+      type: string

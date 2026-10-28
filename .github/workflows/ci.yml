@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.0
+          run_install: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm license:check
+      - run: pnpm contracts:check
+      - run: pnpm contracts:gen
+      - run: pnpm gamedata:build --profile=ci
+      - run: pnpm -r build
+      - run: pnpm -r test
+      - run: pnpm lint
+      - run: chmod +x gradlew && ./gradlew check
+        working-directory: api-service

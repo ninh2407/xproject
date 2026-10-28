@@ -1,0 +1,45 @@
+{
+  "combatTimeoutSec": 5,
+  "baseGrowthPerStage": 1.1,
+  "baseGrowthPerRealm": 1.6,
+  "phamNhanFactor": 0.6,
+  "mitigationK": 5,
+  "mitigationCap": 0.75,
+  "elementStrongMult": 1.25,
+  "elementWeakMult": 0.8,
+  "varianceMin": 0.95,
+  "varianceMax": 1.05,
+  "poiseBreakStunSec": { "PLAYER": 1, "NORMAL": 1.5, "ELITE": 2, "BOSS": 3 },
+  "poiseBreakDamageTakenBonus": 0.2,
+  "poiseRegenPctPerSec": 0.2,
+  "poiseRegenDelaySec": 3,
+  "knockdownImmunitySec": 2,
+  "reactionSec": { "STAGGER": 0.4, "KNOCKBACK": 0.5, "KNOCKDOWN": 1.2 },
+  "staminaRegenDelaySec": 0.8,
+  "dodge": {
+    "staminaCost": 25,
+    "distance": 4,
+    "durationSec": 0.4,
+    "iframeSec": 0.25,
+    "cooldownSec": 0.3,
+    "doubleWindowSec": 0.6
+  },
+  "block": { "staminaCostPerHit": 15, "damageMult": 0.5 },
+  "perfectParryWindowSec": 0.2,
+  "perfectParryPoisePct": 0.3,
+  "perfectParryEnergy": 15,
+  "defenseLagCompMs": 100,
+  "energy": {
+    "max": 100,
+    "onBigHitTaken": 3,
+    "bigHitPctMaxHp": 0.05,
+    "decayPerSec": 5,
+    "decayDelaySec": 10
+  },
+  "eliteCcMult": 0.5,
+  "charm": {
+    "affectsRanks": ["NORMAL", "ELITE"],
+    "affectsPlayers": false,
+    "reapplyImmunitySec": 3
+  }
+}

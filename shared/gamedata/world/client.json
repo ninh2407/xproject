@@ -1,0 +1,47 @@
+{
+  "chunks": { "loadRadius": 2, "unloadRadius": 3 },
+  "anim": {
+    "cancelBlendSec": 0.08,
+    "despawnFadeSec": 0.2,
+    "blend": {
+      "actionStartSec": 0.05,
+      "comboNextSec": 0.05,
+      "recoveryExitSec": 0.15,
+      "idleCombatSwapSec": 0.3,
+      "toReactionSec": 0.05,
+      "toDeathSec": 0.1,
+      "loopEnterSec": 0,
+      "meditateExitSec": 0.2,
+      "flightSec": 0.1,
+      "flightFallSec": 0.05
+    },
+    "rateMin": 0.6,
+    "rateMax": 1.6
+  },
+  "vfxBudget": {
+    "concurrentParticles": [1500, 4000, 8000],
+    "skillParticlesHigh": 300,
+    "skillParticlePct": [0.3, 0.7, 1],
+    "otherPlayersParticlePct": [0, 0.5, 1],
+    "weatherParticlePct": [0.2, 0.6, 1],
+    "skillMeshTrisMax": 500,
+    "lifetimeSecMax": 3,
+    "atlasMaxPx": 1024
+  },
+  "quality": {
+    "autoDowngradeFpsPc": 45,
+    "autoDowngradeFpsMobile": 28,
+    "autoDowngradeWindowSec": 30,
+    "benchSec": 3
+  },
+  "cache": { "quotaMbWeb": 500, "quotaMbMobile": 300 },
+  "reconnect": {
+    "backoffMs": [500, 1000, 2000, 4000],
+    "backgroundKeepAliveSec": 10
+  },
+  "ui": {
+    "breakpoints": { "tablet": 768, "pc": 1280 },
+    "minTouchTargetPx": 44
+  },
+  "bundleBudgetMb": { "firstLoad": 15, "coreJsGzip": 3, "gamedataI18n": 1.5 }
+}

@@ -208,7 +208,7 @@ interface EncounterSession {
 - <a id="enc-r-032"></a>**ENC-R-032** Trúng và đặt chỗ thành công: `pityMissCount = 0`.
 - <a id="enc-r-033"></a>**ENC-R-033** Chọn một ứng viên theo trọng số §6.2 (phẩm cấp × khí vận × bảo hiểm phẩm cấp).
 - <a id="enc-r-034"></a>**ENC-R-034** **Bảo hiểm phẩm cấp:** nếu `sessionsSinceHuyenPlus ≥ params.rarityPityThreshold` (15), mọi ứng viên phẩm `HUYEN` trở lên nhân trọng số `params.rarityPityMult` (3). Bộ đếm reset khi nhận phiên phẩm `HUYEN`+.
-- <a id="enc-r-035"></a>**ENC-R-035** Mọi roll dùng RNG an toàn phía server; mỗi lần roll ở bước [3] và [4] ghi `rng_audit` (kind `ENC_TRIGGER`, `ENC_PICK`).
+- <a id="enc-r-035"></a>**ENC-R-035** Mọi roll dùng RNG an toàn phía server: bước [3] ghi `ENC_TRIGGER`, bước [4] ghi `ENC_PICK`; mỗi `ROLL_CHECK` trong phiên ghi kind `ROLL_CHECK` riêng (TD-01 §9.3).
 
 ### 5.4. Đặt chỗ, cooldown, độc nhất
 - <a id="enc-r-040"></a>**ENC-R-040** Game Server gọi API đặt chỗ (§9.1) trước khi hiện tín hiệu. API kiểm tra **nguyên tử**: nhân vật `ALIVE`, cooldown, `uniqueness`, giới hạn ENC-R-011. Thất bại (409) thì Game Server loại cơ duyên đó và chọn lại trong danh sách còn lại, tối đa `params.reserveRetries` (2) lần; vẫn thất bại thì coi như trượt (không tăng pity).
@@ -788,4 +788,3 @@ CREATE INDEX ix_legacy_unclaimed ON legacy_cave(region_id) WHERE claimed_by IS N
 | v0.5 | 2026-10-25 | — | Cờ `scripted` cho cơ duyên dàn dựng; `ENC_V1_FIRST_OMEN` thuộc GD-18 OB-R-030 |
 | v0.6 | 2026-10-25 | — | Đợt rà nhất quán (AR-04): `presentation.vfx` chỉ nhận ID trong `vfx/effects.json` (validator V-15), ENC-AC-025 |
 | v0.7 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: §7.3 định nghĩa khung `ENC_V1_FIRST_OMEN` (`scripted`, trigger `AREA_ENTER V1_F01_A04`, điều kiện `QC_TUTORIAL_QI` `DONE`; Ink / outcome chờ viết); điểm `V1_F01_ENC_001..004` (`ENCOUNTER_POINT` đã có ở TD-13 §4) chờ nội dung |
-

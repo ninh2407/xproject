@@ -1,0 +1,12 @@
+{
+  "pitchDeg": 50,
+  "pitchRangeDeg": [45, 55],
+  "yawDeg": 0,
+  "fovDeg": 35,
+  "distance": { "default": 20, "min": 14, "max": 26, "step": 1.5 },
+  "followLerp": 0.12,
+  "aimLookAhead": { "enabled": true, "ratio": 0.15, "maxM": 3 },
+  "occluderFade": { "radiusM": 1.5, "minAlpha": 0.25, "fadeSec": 0.15 },
+  "shake": { "maxAmplitudeM": 0.3, "maxDurationSec": 0.4 },
+  "boundsInsetM": 8
+}

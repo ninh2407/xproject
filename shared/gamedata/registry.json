@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "path": "world/client.json",
+      "type": "ClientParams",
+      "visibility": "client"
+    },
+    {
+      "path": "world/camera.json",
+      "type": "CameraParams",
+      "visibility": "client"
+    },
+    {
+      "path": "world/controls.json",
+      "type": "ControlParams",
+      "visibility": "client"
+    },
+    {
+      "path": "stats/params.json",
+      "type": "StatsParams",
+      "visibility": "server"
+    }
+  ]
+}

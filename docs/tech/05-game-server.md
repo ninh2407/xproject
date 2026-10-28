@@ -242,7 +242,7 @@ export const onStatsInputsChanged = defineEventHandler({
 | Hook | Việc | Lỗi |
 |------|------|-----|
 | `onCreate(options)` | Nạp `MapDef` từ `bundle.server` (TD-13), dựng `CollisionWorld` + chỉ mục, navmesh theo cỡ thân (TD-14 §8), spawn ban đầu, seed `RoomRng` (lưu log), đăng ký heartbeat World Directory (TD-12 WM-R-010), subscribe `world:tick` | Map không tồn tại / `gamedataVersion` lệch → không tạo, báo API |
-| `onAuth(client, { ticket })` | `auth.verifyTicket`: chữ ký, `roomKey`, `exp`, `SET NX ticket:{jti}` (TD-01 §14) | `UNAUTHORIZED` |
+| `onAuth(client, { ticket })` | `auth.verifyTicket`: chữ ký, `roomId`, `exp`, `SET NX ticket:{jti}` (TD-01 §14) | `UNAUTHORIZED` |
 | `onJoin(client, auth)` | `GET /internal/v1/characters/{id}/session-load` → tạo entity + component; đặt ở `arrival` (TD-12 WM-R-042); bất tử spawn; lấy `charlock`; gửi `S2C_Welcome` + State trong view | session-load lỗi → `S2C_Kick` + trả vé lại để thử |
 | `onLeave(client, consented)` | Nếu không chủ động: `allowReconnection(client, 60)` (TD-02 NW-R-072), nhân vật xử lý theo nơi đứng (đứng yên / quy tức hiểm địa); hết hạn → snapshot cuối + nhả `charlock` + gỡ entity | — |
 | Chuyển bản đồ | `transfer` (TD-12 §5): khóa nhân vật `TRANSFERRING`, snapshot cuối, gửi `S2C_TransferTicket`, chờ client rời | Timeout → `ABORTED`, mở khóa |
@@ -322,7 +322,7 @@ export const onStatsInputsChanged = defineEventHandler({
 | Loại | Bắt buộc |
 |------|----------|
 | Metric (prom-client) | `gs_tick_duration_ms` (histogram, nhãn `room_type`), `gs_system_duration_ms{system}`, `gs_room_players`, `gs_room_entities`, `gs_rooms_total{type}`, `gs_commands_rejected_total{reason}`, `gs_rate_limited_total{group}`, `gs_api_latency_ms{endpoint}`, `gs_api_errors_total{endpoint,code}`, `gs_retry_queue_length`, `gs_events_consumed_total{type}`, `gs_ws_bytes_out_total`, `gs_ai_decisions_total{tier}`, `gs_transfer_ms{step}` |
-| Log (pino JSON, TA-R-130) | Mỗi dòng có `processId`, `roomKey`, `tick`; sự kiện quan trọng: tạo / đóng room, vào / rời, chuyển bản đồ, chết / hấp hối, lỗi API, vi phạm schema / rate limit |
+| Log (pino JSON, TA-R-130) | Mỗi dòng có `processId`, `roomId`, `tick`; sự kiện quan trọng: tạo / đóng room, vào / rời, chuyển bản đồ, chết / hấp hối, lỗi API, vi phạm schema / rate limit |
 | Trace (OpenTelemetry) | Span cho `onJoin`, `transfer`, mọi gọi API (truyền `traceparent`), xử lý sự kiện domain; **không** trace từng tick (chỉ metric) |
 | Cảnh báo | Theo TA-R-133 (tick p99 > 40ms trong 1 phút, hàng đợi thử lại > 1.000) |
 
@@ -374,4 +374,3 @@ export const onStatsInputsChanged = defineEventHandler({
 | v0.1 | 2026-10-25 | — | Bản nháp đầu: bất biến, cấu trúc `game-server/src`, component store tự viết + phần dùng chung `@tienlo/sim`, thứ tự 10 bước tick có ngân sách, khuôn mẫu system / handler / phản ứng sự kiện, vòng đời room, ApiClient + hàng đợi thử lại + gom lô + chế độ suy giảm, consumer sự kiện, AI 2 tầng + nhóm tần suất, cấu hình / flag, metric / log / trace, kiểm thử, nghiệm thu |
 | v0.2 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
 | v0.3 | 2026-10-25 | — | System `flight` trước movement (GD-31) |
-

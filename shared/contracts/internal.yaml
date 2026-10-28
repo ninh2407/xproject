@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: XProject Internal API
+  version: 0.1.0
+  description: API used by Game Server and World Service (TD-04 API-R-032/034).
+servers:
+  - url: http://api-service:8081
+paths:
+  /internal/v1/world/transfer:
+    post:
+      tags: [world]
+      operationId: world.transfer
+      summary: Validate a map transfer and issue a one-time destination room ticket.
+      security:
+        - serviceAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [transferId, characterId, from, trigger, target]
+              properties:
+                transferId:
+                  type: string
+                characterId:
+                  type: string
+                  format: uuid
+                from:
+                  type: object
+                  additionalProperties: true
+                trigger:
+                  type: string
+                target:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: The destination room ticket and arrival position.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [joinTicket, endpoint, roomId, arrival]
+                properties:
+                  joinTicket:
+                    type: string
+                  endpoint:
+                    type: string
+                    format: uri
+                  roomId:
+                    type: string
+                  arrival:
+                    type: object
+                    additionalProperties: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+components:
+  securitySchemes:
+    serviceAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RequestId:
+      name: X-Request-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Traceparent:
+      name: traceparent
+      in: header
+      required: true
+      schema:
+        type: string
+  schemas:
+    ErrorResponse:
+      $ref: "./components/common.yaml#/ErrorResponse"
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Service authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: The character or transfer cannot be transferred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unavailable:
+      description: A temporary dependency failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

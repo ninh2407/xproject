@@ -1,0 +1,116 @@
+schemaVersion: 1
+codes:
+  - code: VALIDATION
+    http: 400
+    messageKey: err.validation
+  - code: UNAUTHENTICATED
+    http: 401
+    messageKey: err.unauthenticated
+  - code: INVALID_CREDENTIALS
+    http: 401
+    messageKey: err.invalid_credentials
+  - code: TOKEN_EXPIRED
+    http: 401
+    messageKey: err.token_expired
+  - code: TOKEN_REVOKED
+    http: 401
+    messageKey: err.token_revoked
+  - code: FORBIDDEN
+    http: 403
+    messageKey: err.forbidden
+  - code: ACCOUNT_SUSPENDED
+    http: 403
+    messageKey: err.account_suspended
+  - code: LOCK_NOT_AVAILABLE
+    http: 403
+    messageKey: err.lock_not_available
+  - code: NOT_FOUND
+    http: 404
+    messageKey: err.not_found
+  - code: INSUFFICIENT
+    http: 409
+    messageKey: err.insufficient
+  - code: ALREADY_KNOWN
+    http: 409
+    messageKey: err.already_known
+  - code: ALREADY_HAS_TALENT
+    http: 409
+    messageKey: err.already_has_talent
+  - code: NO_SPACE
+    http: 409
+    messageKey: err.no_space
+  - code: NO_ROLLS_LEFT
+    http: 409
+    messageKey: err.no_rolls_left
+  - code: NAME_TAKEN
+    http: 409
+    messageKey: err.name_taken
+  - code: NAME_FILTERED
+    http: 409
+    messageKey: err.name_filtered
+  - code: TAKEN
+    http: 409
+    messageKey: err.taken
+  - code: UNIQUE_TAKEN
+    http: 409
+    messageKey: err.unique_taken
+  - code: SOLD
+    http: 409
+    messageKey: err.sold
+  - code: PRICE_CHANGED
+    http: 409
+    messageKey: err.price_changed
+  - code: CHANCE_CHANGED
+    http: 409
+    messageKey: err.chance_changed
+  - code: INVALID_STATE
+    http: 409
+    messageKey: err.invalid_state
+  - code: REQUIREMENT_NOT_MET
+    http: 409
+    messageKey: err.requirement_not_met
+  - code: REALM_LOCKED
+    http: 409
+    messageKey: err.realm_locked
+  - code: COOLDOWN
+    http: 409
+    messageKey: err.cooldown
+  - code: DAILY_LIMIT
+    http: 409
+    messageKey: err.daily_limit
+  - code: NOT_OWNER
+    http: 409
+    messageKey: err.not_owner
+  - code: NOT_ALLOWED
+    http: 409
+    messageKey: err.not_allowed
+  - code: NOT_NEAR
+    http: 409
+    messageKey: err.not_near
+  - code: IN_COMBAT
+    http: 409
+    messageKey: err.in_combat
+  - code: CONTEXT_STALE
+    http: 409
+    messageKey: err.context_stale
+  - code: IDEMPOTENCY_MISMATCH
+    http: 422
+    messageKey: err.idempotency_mismatch
+  - code: CHARACTER_LOCKED
+    http: 423
+    messageKey: err.character_locked
+  - code: CLIENT_OUTDATED
+    http: 426
+    messageKey: err.client_outdated
+  - code: SPEND_LIMIT_REACHED
+    http: 409
+    messageKey: err.spend_limit_reached
+  - code: STORE_LOCKED
+    http: 423
+    messageKey: err.store_locked
+  - code: RATE_LIMITED
+    http: 429
+    messageKey: err.rate_limited
+  - code: UNAVAILABLE
+    http: 503
+    messageKey: err.unavailable

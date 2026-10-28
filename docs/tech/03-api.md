@@ -142,7 +142,7 @@ Ký hiệu: **Idem** — `IK` = header `Idempotency-Key`; tên trường = khóa
 |---------------|----------|-------|------|-----|
 | `GET /v1/meta` | `gamedataVersion`, URL bundle client, phiên bản client tối thiểu | TD-07 DT-R-121 | — | |
 | `GET /v1/meta/rarity-bands` | Band độ hiếm | GD-29 §9.1 | — | |
-| `POST /v1/play/join` | Vào game → `{ endpoint, roomKey, joinTicket }` | TD-01 §14, TD-12 §10 | IK | |
+| `POST /v1/play/join` | Vào game → `{ endpoint, roomId, joinTicket }` | TD-01 §14, TD-12 §10 | IK | |
 | `POST /v1/characters/{id}/channel` | Đổi kênh | TD-12 WM-R-032 | IK | ⚔ |
 | `GET /v1/world/maps/{mapId}/channels` | Danh sách kênh | TD-12 §10 | — | |
 | `GET /internal/v1/meta` | `gamedataVersion` của API (Game Server so khi khởi động) | TD-01 TA-R-150 | — | |
@@ -433,4 +433,3 @@ Danh sách đóng = TD-01 §9.3 (đã gồm các bổ sung của GD-08, GD-25: `
 | v0.3 | 2026-10-25 | — | Bổ sung mã lỗi `SPEND_LIMIT_REACHED`, `STORE_LOCKED`; trỏ endpoint GD-19 |
 | v0.4 | 2026-10-25 | — | Trỏ endpoint GD-23, GD-20 |
 | v0.5 | 2026-10-25 | — | `GET /v1/crafted-techniques/{id}` trả thành phần (GD-08 TF-R-072, AR-04) |
-

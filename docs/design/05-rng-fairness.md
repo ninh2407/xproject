@@ -88,7 +88,7 @@
 | Luyện khí: thành công, phẩm, thuộc tính phụ, dị tượng | A | GD-11 | `FORGE_*` |
 | Cường hóa, tẩy luyện, nâng phẩm | A | GD-11 | `ENHANCE`, `REROLL`, `UPGRADE` |
 | Chế công pháp: điểm ngộ đạo, đột biến | A | GD-08 | `TECHNIQUE_*` |
-| Lựa chọn may rủi trong cơ duyên (`ROLL_CHECK`) | A | GD-22 | (trong `ENC_PICK` session) |
+| Lựa chọn may rủi trong cơ duyên (`ROLL_CHECK`) | A | GD-22 | `ROLL_CHECK` (trong `ENC_PICK` session) |
 | Cơ duyên: có xảy ra, chọn cơ duyên nào | B | GD-22 | `ENC_TRIGGER`, `ENC_PICK` |
 | Rơi đồ quái / boss | B | GD-12 | `MONSTER_LOOT` |
 | Mở rương, rương hiểm địa | B | GD-09, GD-28 | `CONTAINER_OPEN` |
@@ -482,4 +482,3 @@ Xem §9.3. KPI: tỷ lệ khiếu nại / 1.000 roll loại A < 0,5; câu khảo
 | v0.1 | 2026-10-23 | — | Bản nháp đầu: 5 loại roll + danh mục roll hiện có, `ChanceView` + làm tròn + báo giá, chống save-scum, band độ hiếm cho loại B, **dữ liệu `serverOnly` / hai bundle (chốt TD-07 DT-Q-3)**, tách seed minigame / kết quả, luật loại E, Thiên Cơ Lục + khiếu nại, khí vận được / không được + bảng đăng ký, quy ước điểm phần trăm cho xác suất cộng dồn, 4 dạng pity + bảng đăng ký, giám sát lệch tỷ lệ, nghiệm thu |
 | v0.2 | 2026-10-25 | — | Loại E tắt ở launch (GD-19) |
 | v0.3 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
-

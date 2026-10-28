@@ -154,6 +154,14 @@ Chú thích: **Loại** — TV (thư viện), CC (công cụ), DV (dịch vụ /
 | mistreevous | TV | MIT (theo PLAN) | Tham khảo AI behavior tree | Có (nếu dùng) | ⚠️ | Hiện chỉ **tham khảo**; nếu import thì xác minh LICENSE |
 | TypeScript | CC | Apache-2.0 | Toàn bộ mã TS | Không | ✅ | |
 | Vite | CC | MIT | Build client | Không | ✅ | |
+| @vitejs/plugin-react | CC | MIT | JSX transform cho Vite client | Không | ✅ | npm metadata checked 2026-10-28; pin 4.4.1 |
+| @types/node | CC | MIT | TypeScript Node.js declarations | Không | ✅ | npm metadata checked 2026-10-28; pin 22.14.1 |
+| @types/react | CC | MIT | TypeScript React declarations | Không | ✅ | npm metadata checked 2026-10-28; pin 19.0.12 |
+| @types/react-dom | CC | MIT | TypeScript React DOM declarations | Không | ✅ | npm metadata checked 2026-10-28; pin 19.0.4 |
+| ESLint | CC | MIT | TypeScript lint | Không | ✅ | npm metadata checked 2026-10-28; pin 10.13.0 |
+| Prettier | CC | MIT | TypeScript formatter | Không | ✅ | npm metadata checked 2026-10-28; pin 3.9.10 |
+| typescript-eslint | CC | MIT | Typed ESLint rules | Không | ✅ | npm metadata checked 2026-10-28; pin 8.72.1 |
+| React DOM | TV | MIT | Client UI renderer | Có | ✅ | npm metadata checked 2026-10-28; pin 19.0.0 |
 
 ### 4.2. Game Server & API Service
 | Tên | Loại | License | Dùng ở đâu | Phân phối? | Trạng thái | Ghi chú |
@@ -165,11 +173,14 @@ Chú thích: **Loại** — TV (thư viện), CC (công cụ), DV (dịch vụ /
 | OpenTelemetry (JS + Java SDK) | TV | Apache-2.0 | Trace (TD-01 §15) | Có | ✅ | |
 | OpenJDK (vd. Eclipse Temurin) | DV (runtime) | GPLv2 + Classpath Exception | API Service | Có (vận hành) | ✅ | OSS-R-010 |
 | Spring Boot (+ Spring Framework) | TV | Apache-2.0 | API Service | Có | ✅ | |
-| Flyway (Community) | TV | Apache-2.0 | Migration (TD-03 §11) | Có | ⚠️ | Chỉ bản **Community**; các bản thương mại có điều khoản khác — xác minh khi nâng phiên bản |
+| Spring Boot Validation (Hibernate Validator) | TV | Apache-2.0 | Bean validation for API contracts | Có | ✅ | Version managed by Spring Boot 3.4.5 |
+| Flyway (Community) | TV | Apache-2.0 | Migration (TD-03 §11) | Có | ✅ | Community 10.20.1; Apache-2.0 verified from official Maven Central parent POM on 2026-10-28; review again on upgrade |
 | jOOQ (Open Source Edition) | TV | Apache-2.0 khi dùng với DB mã nguồn mở | API Service (truy vấn nóng) | Có | ⚠️ | Bản miễn phí chỉ cho DB open source — **PostgreSQL đạt**; xác minh điều khoản phiên bản dùng |
 | Caffeine | TV | Apache-2.0 | Cache API | Có | ✅ | |
 | Micrometer | TV | Apache-2.0 | Metric API | Có | ✅ | |
 | OpenAPI Generator | CC | Apache-2.0 | Sinh client / stub từ `shared/contracts` | Không (output có) | ✅ | Kiểm tra license template của generator dùng |
+| @openapitools/openapi-generator-cli | CC | Apache-2.0 | Wrapper CLI cho OpenAPI Generator | Không | ✅ | npm metadata checked 2026-10-28; pin 2.42.0; generator pin 7.12.0 |
+| Prism CLI | CC | Apache-2.0 | Mock server cho OpenAPI contracts | Không | ✅ | npm metadata checked 2026-10-28; pin `@stoplight/prism-cli` 5.16.0 |
 | ts-json-schema-generator | CC | MIT | TS → JSON Schema (TD-07) | Không | ⚠️ | Xác minh LICENSE repo |
 | jsonschema2pojo | CC | Apache-2.0 | JSON Schema → Java (TD-07, DT-Q-2) | Không (output có) | ⚠️ | Xác minh LICENSE repo |
 | Ajv | TV | MIT | Validator gamedata, payload | Có (tools) | ✅ | |
@@ -200,6 +211,7 @@ Chú thích: **Loại** — TV (thư viện), CC (công cụ), DV (dịch vụ /
 | JUnit 5 | TV | EPL-2.0 | Test API | Không | ✅ | |
 | ArchUnit | TV | Apache-2.0 | Kiểm tra ranh giới module (TD-01, TD-03) | Không | ✅ | |
 | Vitest | TV | MIT | Test TS | Không | ✅ | |
+| Gradle | CC | Apache-2.0 | Build Java API (wrapper 8.13) | Không | ✅ | |
 | Playwright | TV | Apache-2.0 | Test chéo trình duyệt (TD-14) | Không | ✅ | |
 | glTF-Transform | CC | MIT | Tối ưu asset | Không | ✅ | |
 | Công cụ khảo sát playtest (**chờ chọn**: biểu mẫu tự host hoặc dịch vụ SaaS) | DV | — | Khảo sát người ngoài team (PM-05 §5.2, PT-Q-2) | Không | ⚠️ chờ chọn | Chưa được dùng cho tới khi có tên dịch vụ cụ thể + điều khoản / chính sách dữ liệu đã đọc (OSS-R-022). Buổi nội bộ (`PAPER`, `INTERNAL`) dùng biểu mẫu giấy / file trong repo, không cần dịch vụ |
@@ -296,4 +308,3 @@ Cách kiểm: file `LICENSE` tải trực tiếp từ repo GitHub chính thức;
 | v0.3 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
 | v0.4 | 2026-10-25 | — | Kiểm license mô hình AI / dịch vụ asset từ nguồn chính thức (§4.7, link + ngày kiểm): TRELLIS.2 MIT nhưng phụ thuộc NVIDIA / RMBG-2.0 phi thương mại → ⚠️ rủi ro; thêm dòng `nvdiffrast`, `nvdiffrec`, `RMBG-2.0` (❌), `BiRefNet`, `DINOv3`, CuMesh / FlexGEMM / O-Voxel; FLUX.1 schnell, SDXL, Mixamo, KayKit → "⚠️ chờ duyệt"; Hunyuan3D giữ ❌ (lãnh thổ). Trạng thái "⚠️ chờ duyệt" / "⚠️ rủi ro"; OSS-R-022 (SaaS thu dữ liệu người ngoài), OSS-R-051 (`art:check` đọc §4.5), OSS-R-052 (phụ thuộc lúc sinh của mô hình); `source = SERVICE` + bảng nghĩa `source`, OSS-R-034 (chốt AR-05 TRK-Q-2); dòng công cụ khảo sát playtest "chờ chọn" (PM-05 PT-Q-2); OSS-Q-5, OSS-Q-6 |
 | v0.5 | 2026-10-25 | — | Chốt OSS-Q-5 (D-28): không chốt công cụ sinh asset; team tự bổ sung asset theo danh sách yêu cầu |
-

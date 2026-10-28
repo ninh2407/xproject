@@ -1,0 +1,8 @@
+openapi: 3.1.0
+info:
+  title: XProject Admin API
+  version: 0.1.0
+  description: GM and development-only administrative API (TD-04 API-R-033).
+servers:
+  - url: http://api-service:8082
+paths: {}

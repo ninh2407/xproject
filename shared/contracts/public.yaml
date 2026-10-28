@@ -1,0 +1,1054 @@
+openapi: 3.1.0
+info:
+  title: XProject Public API
+  version: 0.1.0
+  description: Public player-facing API. Contract-first source per TD-04 API-R-001.
+servers:
+  - url: https://api.example.invalid
+paths:
+  /v1/play/join:
+    post:
+      tags: [play]
+      operationId: play.join
+      summary: Create a one-time ticket for the selected character's game room.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            maxLength: 80
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [characterId]
+              properties:
+                characterId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: The room endpoint and one-time join ticket.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/register:
+    post:
+      tags: [auth]
+      operationId: auth.register
+      summary: Register an account.
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: The account was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: auth.login
+      summary: Create an authenticated account session.
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: The access and refresh tokens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      operationId: auth.refresh
+      summary: Rotate a refresh token.
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: The rotated access and refresh tokens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: auth.logout
+      summary: Revoke the session associated with a refresh token.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "204":
+          description: The session was revoked.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/auth/logout-all:
+    post:
+      tags: [auth]
+      operationId: auth.logoutAll
+      summary: Revoke all sessions for the authenticated account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "204":
+          description: All account sessions were revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/accounts/me:
+    get:
+      tags: [account]
+      operationId: account.getCurrent
+      summary: Get the authenticated account profile.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: The account profile and settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/accounts/me/settings:
+    patch:
+      tags: [account]
+      operationId: account.updateSettings
+      summary: Update account settings.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountSettingsPatch"
+      responses:
+        "200":
+          description: The updated account profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/accounts/me/characters:
+    get:
+      tags: [account]
+      operationId: account.listCharacters
+      summary: List current and ended characters belonging to the account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: The account's character summaries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountCharacters"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/accounts/me/deletion-requests:
+    post:
+      tags: [account]
+      operationId: account.requestDeletion
+      summary: Request account deletion.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "202":
+          description: The deletion request was accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletionRequestAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/creation/odds:
+    get:
+      tags: [creation]
+      operationId: creation.getOdds
+      summary: Get public character-creation odds.
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: Public probability tables defined by GD-27.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreationOdds"
+  /v1/backgrounds:
+    get:
+      tags: [creation]
+      operationId: creation.listBackgrounds
+      summary: List character backgrounds and account unlock state.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: Available background definitions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundCatalog"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/talents:
+    get:
+      tags: [creation]
+      operationId: creation.listTalents
+      summary: List talent definitions and account unlock state.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: Available talent definitions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentCatalog"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/creation/attempts:
+    post:
+      tags: [creation]
+      operationId: creation.openAttempt
+      summary: Open or resume the account's character-creation attempt.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: The current attempt and its roll history.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreationSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/creation/attempts/{attemptId}/rolls:
+    post:
+      tags: [creation]
+      operationId: creation.roll
+      summary: Roll character-creation attributes and talents.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreationRollRequest"
+      responses:
+        "200":
+          description: The generated creation roll.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreationRollResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/creation/attempts/{attemptId}/confirm:
+    post:
+      tags: [creation]
+      operationId: creation.confirm
+      summary: Confirm a creation roll and create the character.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreationConfirmRequest"
+      responses:
+        "201":
+          description: The character was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /v1/characters/{id}/talents:
+    get:
+      tags: [character]
+      operationId: character.getTalents
+      summary: Get a character's talents, spirit root, and pending choice.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The character talent view.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterTalentsView"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/characters/{id}/talent-choices/{pendingId}:
+    post:
+      tags: [character]
+      operationId: character.resolveTalentChoice
+      summary: Resolve a pending talent choice.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: pendingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentChoiceRequest"
+      responses:
+        "200":
+          description: The updated character talent view.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterTalentsView"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RequestId:
+      name: X-Request-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Traceparent:
+      name: traceparent
+      in: header
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 80
+  schemas:
+    ErrorResponse:
+      $ref: "./components/common.yaml#/ErrorResponse"
+    JoinTicket:
+      $ref: "./components/common.yaml#/JoinTicket"
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password, locale]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+        displayHandle:
+          type: string
+          minLength: 3
+          maxLength: 24
+        locale:
+          type: string
+          maxLength: 8
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password, device]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+        device:
+          type: string
+          maxLength: 128
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    AccountCreated:
+      type: object
+      additionalProperties: false
+      required: [accountId]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+    AuthTokens:
+      type: object
+      additionalProperties: false
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          const: 900
+    AccountProfile:
+      type: object
+      additionalProperties: false
+      required: [accountId, status, locale, settings, createdAt]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        displayHandle:
+          type: [string, "null"]
+          maxLength: 24
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, BANNED, DELETED]
+        locale:
+          type: string
+          maxLength: 8
+        settings:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    AccountSettingsPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        hideNameInBroadcast:
+          type: boolean
+        locale:
+          type: string
+          maxLength: 8
+    DeletionRequestAccepted:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: REQUESTED
+    AccountCharacters:
+      type: object
+      additionalProperties: false
+      required: [characters]
+      properties:
+        characters:
+          type: array
+          items:
+            $ref: "#/components/schemas/CharacterSummary"
+    CharacterSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, generation, backgroundId, lifeState]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 16
+        generation:
+          type: integer
+          minimum: 1
+        backgroundId:
+          type: string
+        lifeState:
+          type: string
+          enum: [ALIVE, ENDING, ENDED]
+        realm:
+          type: string
+        realmStage:
+          type: integer
+          minimum: 1
+        endCause:
+          type: [string, "null"]
+    CreationOdds:
+      type: object
+      description: Public creation probability tables defined by GD-27 TLN-R-064.
+      additionalProperties: true
+    BackgroundCatalog:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackgroundSummary"
+    BackgroundSummary:
+      type: object
+      additionalProperties: false
+      required: [id, nameKey, descKey, unlockId]
+      properties:
+        id:
+          type: string
+        nameKey:
+          type: string
+        descKey:
+          type: string
+        unlockId:
+          type: [string, "null"]
+    TalentCatalog:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TalentSummary"
+    TalentSummary:
+      type: object
+      additionalProperties: false
+      required: [id, nameKey, descKey, rarity, polarity, sources, tags]
+      properties:
+        id:
+          type: string
+        nameKey:
+          type: string
+        descKey:
+          type: string
+        rarity:
+          type: string
+          enum: [COMMON, RARE, EPIC, LEGENDARY, MYTHIC]
+        polarity:
+          type: string
+          enum: [POSITIVE, DUAL, NEGATIVE]
+        sources:
+          type: array
+          items:
+            type: string
+            enum: [CREATION, AWAKEN, EVENT, FUSION]
+        tags:
+          type: array
+          items:
+            type: string
+        hiddenAtCreation:
+          type: boolean
+    CreationSession:
+      type: object
+      additionalProperties: false
+      required: [attempt, rolls]
+      properties:
+        attempt:
+          $ref: "#/components/schemas/CreationAttempt"
+        rolls:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreationRollResult"
+    CreationAttempt:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          attemptId,
+          accountId,
+          generation,
+          rollsAllowed,
+          rollsUsed,
+          lockAvailable,
+          noRarePlusStreak,
+          confirmedRollId,
+        ]
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        generation:
+          type: integer
+          minimum: 1
+        rollsAllowed:
+          type: integer
+          minimum: 1
+        rollsUsed:
+          type: integer
+          minimum: 0
+        lockAvailable:
+          type: boolean
+        noRarePlusStreak:
+          type: integer
+          minimum: 0
+        confirmedRollId:
+          type: [string, "null"]
+          format: uuid
+    CreationRollRequest:
+      type: object
+      additionalProperties: false
+      required: [backgroundId]
+      properties:
+        backgroundId:
+          type: string
+        lockLine:
+          $ref: "#/components/schemas/CreationLine"
+    CreationLine:
+      type: string
+      enum: [ROOT, INNATE, TALENT_1, TALENT_2, TALENT_3]
+    CreationConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [rollId, name, appearancePresetId, colors]
+      properties:
+        rollId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 16
+        appearancePresetId:
+          type: string
+        colors:
+          type: object
+          additionalProperties:
+            type: string
+    CreationRollResult:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          rollId,
+          attemptId,
+          index,
+          backgroundId,
+          spiritRoot,
+          innateStats,
+          innateLifespanBonusYears,
+          talentIds,
+          lockedLine,
+          seed,
+          createdAt,
+        ]
+      properties:
+        rollId:
+          type: string
+          format: uuid
+        attemptId:
+          type: string
+          format: uuid
+        index:
+          type: integer
+          minimum: 0
+        backgroundId:
+          type: string
+        spiritRoot:
+          $ref: "#/components/schemas/SpiritRoot"
+        innateStats:
+          $ref: "#/components/schemas/InnateStats"
+        innateLifespanBonusYears:
+          type: integer
+          minimum: 0
+        talentIds:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: string
+        lockedLine:
+          oneOf:
+            - $ref: "#/components/schemas/CreationLine"
+            - type: "null"
+        seed:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    SpiritRoot:
+      type: object
+      additionalProperties: false
+      required: [elements, purity, mutated]
+      properties:
+        elements:
+          type: array
+          minItems: 1
+          maxItems: 5
+          uniqueItems: true
+          items:
+            type: string
+            enum: [KIM, MOC, THUY, HOA, THO, LOI, BANG, PHONG]
+        purity:
+          type: integer
+          minimum: 1
+          maximum: 100
+        mutated:
+          type: boolean
+    InnateStats:
+      type: object
+      additionalProperties: false
+      required: [constitution, comprehension, luck, spiritSense]
+      properties:
+        constitution:
+          type: integer
+        comprehension:
+          type: integer
+        luck:
+          type: integer
+        spiritSense:
+          type: integer
+    CharacterTalentsView:
+      type: object
+      additionalProperties: false
+      required: [characterId, spiritRoot, innateStats, talents, pendingChoice]
+      properties:
+        characterId:
+          type: string
+          format: uuid
+        spiritRoot:
+          $ref: "#/components/schemas/SpiritRoot"
+        innateStats:
+          $ref: "#/components/schemas/InnateStats"
+        talents:
+          type: array
+          items:
+            $ref: "#/components/schemas/CharacterTalent"
+        pendingChoice:
+          oneOf:
+            - $ref: "#/components/schemas/PendingTalentChoice"
+            - type: "null"
+    CharacterTalent:
+      type: object
+      additionalProperties: false
+      required:
+        [characterId, talentId, source, slot, revealed, acquiredAt, refId]
+      properties:
+        characterId:
+          type: string
+          format: uuid
+        talentId:
+          type: string
+        source:
+          type: string
+          enum: [CREATION, AWAKEN, EVENT, FUSION]
+        slot:
+          type: integer
+          minimum: 1
+        revealed:
+          type: boolean
+        acquiredAt:
+          type: string
+          format: date-time
+        refId:
+          type: [string, "null"]
+    PendingTalentChoice:
+      type: object
+      additionalProperties: false
+      required:
+        [pendingId, characterId, kind, offers, context, createdAt, resolvedAt]
+      properties:
+        pendingId:
+          type: string
+          format: uuid
+        characterId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [AWAKEN, REPLACE]
+        offers:
+          type: array
+          items:
+            type: string
+        context:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: [string, "null"]
+          format: date-time
+    TalentChoiceRequest:
+      type: object
+      additionalProperties: false
+      required: [pick]
+      properties:
+        pick:
+          type: [string, "null"]
+        replaceTalentId:
+          type: string
+        element:
+          type: string
+          enum: [KIM, MOC, THUY, HOA, THO, LOI, BANG, PHONG]
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: The character does not belong to this account or is unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: The character cannot enter a room in its current state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unprocessable:
+      description: An idempotency key was reused with a different request body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: The requested account or character resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: The account or IP rate limit was exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unavailable:
+      description: A temporary dependency failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

@@ -68,7 +68,7 @@
 - <a id="sec-r-014"></a>**SEC-R-014** **Xoay khóa ký** mỗi 30 ngày: khóa mới ký token mới, khóa cũ vẫn xác minh tới khi token cuối hết hạn (giữ ≥ 2 khóa trong JWKS); khóa bị nghi lộ → thu hồi ngay, mọi phiên phải đăng nhập lại.
 - <a id="sec-r-015"></a>**SEC-R-015** **Refresh token:** chuỗi ngẫu nhiên 256 bit, lưu **băm** trong `account_session.refresh_token_hash` (TD-03 §6), sống 30 ngày, **xoay vòng mỗi lần dùng** (cấp mới, vô hiệu cũ). **Phát hiện tái dùng:** một refresh token đã bị xoay mà được dùng lại → coi như bị đánh cắp: thu hồi **toàn bộ chuỗi phiên** đó, gửi email cảnh báo.
 - <a id="sec-r-016"></a>**SEC-R-016** Trình duyệt: refresh token để trong cookie `HttpOnly; Secure; SameSite=Strict; Path=/v1/auth`; access token chỉ giữ trong bộ nhớ (không `localStorage`). App Capacitor: refresh token trong kho bảo mật của hệ điều hành (Keychain / Keystore) qua plugin.
-- <a id="sec-r-017"></a>**SEC-R-017** **Join ticket** vào Game Server (TD-01 §14): JWT ký riêng (`aud = game`), TTL 60s, `jti` dùng một lần (`SET NX ticket:{jti}`), gắn `characterId` + `roomKey`; Game Server từ chối vé sai room hoặc đã dùng. Đăng nhập lần hai → phiên cũ bị ngắt (TA-R-120).
+- <a id="sec-r-017"></a>**SEC-R-017** **Join ticket** vào Game Server (TD-01 §14): JWT ký riêng (`aud = game`), TTL 60s, `jti` dùng một lần (`SET NX ticket:{jti}`), gắn `characterId` + `roomId`; Game Server từ chối vé sai room hoặc đã dùng. Đăng nhập lần hai → phiên cũ bị ngắt (TA-R-120).
 - <a id="sec-r-018"></a>**SEC-R-018** Đăng xuất / đổi mật khẩu / khóa tài khoản → thu hồi refresh token, đưa `sid` vào danh sách thu hồi trong Valkey tới khi access token hết hạn, ngắt kết nối Game Server của tài khoản (sự kiện `account.sessions_revoked`).
 
 ### 3.3. Dịch vụ nội bộ
@@ -311,4 +311,3 @@ CREATE INDEX ix_security_flag_open ON security_flag(status, score DESC) WHERE st
 | v0.1 | 2026-10-25 | — | Bản nháp đầu: bất biến, mô hình đe dọa STRIDE, xác thực (Argon2id, khóa đăng nhập, 2FA), token (JWT bất đối xứng + xoay khóa, refresh xoay vòng + phát hiện tái dùng, join ticket), service token có phạm vi + mTLS, vai trò GM + 2FA + 4-eyes + `admin_audit`, bảo vệ API (IDOR, validate, kiểm tra hợp lý API nội bộ, rate limit 3 trục, chống phát lại, CORS / CSP / header), chống gian lận (kiểm tra Game Server, bot, đa tài khoản / RMT, map hack, lạm dụng PvP), `security_flag`, thang xử phạt + kháng nghị, bảo vệ dữ liệu, chuỗi cung ứng, mobile / biên lai, DDoS, runbook + kill switch, kiểm thử, nghiệm thu |
 | v0.2 | 2026-10-25 | — | SEC-R-084: bỏ giả định fork T5C (D-23) |
 | v0.3 | 2026-10-25 | — | D-24: Valkey thay Redis (tên khóa / lệnh không đổi) |
-
