@@ -38,7 +38,7 @@ for (const name of ["public", "internal"]) {
     "-i", `shared/contracts/${name}.yaml`,
     "-g", "spring",
     "-o", javaOutput,
-    `--additional-properties=interfaceOnly=true,useSpringBoot3=true,useTags=true,skipDefaultInterface=true,documentationProvider=none,annotationLibrary=none,useBeanValidation=false,openApiNullable=false,hideGenerationTimestamp=true,apiPackage=${javaPackage},modelPackage=${javaPackage}.model,invokerPackage=${javaPackage}`,
+    `--additional-properties=interfaceOnly=true,useSpringBoot3=true,useTags=true,skipDefaultInterface=true,documentationProvider=none,annotationLibrary=none,useBeanValidation=true,openApiNullable=false,hideGenerationTimestamp=true,apiPackage=${javaPackage},modelPackage=${javaPackage}.model,invokerPackage=${javaPackage}`,
     "--global-property=apiTests=false,modelTests=false,apiDocs=false,modelDocs=false"
   ]);
 }

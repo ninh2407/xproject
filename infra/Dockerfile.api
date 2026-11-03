@@ -1,6 +1,25 @@
+FROM node:22-bookworm AS contracts
+WORKDIR /workspace
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+RUN corepack enable && corepack prepare pnpm@10.13.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc openapitools.json ./
+COPY client/package.json client/package.json
+COPY game-server/package.json game-server/package.json
+COPY shared/contracts/package.json shared/contracts/package.json
+COPY shared/gamedata-types/package.json shared/gamedata-types/package.json
+COPY shared/gamedata/package.json shared/gamedata/package.json
+COPY shared/sim/package.json shared/sim/package.json
+COPY shared/testvectors/package.json shared/testvectors/package.json
+RUN pnpm install --frozen-lockfile --filter xproject
+COPY shared/contracts shared/contracts
+COPY tools/contracts tools/contracts
+RUN pnpm contracts:gen
+
 FROM gradle:8.13-jdk21 AS build
 WORKDIR /workspace
 COPY api-service api-service
+COPY --from=contracts /workspace/api-service/build/generated/openapi api-service/build/generated/openapi
 WORKDIR /workspace/api-service
 RUN gradle --no-daemon bootJar
 

@@ -37,6 +37,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xproject
       SPRING_DATASOURCE_USERNAME: xproject
       SPRING_DATASOURCE_PASSWORD: local-dev-only
+      TL_JWT_KEY_ID: ${TL_JWT_KEY_ID:-}
+      TL_JWT_PRIVATE_KEY: ${TL_JWT_PRIVATE_KEY:-}
+      TL_JWT_PUBLIC_KEY: ${TL_JWT_PUBLIC_KEY:-}
+      TL_AUTH_IDEMPOTENCY_HMAC_KEY: ${TL_AUTH_IDEMPOTENCY_HMAC_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

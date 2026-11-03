@@ -565,9 +565,76 @@ Chỉ dùng công cụ / mô hình đã đăng ký TD-15 §4.5 (TRELLIS.2, SDXL 
 | Rải nhỏ (cỏ, lá, sỏi, hoa) | Script Blender (thẻ / mesh thấp) hoặc gói CC0 đã đăng ký → chuẩn hóa |
 | Bản thử (blockout) | Gói CC0 (Kenney / Quaternius / KayKit — xác minh từng gói KayKit, TD-15) |
 
+### 12.1. Prompt ảnh concept bản đồ và khối ghép
+
+Dùng ảnh concept để thống nhất bố cục và ngôn ngữ hình ảnh trước khi sinh asset. Các prompt dưới đây tự mô tả phong cách và yêu cầu hình ảnh, không dựa vào việc mô hình đọc tài liệu dự án. Trước khi gửi, thay mọi trường trong `[]` bằng mô tả cụ thể ngay trong prompt; không để nguyên placeholder, không yêu cầu mô hình tự tra tài liệu. Mô tả địa hình, đường đi, công trình, POI và màu sắc cần lấy từ thiết kế bản đồ đã chốt; không để AI tự sáng tác nội dung gameplay hoặc lore. Prompt tiếng Anh để dùng trực tiếp với mô hình ảnh.
+
+**Bước 1 — ảnh tổng quan làm ảnh tham chiếu**
+
+```text
+Create a single complete environment concept image for this fictional cultivation-fantasy game map.
+
+MAP DESCRIPTION — use these details exactly:
+- Map name and setting: [WRITE THE MAP NAME AND WHERE IT IS]
+- Map size: [WIDTH] m east-to-west × [LENGTH] m north-to-south
+- Terrain and biome: [DESCRIBE THE GROUND, ELEVATION, WATER, VEGETATION, WEATHER, AND TIME OF DAY]
+- Layout: [DESCRIBE THE MAIN ENTRANCE, WALKABLE ROUTES, OPEN PLAY AREAS, BOUNDARIES, AND CONNECTIONS]
+- Important locations and positions: [LIST EACH LANDMARK / POI AND WHERE IT IS, USING NORTH / SOUTH / EAST / WEST OR GRID POSITIONS]
+- Color palette: [NAME THE MAIN, SECONDARY, ACCENT, AND FOG COLORS, OR DESCRIBE THEM CLEARLY]
+
+ART DIRECTION — follow this description even if no style reference image is attached:
+Stylized low-poly 3D environment concept for an ancient Chinese xianxia cultivation-fantasy game. Use elegant traditional Chinese silhouettes and materials such as timber, stone, plaster, curved tiled roofs, bamboo, and carved ornament only where the map description calls for them. Build forms from clean, readable large shapes with simplified geometry, restrained small details, and soft toon shading. Use flat gradient-like color ramps, matte surfaces, gentle ambient occlusion, soft daylight, and a cohesive palette. The result should feel painterly and fantastical, not realistic or photographic.
+
+COMPOSITION:
+Show the entire map as one uninterrupted environment, with north at the top and the map boundary visible on every side. Use a high-angle, near-orthographic view with mild depth, similar to a fixed game camera tilted about 50 degrees above the ground. Keep scale consistent across the image. Match the image aspect ratio to the map's width-to-length ratio as closely as possible. Make paths, walkable ground, water edges, cliffs, and open combat spaces easy to distinguish at a glance. Keep every described feature inside the map boundary and in its stated location.
+
+This image is a visual layout concept, not a finished game map, texture, or 3D model. Do not create a collage, multiple views, inset panels, a minimap, or a border. Do not add text, labels, signs with readable writing, UI, legend, watermark, characters, enemies, combat effects, or extra landmarks. Do not add or move paths, hazards, buildings, or lore details that are not explicitly written in the map description.
+```
+
+**Bước 2 — sinh từng khối từ ảnh tổng quan đã duyệt**
+
+Chia ảnh tổng quan thành lưới có tọa độ rõ ràng trước khi sinh khối. Mỗi lần chỉ sinh **một** ô. Đính kèm ảnh tổng quan làm tham chiếu hình ảnh, nhưng vẫn chép mô tả bản đồ và phong cách vào prompt dưới đây để yêu cầu không phụ thuộc riêng vào ảnh. Nếu công cụ hỗ trợ, đính kèm thêm ảnh các ô kề hoặc crop có cùng tỷ lệ. Ghi rõ nội dung từng cạnh nối; kích thước ô phải khớp kích thước bản đồ. Kích thước module/asset sản xuất vẫn theo §2 (lưới 0,5m, cạnh module theo bội số đã định).
+
+```text
+Create ONLY one environment concept block for a modular ancient Chinese xianxia cultivation-fantasy game map.
+
+FULL MAP DESCRIPTION — keep this text identical for every block generated from the same map:
+- Map name and setting: [PASTE THE SAME MAP NAME AND SETTING]
+- Full map size and orientation: [PASTE THE SAME WIDTH, LENGTH, AND NORTH DIRECTION]
+- Terrain and biome: [PASTE THE SAME TERRAIN / BIOME DESCRIPTION]
+- Full layout and routes: [PASTE THE SAME MAP LAYOUT DESCRIPTION]
+- All landmarks and positions: [PASTE THE SAME COMPLETE LANDMARK / POI LIST AND POSITIONS]
+- Color palette: [PASTE THE SAME MAIN, SECONDARY, ACCENT, AND FOG COLORS]
+
+BLOCK TO GENERATE:
+- Block ID and grid position: [BLOCK_ID, ROW, COLUMN]
+- Block size: [WIDTH] m × [LENGTH] m
+- Features inside this block: [DESCRIBE ONLY THE TERRAIN, PROPS, AND PARTS OF LANDMARKS IN THIS BLOCK]
+- North edge: [DESCRIBE WHAT CROSSES THIS EDGE, OR SAY CLOSED EDGE]
+- East edge: [DESCRIBE WHAT CROSSES THIS EDGE, OR SAY CLOSED EDGE]
+- South edge: [DESCRIBE WHAT CROSSES THIS EDGE, OR SAY CLOSED EDGE]
+- West edge: [DESCRIBE WHAT CROSSES THIS EDGE, OR SAY CLOSED EDGE]
+
+ART DIRECTION — use the same style for every block:
+Stylized low-poly 3D environment concept for an ancient Chinese xianxia cultivation-fantasy game. Use elegant traditional Chinese silhouettes and materials such as timber, stone, plaster, curved tiled roofs, bamboo, and carved ornament only where the map description calls for them. Use clean readable large shapes, simplified geometry, restrained details, soft toon shading, flat gradient-like color ramps, matte surfaces, gentle ambient occlusion, and soft consistent daylight. Do not use realistic photography or change the established visual style.
+
+CAMERA AND EDGE MATCHING:
+Use a high-angle, near-orthographic view tilted about 50 degrees above the ground. Match the camera direction, scale, lighting, palette, and detail level of the attached overview and other block references. Show the whole block from the same north-up orientation; center it and make all four edges visible. Match terrain height, ground color, water level, path direction and width, cliff profile, and vegetation density exactly to the written edge descriptions. Continue only the features stated for open edges. Keep all geometry and props inside this block. Do not repeat landmarks assigned to other blocks.
+
+This is a visual reference for modular environment art, not final production geometry. Create one image only, not a collage or multiple views. Do not add text, labels, signs with readable writing, UI, watermark, frame, padding, unrelated features, new routes, or anything outside this block. Do not contradict the full map description or invent gameplay and lore details.
+```
+
+**Negative prompt gợi ý (nếu công cụ có trường riêng):**
+
+```text
+text, letters, labels, readable signs, UI, map legend, watermark, frame, border, padding, collage, inset panels, cropped map boundary, cropped block edges, inconsistent camera, perspective distortion, mismatched scale, mismatched lighting, mismatched palette, unrelated landmarks, extra paths, photorealistic textures, characters, enemies
+```
+
+Ảnh khối chỉ là tham chiếu mỹ thuật: mô hình ảnh có thể không tạo được biên ghép chính xác giữa các lần sinh. Duyệt bố cục và phong cách bằng ảnh concept; dựng cạnh nối, kích thước, pivot, va chạm và hình học ghép thật theo §2, §3 và quy trình bên dưới. Không dùng ảnh concept làm mesh hay texture bản đồ cuối.
+
 ```
 1. Brief          : assetId, kit, category, footprint / heightM, tam giác mục tiêu, MaterialGroup, hồ sơ cạnh (§4–§5)
-2. Concept        : mô hình vẽ ảnh (TD-15) + LoRA phong cách dự án; prompt mẫu:
+2. Concept        : mô hình vẽ ảnh (TD-15) + LoRA phong cách dự án; với concept bản đồ/khối dùng prompt §12.1; với asset đơn lẻ, prompt mẫu:
                     "stylized low-poly ancient Chinese {vật}, 3/4 top-down view, flat gradient colors, toon, isolated"
                     — không tên họa sĩ còn sống / tên game khác (ART-R-050)
 3. Ảnh → 3D       : TRELLIS.2 → GLB (PBR) — chỉ loại mảnh "hữu cơ"
@@ -663,4 +730,4 @@ Chỉ dùng công cụ / mô hình đã đăng ký TD-15 §4.5 (TRELLIS.2, SDXL 
 | v0.1 | 2026-10-25 | — | Bản nháp đầu: bất biến (grid snap, mảnh module, atlas gradient chung, va chạm + `fly`, đọc được ở camera game, ngân sách TD-11, hồ sơ nguồn gốc), quy chuẩn lắp ghép (lưới 0,5m / 15°, module 2m, pivot, hồ sơ cạnh, va chạm theo loại mảnh, prop động không vào chunk), danh mục / đặt tên / dữ liệu mảnh, 13 kit Vực 1 + 5 kit dùng chung với danh sách mảnh (mã, mô tả, tam giác, `collisionTemplate`, `fly`, ưu tiên, phase), thôn trấn, ba đại tông, sơn môn, trú địa, động phủ, thử thách, hiểm địa, atlas + 16 nhóm vật liệu, bảng màu Vực 1 + sơ bộ Vực 2–4, 8 mẫu biome cho cọ rải E11, điểm nhấn, ngân sách, ước lượng số mảnh theo phase, quy trình TRELLIS.2 → Blender script, danh sách đồng bộ, 20 tiêu chí nghiệm thu, 13 câu hỏi mở |
 | v0.2 | 2026-10-25 | — | Đánh dấu đã đồng bộ §13 với TD-07 v0.9 (registry `env_palettes.json`, tiền tố), TD-13 v0.7 (hồ sơ cạnh, `BiomeTemplate`, giảm rải tất định, không nướng prop động / vị trí `@serverOnly` vào chunk) và AR-02 v0.3 (khóa `extras`, `KIT_CM_*`, `ENV_*`, `TER_*`, `kit_conform.py`); bỏ nhãn "đề xuất" ở các mục đã có tài liệu chủ quản; đóng KIT-Q-6, KIT-Q-12 |
 | v0.3 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: `PRP_BAMBOO_STALK_FAR_01..02` (trúc lấp lõi khối chặn, không va chạm) + KIT-R-048; `V1_F01` dùng `PRP_MINE_ORE_NODE_*` (kit phụ `MINE`, mảnh dời sang Phase 1); §8 / KIT-Q-1 chốt điểm mốc `V1_F01` = `PRP_POI_LEY_STONE` + `VFX_POI_LEY_LINE` |
-
+| v0.4 | 2026-10-31 | — | Bổ sung prompt tự mô tả phong cách và yêu cầu sinh ảnh concept tổng quan bản đồ rồi sinh từng khối theo lưới, quy tắc giữ phong cách/biên nối và giới hạn ảnh concept với asset sản xuất |

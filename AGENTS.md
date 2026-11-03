@@ -38,3 +38,4 @@ Generated files under `shared/gamedata-build/` and `api-service/build/` are not 
 - Cite the relevant spec rule/acceptance criterion in implementation and test names.
 - Run the smallest relevant test, then all workspace checks for cross-package changes.
 - Keep dependency versions exact and add direct dependencies to `docs/tech/14-oss-register.md` before use.
+- If the user explicitly asks to skip unit tests to save effort, honor that for the requested task; use compile/build or configuration checks instead and report that tests were skipped. Do not remove tests or disable CI checks.

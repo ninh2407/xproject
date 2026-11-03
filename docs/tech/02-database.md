@@ -101,7 +101,7 @@ Cột: **Bảng** · **Module** (TD-01 §5.1) · **Nguồn DDL** · **Phạm vi*
 | Bảng | Module | Nguồn DDL | Phạm vi | Ghi chú |
 |------|--------|-----------|---------|---------|
 | `account` | account | **TD-03 §6** | ACCOUNT | |
-| `account_session` | account | **TD-03 §6** | ACCOUNT | Refresh token Thêm `device_hash` (TD-08) |
+| `account_session` | account | **TD-03 §6** | ACCOUNT | `device_hash` lưu SHA-256 dạng BYTEA, nullable (TD-08) |
 | `account_meta` | lifecycle | GD-26 §9 (+ GD-09 `bag_expansion`) | ACCOUNT | V |
 | `account_flag` | encounter | GD-22 §10 | ACCOUNT | |
 | `idempotency_record` | platform | **TD-03 §6** | LOG | R 7 ngày |
@@ -227,6 +227,7 @@ CREATE TABLE account (
   password_hash VARCHAR(255) NOT NULL,                -- Argon2id
   display_handle VARCHAR(24) UNIQUE,
   status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','SUSPENDED','BANNED','DELETED')),
+  suspended_until TIMESTAMPTZ,                       -- SUSPENDED / BANNED deadline; NULL means indefinite
   locale VARCHAR(8) NOT NULL DEFAULT 'vi',
   settings JSONB NOT NULL DEFAULT '{}',               -- hideNameInBroadcast (GD-14 SO-R-061), ControlSettings (GD-24), hintsSeen (GD-18 OB-R-011)
   roles JSONB NOT NULL DEFAULT '[]',                  -- GM, ADMIN
@@ -234,7 +235,7 @@ CREATE TABLE account (
 );
 CREATE TABLE account_session (
   id UUID PRIMARY KEY, account_id UUID NOT NULL REFERENCES account(id),
-  refresh_token_hash BYTEA NOT NULL UNIQUE, device VARCHAR(128), ip INET,
+  refresh_token_hash BYTEA NOT NULL UNIQUE, device_hash BYTEA, device VARCHAR(128), ip INET,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL, revoked_at TIMESTAMPTZ
 );
 CREATE INDEX ix_account_session_account ON account_session(account_id) WHERE revoked_at IS NULL;
@@ -372,7 +373,7 @@ CREATE INDEX ix_pvp_kill_pair ON pvp_kill_log(killer_id, victim_id, created_at D
 | `age_accrual_report`, `meditation_report`, `mastery_batch` | — | 30–90 ngày | Xóa |
 | `admin_audit` | Năm | 5 năm | — |
 
-- <a id="db-r-040"></a>**DB-R-040** pg_partman tạo trước 3 phân vùng tương lai; job kiểm tra hằng ngày cảnh báo khi còn < 2 phân vùng tương lai.
+- <a id="db-r-040"></a>**DB-R-040** pg_partman tạo trước 3 phân vùng tương lai; job kiểm tra hằng ngày cảnh báo khi còn < 2 phân vùng tương lai. Migration khởi tạo `DEFAULT` partition cho `rng_audit` và `pvp_kill_log` để không chặn ghi trước khi bộ quản lý phân vùng hoạt động; trước khi tạo range partition chồng lên dữ liệu trong `DEFAULT`, phải chuyển dữ liệu đó ra trước.
 - <a id="db-r-041"></a>**DB-R-041** Bảng phân vùng: khóa chính / unique phải chứa cột phân vùng (`created_at`). Idempotency của ledger phân vùng dựa vào `idempotency_record` (không phân vùng) thay vì unique toàn cục trên bảng phân vùng.
 
 ---
@@ -402,7 +403,7 @@ CREATE INDEX ix_pvp_kill_pair ON pvp_kill_log(killer_id, victim_id, created_at D
 | Ghi snapshot (30s / nhân vật) | ~5.000 / phút ở 2.500 CCU | `UPDATE character SET … WHERE id = ? AND snapshot_seq < ?` (HOT update — các cột snapshot không có index) |
 | Gom lô tu vi / thuần thục / tuổi | Mỗi 30–60s / nhân vật | Một transaction mỗi lô; ledger `INSERT` + `UPDATE character` |
 | Kho tài khoản / Di Tàng | Khi mở UI | `item_instance (owner_account_id, location)` |
-| Đấu giá: tìm theo mẫu / giá | Thường xuyên | `auction_listing (template_id, price) WHERE status='ACTIVE'` |
+| Đấu giá: tìm theo mẫu / giá | Thường xuyên | `auction_listing (template_id, unit_price) WHERE state='ACTIVE'` (GD-13 §10) |
 | Bảng xếp hạng chiến lực | 10 phút | Valkey sorted set (§10) + `ix_character_cp` dự phòng |
 | Kiểm toán: lịch sử một vật phẩm | Thỉnh thoảng (GM) | `item_log (item_instance_id)` |
 
@@ -491,4 +492,3 @@ Dữ liệu telemetry / KPI nằm ở **kho phân tích tách riêng** (PostHog 
 | v0.4 | 2026-10-25 | — | Bảng monetization; `account.settings` gồm ControlSettings; trỏ TD-09 §5 |
 | v0.5 | 2026-10-25 | — | Bảng GD-23; ghi chú kho phân tích tách riêng (GD-20) |
 | v0.6 | 2026-10-25 | — | `account.settings.hintsSeen` (GD-18) |
-

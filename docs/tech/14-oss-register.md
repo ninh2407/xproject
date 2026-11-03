@@ -173,9 +173,14 @@ Chú thích: **Loại** — TV (thư viện), CC (công cụ), DV (dịch vụ /
 | OpenTelemetry (JS + Java SDK) | TV | Apache-2.0 | Trace (TD-01 §15) | Có | ✅ | |
 | OpenJDK (vd. Eclipse Temurin) | DV (runtime) | GPLv2 + Classpath Exception | API Service | Có (vận hành) | ✅ | OSS-R-010 |
 | Spring Boot (+ Spring Framework) | TV | Apache-2.0 | API Service | Có | ✅ | |
+| Spring Security | TV | Apache-2.0 | Authentication and authorization for API Service (TD-04 API-R-030, TD-08 SEC-R-013) | Có | ✅ | Version managed by Spring Boot 3.4.5 |
 | Spring Boot Validation (Hibernate Validator) | TV | Apache-2.0 | Bean validation for API contracts | Có | ✅ | Version managed by Spring Boot 3.4.5 |
+| Spring Data JPA (+ Hibernate ORM) | TV | Apache-2.0 | Simple CRUD persistence for API Service (TD-10 CC-R-065) | Có | ✅ | Version managed by Spring Boot 3.4.5 |
+| jOOQ (Open Source Edition) | TV | Apache-2.0 khi dùng với DB mã nguồn mở | Hot queries for API Service (TD-10 CC-R-065) | Có | ✅ | jOOQ 3.19.22 managed by Spring Boot 3.4.5; PostgreSQL qualifies for the OSS edition |
+| Nimbus JOSE+JWT | TV | Apache-2.0 | Ed25519 JWT signing and verification (TD-04 API-R-030) | Có | ✅ | `nimbus-jose-jwt` 9.37.3; version managed by Spring Boot 3.4.5 and pinned as a direct dependency |
+| Bouncy Castle | TV | Bouncy Castle Licence | Argon2id password hashing (TD-08 SEC-R-010) | Có | ✅ | `bcprov-jdk18on` 1.86; Maven Central POM checked 2026-11-03 |
+| Tink (Java) | TV | Apache-2.0 | Ed25519 JWT signing dependency for Nimbus JOSE+JWT (TD-04 API-R-030) | Có | ✅ | Version 1.24.0; Maven Central metadata and POM checked 2026-11-03 |
 | Flyway (Community) | TV | Apache-2.0 | Migration (TD-03 §11) | Có | ✅ | Community 10.20.1; Apache-2.0 verified from official Maven Central parent POM on 2026-10-28; review again on upgrade |
-| jOOQ (Open Source Edition) | TV | Apache-2.0 khi dùng với DB mã nguồn mở | API Service (truy vấn nóng) | Có | ⚠️ | Bản miễn phí chỉ cho DB open source — **PostgreSQL đạt**; xác minh điều khoản phiên bản dùng |
 | Caffeine | TV | Apache-2.0 | Cache API | Có | ✅ | |
 | Micrometer | TV | Apache-2.0 | Metric API | Có | ✅ | |
 | OpenAPI Generator | CC | Apache-2.0 | Sinh client / stub từ `shared/contracts` | Không (output có) | ✅ | Kiểm tra license template của generator dùng |

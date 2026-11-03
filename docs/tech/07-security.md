@@ -61,6 +61,22 @@
 ### 3.1. Đăng nhập
 - <a id="sec-r-010"></a>**SEC-R-010** Mật khẩu băm **Argon2id** (tham số khởi điểm: memory 64 MiB, iterations 3, parallelism 1; hiệu chỉnh để băm ≈ 200–300ms trên máy chủ API), muối ngẫu nhiên mỗi tài khoản. Độ dài tối thiểu 10 ký tự, kiểm tra với danh sách mật khẩu phổ biến / đã lộ (danh sách offline, không gửi mật khẩu ra ngoài).
 - <a id="sec-r-011"></a>**SEC-R-011** **Chống dò mật khẩu:** đếm thất bại theo tài khoản và theo IP (bảng `login_attempt` + Valkey): ≥ 5 lần / 15 phút theo tài khoản → yêu cầu CAPTCHA; ≥ 10 → khóa đăng nhập tài khoản 15 phút (tăng dần, tối đa 24h) và gửi email cảnh báo; ≥ 50 lần / giờ theo IP → chặn IP 1 giờ. Thông báo lỗi **không** tiết lộ tài khoản có tồn tại hay không.
+- `login_attempt` chỉ lưu account ID (nếu xác định được), IP và kết quả; không lưu email hay mật khẩu. Valkey giữ bộ đếm ngắn hạn; bảng này phục vụ kiểm toán và lưu 90 ngày.
+
+DDL đề xuất:
+
+```sql
+CREATE TABLE login_attempt (
+  id BIGSERIAL PRIMARY KEY,
+  account_id UUID REFERENCES account(id),
+  ip INET NOT NULL,
+  succeeded BOOLEAN NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_login_attempt_account_time ON login_attempt(account_id, created_at DESC);
+CREATE INDEX ix_login_attempt_ip_time ON login_attempt(ip, created_at DESC);
+```
+
 - <a id="sec-r-012"></a>**SEC-R-012** **2FA (TOTP)** tùy chọn cho người chơi (khuyến khích bằng phần thưởng cosmetic nhỏ); **bắt buộc** cho tài khoản có vai trò GM / ADMIN (§3.4). Đổi email / mật khẩu / tắt 2FA cần xác nhận qua email đã đăng ký và nhập lại mật khẩu.
 
 ### 3.2. Token & phiên
@@ -185,6 +201,51 @@ CREATE INDEX ix_security_flag_open ON security_flag(status, score DESC) WHERE st
 - <a id="sec-r-062"></a>**SEC-R-062** **Kháng nghị:** người bị xử phạt mức ≥ 2 gửi kháng nghị trong 30 ngày (`POST /v1/support/appeals`); người xem xét **khác** người ra quyết định; trả lời trong 7 ngày. Xử oan → gỡ phạt, khôi phục (bao gồm khôi phục vật phẩm bị thu từ ledger), bồi thường cosmetic.
 - <a id="sec-r-063"></a>**SEC-R-063** Mọi xử phạt ghi `sanction { accountId, level, kind, reason, evidenceFlagIds, actorId, startsAt, endsAt }` và `admin_audit`; người chơi xem được lý do và thời hạn.
 
+DDL đề xuất cho xử phạt và kháng nghị:
+
+```sql
+CREATE TABLE sanction (
+  id UUID PRIMARY KEY,
+  account_id UUID NOT NULL REFERENCES account(id),
+  level SMALLINT NOT NULL CHECK (level BETWEEN 1 AND 4),
+  kind VARCHAR(32) NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_flag_ids JSONB NOT NULL DEFAULT '[]',
+  actor_id UUID NOT NULL,
+  approved_by UUID,
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  revoked_by UUID,
+  revoke_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (ends_at IS NULL OR ends_at > starts_at),
+  CHECK (level NOT IN (2, 3) OR
+         (ends_at IS NOT NULL AND ends_at >= starts_at + INTERVAL '1 day')),
+  CHECK (level <> 2 OR ends_at <= starts_at + INTERVAL '7 days'),
+  CHECK (level <> 3 OR ends_at <= starts_at + INTERVAL '30 days'),
+  CHECK (level <> 4 OR
+         (ends_at IS NULL AND approved_by IS NOT NULL AND approved_by <> actor_id))
+);
+CREATE INDEX ix_sanction_account_time ON sanction(account_id, created_at DESC);
+
+CREATE TABLE appeal (
+  id UUID PRIMARY KEY,
+  sanction_id UUID NOT NULL REFERENCES sanction(id),
+  account_id UUID NOT NULL REFERENCES account(id),
+  body TEXT NOT NULL,
+  reviewer_id UUID,
+  response TEXT,
+  upheld BOOLEAN,
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  resolved_at TIMESTAMPTZ
+);
+CREATE INDEX ix_appeal_sanction_time ON appeal(sanction_id, submitted_at DESC);
+CREATE INDEX ix_appeal_pending ON appeal(submitted_at) WHERE resolved_at IS NULL;
+```
+
+`appeal.reviewer_id` phải khác `sanction.actor_id`; `upheld = false` yêu cầu thu hồi sanction và khôi phục quyền lợi theo SEC-R-062. Đây là kiểm tra nghiệp vụ trong cùng transaction xử lý kháng nghị.
+
 ---
 
 ## 6. Bảo vệ dữ liệu
@@ -217,6 +278,23 @@ CREATE INDEX ix_security_flag_open ON security_flag(status, score DESC) WHERE st
 
 ## 8. Client mobile / Capacitor và thanh toán
 - <a id="sec-r-090"></a>**SEC-R-090** **Biên lai mua hàng** (App Store / Google Play) **luôn xác minh phía server** với API của cửa hàng (App Store Server API / Google Play Developer API) trước khi cấp quyền sở hữu (TD-01 TA-R-164); lưu `purchase_receipt { store, transactionId UNIQUE, productId, accountId, status }` chống dùng lại biên lai; xử lý thông báo hoàn tiền (server-to-server) → thu hồi cosmetic tương ứng.
+
+DDL đề xuất:
+
+```sql
+CREATE TABLE purchase_receipt (
+  transaction_id VARCHAR(128) PRIMARY KEY,
+  store VARCHAR(16) NOT NULL,
+  product_id VARCHAR(128) NOT NULL,
+  account_id UUID NOT NULL REFERENCES account(id),
+  status VARCHAR(16) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  verified_at TIMESTAMPTZ,
+  refunded_at TIMESTAMPTZ
+);
+```
+
+Chỉ lưu định danh và trạng thái cần cho chống dùng lại / xử lý hoàn tiền; không lưu payload biên lai thô.
 - <a id="sec-r-091"></a>**SEC-R-091** Thanh toán web qua cổng thanh toán: chỉ tin **webhook đã xác minh chữ ký** từ cổng, không tin tham số trả về trình duyệt.
 - <a id="sec-r-092"></a>**SEC-R-092** App Capacitor: tắt gỡ lỗi WebView ở bản phát hành, giới hạn điều hướng WebView về origin của game, không nạp mã từ xa ngoài bundle đã ký (trừ asset / gamedata có hash), lưu token ở kho bảo mật hệ điều hành (SEC-R-016).
 

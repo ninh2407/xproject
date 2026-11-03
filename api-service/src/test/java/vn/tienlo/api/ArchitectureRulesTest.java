@@ -33,4 +33,16 @@ class ArchitectureRulesTest {
                 .allowEmptyShould(true);
         rule.check(classes);
     }
+
+    @Test
+    void API_AC_003_securityWebDoesNotDependOnPersistence() {
+        ArchRule rule = noClasses()
+                .that()
+                .resideInAPackage("vn.tienlo.api.security.web..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("vn.tienlo.api.security.persistence..")
+                .allowEmptyShould(true);
+        rule.check(classes);
+    }
 }

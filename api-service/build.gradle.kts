@@ -28,15 +28,23 @@ repositories {
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.5"))
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-jooq")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
+    implementation("com.google.crypto.tink:tink:1.24.0")
     implementation("org.flywaydb:flyway-core:10.20.1")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:10.20.1")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<Test>().configureEach {

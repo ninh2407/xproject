@@ -54,7 +54,12 @@ for (const packageFile of packageFiles) {
 
 for (const label of [
   "Spring Boot (+ Spring Framework)",
+  "Spring Data JPA (+ Hibernate ORM)",
+  "jOOQ (Open Source Edition)",
+  "Spring Security",
   "Spring Boot Validation (Hibernate Validator)",
+  "Bouncy Castle",
+  "Tink (Java)",
   "Flyway (Community)",
   "PostgreSQL",
   "ArchUnit",
