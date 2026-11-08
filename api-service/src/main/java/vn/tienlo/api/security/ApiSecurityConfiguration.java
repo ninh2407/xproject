@@ -4,7 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -14,11 +20,13 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import vn.tienlo.api.generated.publicapi.model.ErrorResponse;
 import vn.tienlo.api.generated.publicapi.model.ErrorResponseError;
+import vn.tienlo.api.security.JwtDependencyUnavailableException;
 
 @Configuration
 public class ApiSecurityConfiguration {
@@ -28,10 +36,16 @@ public class ApiSecurityConfiguration {
             AuthenticationEntryPoint authenticationEntryPoint,
             AccessDeniedHandler accessDeniedHandler)
             throws Exception {
-        return http.csrf(AbstractHttpConfigurer::disable)
+        return http.cors(cors -> {})
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/v1/auth/**")
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/v1/auth/register",
+                                "/v1/auth/login",
+                                "/v1/auth/refresh")
                         .permitAll()
                         .requestMatchers("/internal/**", "/admin/**")
                         .denyAll()
@@ -50,9 +64,52 @@ public class ApiSecurityConfiguration {
     }
 
     @Bean
+    CorsConfigurationSource corsConfigurationSource(
+            @Value("${security.cors.allowed-origins:}") String configuredOrigins) {
+        List<String> origins = Arrays.stream(configuredOrigins.split(","))
+                .map(String::strip)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+        if (origins.stream().anyMatch("*"::equals)) {
+            throw new IllegalStateException("TL_CORS_ALLOWED_ORIGINS must not contain a wildcard");
+        }
+
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOrigins(origins);
+        cors.setAllowCredentials(true);
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cors.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Idempotency-Key",
+                "traceparent",
+                "X-Request-Id"));
+        cors.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/v1/**", cors);
+        return source;
+    }
+
+    @Bean
     AuthenticationEntryPoint authenticationEntryPoint(ObjectMapper objectMapper) {
-        return (request, response, exception) ->
-                writeError(objectMapper, request, response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "err.unauthenticated");
+        return (request, response, exception) -> {
+            if (hasCause(exception, JwtDependencyUnavailableException.class)) {
+                writeError(objectMapper, request, response, HttpStatus.SERVICE_UNAVAILABLE, "UNAVAILABLE", "err.unavailable");
+            } else if (containsJwtError(exception, "token_expired")) {
+                writeError(objectMapper, request, response, HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "err.token_expired");
+            } else if (containsJwtError(exception, "token_revoked")) {
+                writeError(objectMapper, request, response, HttpStatus.UNAUTHORIZED, "TOKEN_REVOKED", "err.token_revoked");
+            } else {
+                writeError(
+                        objectMapper,
+                        request,
+                        response,
+                        HttpStatus.UNAUTHORIZED,
+                        "UNAUTHENTICATED",
+                        "err.unauthenticated");
+            }
+        };
     }
 
     @Bean
@@ -95,5 +152,28 @@ public class ApiSecurityConfiguration {
                 new ErrorResponse(
                         new ErrorResponseError(code, status.getReasonPhrase(), messageKey),
                         requestId));
+    }
+
+    private static boolean containsJwtError(Throwable throwable, String code) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof JwtValidationException validationException
+                    && validationException.getErrors().stream().anyMatch(error -> code.equals(error.getErrorCode()))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private static boolean hasCause(Throwable throwable, Class<? extends Throwable> type) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (type.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

@@ -55,6 +55,7 @@ for (const packageFile of packageFiles) {
 for (const label of [
   "Spring Boot (+ Spring Framework)",
   "Spring Data JPA (+ Hibernate ORM)",
+  "Spring Data Redis (Lettuce)",
   "jOOQ (Open Source Edition)",
   "Spring Security",
   "Spring Boot Validation (Hibernate Validator)",

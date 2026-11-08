@@ -23,9 +23,6 @@ public class AccountMetaEntity {
     @Column(name = "rebirth_points_total", nullable = false)
     private Integer rebirthPointsTotal;
 
-    @Column(name = "generation_count", nullable = false)
-    private Integer generationCount;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "unlocks", nullable = false, columnDefinition = "jsonb")
     private JsonNode unlocks;
@@ -67,14 +64,6 @@ public class AccountMetaEntity {
 
     public void setRebirthPointsTotal(Integer rebirthPointsTotal) {
         this.rebirthPointsTotal = rebirthPointsTotal;
-    }
-
-    public Integer getGenerationCount() {
-        return generationCount;
-    }
-
-    public void setGenerationCount(Integer generationCount) {
-        this.generationCount = generationCount;
     }
 
     public JsonNode getUnlocks() {

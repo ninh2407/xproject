@@ -106,11 +106,16 @@ interface AccountRebirth {
   accountId: string;
   rebirthPoints: number;              // số dư hiện tại
   rebirthPointsTotal: number;         // tổng đã nhận (thống kê)
-  generationCount: number;            // số kiếp đã bắt đầu trên server
   unlocks: string[];                  // ID trong rebirth_unlocks.json
   vaultSlots: number;
   vaultSpiritStones: number;
   firstReachRealms: string[];         // RealmCode lớn đã đạt lần đầu (thưởng một lần)
+}
+
+interface AccountServerProgress {
+  accountId: string;
+  serverId: number;
+  generationCount: number;            // số kiếp đã bắt đầu trên server này
 }
 
 interface LifeRecord {                // Bia Vạn Cổ
@@ -154,7 +159,7 @@ interface RemnantSnapshot {                 // chụp ở bước 6 (§5.8)
 
 | Từ | Đến | Điều kiện (guard) | Tác dụng phụ |
 |----|-----|-------------------|--------------|
-| — | `ALIVE` | Tạo nhân vật thành công (GD-27); tài khoản không có nhân vật `ALIVE`/`ENDING` (LC-R-006) | `generation = account.generationCount + 1`; `startAge = params.startAge`; ghi `lifecycle.life_started` |
+| — | `ALIVE` | Tạo nhân vật thành công (GD-27); tài khoản không có nhân vật `ALIVE`/`ENDING` trên server đã chọn (LC-R-006) | `generation = accountServerProgress(serverId).generationCount + 1`; `startAge = params.startAge`; ghi `lifecycle.life_started` |
 | `ALIVE` | `ALIVE` (LAST_LIGHT) | `lifespanRemainingYears ≤ 0` và `lastLightUntil == null` | `lastLightUntil = now + params.lastLightRealSec`; thêm status `LAST_LIGHT` (§5.5) |
 | `ALIVE` | `ENDING` | Chết thật hợp lệ (§5.7) **hoặc** `now ≥ lastLightUntil` (có trì hoãn chiến đấu, LC-R-033) | Quy trình §5.8 bước 1–6 |
 | `ENDING` | `ENDED` | Người chơi xác nhận **hoặc** `now ≥ endingDeadline` | Quy trình §5.8 bước 7–12 |
@@ -277,9 +282,10 @@ Bước 1–6 chạy trong **một transaction** khi vào `ENDING`; bước 7–
 - <a id="lc-r-092"></a>**LC-R-092** Ghi `rebirth_ledger` (reason `LIFE_ENDED`, `UNLOCK_PURCHASE`, `GM_ADJUST`).
 
 ### 5.10. Cửa hàng Luân Hồi
-- <a id="lc-r-100"></a>**LC-R-100** Danh mục trong `rebirth_unlocks.json`. Mỗi unlock có: `id`, `cost`, `requires` (điều kiện tài khoản), `stackMax`, `effect`.
+- <a id="lc-r-100"></a>**LC-R-100** Danh mục trong `rebirth_unlocks.json`. Mỗi unlock có: `id`, `cost`, `requires` (điều kiện trên metadata tài khoản và/hoặc tiến trình server theo LC-R-164), `stackMax`, `effect`.
 - <a id="lc-r-101"></a>**LC-R-101** Mua được bất cứ lúc nào (kể cả khi đang có nhân vật `ALIVE`); hiệu lực của unlock loại "lúc tạo nhân vật" chỉ áp dụng cho kiếp **tiếp theo**.
 - <a id="lc-r-102"></a>**LC-R-102** Không hoàn điểm. Không quy đổi qua lại với Tiên Ngọc (LC-R-005).
+- <a id="lc-r-164"></a>**LC-R-164** `generationCount` được lưu và tăng độc lập theo `(accountId, serverId)`, chỉ tăng cùng transaction confirm tạo nhân vật thành công. Với điều kiện generation của unlock cấp account, dùng giá trị lớn nhất trong các server của tài khoản; unlock đã mua vẫn dùng chung trên mọi server.
 
 Danh mục MVP:
 
@@ -293,7 +299,7 @@ Danh mục MVP:
 | `UNL_BG_TAC_THIEN_GANG` | Mở xuất thân Bang chúng Tạc Thiên | 250 | Từng vào Tạc Thiên Bang (`FLAG_ACC_JOINED_TAC_THIEN`) | 1 |
 | `UNL_BG_HOP_HOAN_DISCIPLE` | Mở xuất thân Hợp Hoan đệ tử | 250 | Từng vào Hợp Hoan Tông (`FLAG_ACC_JOINED_HOP_HOAN`) | 1 |
 | `UNL_BAG_SLOTS` | +5 ô túi (nguồn trong game của mở rộng túi, GD-19) | 150 × (số đã mua + 1) | — | 4 (= 20 ô) |
-| `UNL_BG_OUTCAST` | Mở xuất thân Phế vật bị trục xuất | 500 | `generationCount ≥ 3` | 1 |
+| `UNL_BG_OUTCAST` | Mở xuất thân Phế vật bị trục xuất | 500 | `max(generationCount across servers) ≥ 3` | 1 |
 | `UNL_VAULT_SLOT` | +1 ô Tàng Bảo Các | 150 / 300 / 600 | — | 3 (tối đa 6 ô) |
 | `UNL_PAST_LIFE_MEMORY` | Kiếp mới chọn 1 đan phương / khí phổ đã biết ở kiếp trước, bắt đầu với nó ở mức thuần thục 1 | 300 | — | 1 |
 | `UNL_TALENT_POOL_*` | Thêm thiên phú vào pool roll (GD-27) | 100–400 | Theo từng thiên phú | 1 mỗi loại |
@@ -572,11 +578,17 @@ CREATE TABLE account_meta (
   account_id            UUID PRIMARY KEY,
   rebirth_points        INT NOT NULL DEFAULT 0,
   rebirth_points_total  INT NOT NULL DEFAULT 0,
-  generation_count      INT NOT NULL DEFAULT 0,
   unlocks               JSONB NOT NULL DEFAULT '[]',
   vault_slots           INT NOT NULL DEFAULT 3,
   vault_spirit_stones   BIGINT NOT NULL DEFAULT 0,
   first_reach_realms    JSONB NOT NULL DEFAULT '[]'
+);
+
+CREATE TABLE account_server_meta (
+  account_id       UUID NOT NULL REFERENCES account(id),
+  server_id        SMALLINT NOT NULL REFERENCES server_registry(server_id),
+  generation_count INT NOT NULL DEFAULT 0 CHECK (generation_count >= 0),
+  PRIMARY KEY (account_id, server_id)
 );
 
 CREATE TABLE rebirth_ledger (
@@ -725,6 +737,7 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 | LC-AC-037 | Đã bế quan offline hôm nay | Bế quan offline lần 2 | Từ chối tới 05:00 |
 | LC-AC-038 | Vào Tàn Hồn Cảnh tầng TC | Phí | Trừ 600 linh thạch (không hoàn khi thua) |
 | <a id="lc-ac-039"></a>LC-AC-039 | Nhân vật kiếp 1 `LK1` ở `V1_F01`, chưa kích hoạt truyền tống trận nào | Hết máu (trọng thương) | `severe-injury` trả `respawn = { mapId: "V1_F01", poiId: "V1_F01_LM_001" }` (`Background.start`), không về `V1_HUB` (LC-R-061 bước 4) |
+| LC-AC-040 | Tài khoản có generation 3 trên server A, generation 0 trên server B | Kiểm tra điều kiện và mua `UNL_BG_OUTCAST`, sau đó tạo nhân vật trên B | Đủ điều kiện mua theo generation cao nhất; unlock dùng được trên B và generation B chỉ tăng khi confirm thành công |
 
 ---
 
@@ -772,4 +785,4 @@ Mã `item_log` mới: `LIFE_ENDED_SEALED`, `SEAL_RELEASED`, `SEAL_DISSIPATED`. N
 | v0.7 | 2026-10-25 | — | Unlock `UNL_BAG_SLOTS` (GD-19) |
 | v0.8 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
 | v0.9 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: LC-R-061 bước 4 — nhân vật chưa kích hoạt truyền tống trận nào hồi sinh tại `Background.start` (Vực 1: miếu hoang `V1_F01_LM_001`) thay vì `HUB`; LC-AC-039 |
-
+| v0.10 | 2026-11-03 | — | Tách generation theo server; điều kiện generation của unlock cấp account dùng giá trị cao nhất giữa các server; LC-R-164, LC-AC-040 |

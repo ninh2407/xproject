@@ -176,6 +176,7 @@ Chú thích: **Loại** — TV (thư viện), CC (công cụ), DV (dịch vụ /
 | Spring Security | TV | Apache-2.0 | Authentication and authorization for API Service (TD-04 API-R-030, TD-08 SEC-R-013) | Có | ✅ | Version managed by Spring Boot 3.4.5 |
 | Spring Boot Validation (Hibernate Validator) | TV | Apache-2.0 | Bean validation for API contracts | Có | ✅ | Version managed by Spring Boot 3.4.5 |
 | Spring Data JPA (+ Hibernate ORM) | TV | Apache-2.0 | Simple CRUD persistence for API Service (TD-10 CC-R-065) | Có | ✅ | Version managed by Spring Boot 3.4.5 |
+| Spring Data Redis (Lettuce) | TV | Apache-2.0 | Valkey-backed API rate limits and revoked-session keys (TD-08 SEC-R-011, SEC-R-018) | Có | ✅ | Version managed by Spring Boot 3.4.5; Valkey uses the Redis-compatible RESP protocol |
 | jOOQ (Open Source Edition) | TV | Apache-2.0 khi dùng với DB mã nguồn mở | Hot queries for API Service (TD-10 CC-R-065) | Có | ✅ | jOOQ 3.19.22 managed by Spring Boot 3.4.5; PostgreSQL qualifies for the OSS edition |
 | Nimbus JOSE+JWT | TV | Apache-2.0 | Ed25519 JWT signing and verification (TD-04 API-R-030) | Có | ✅ | `nimbus-jose-jwt` 9.37.3; version managed by Spring Boot 3.4.5 and pinned as a direct dependency |
 | Bouncy Castle | TV | Bouncy Castle Licence | Argon2id password hashing (TD-08 SEC-R-010) | Có | ✅ | `bcprov-jdk18on` 1.86; Maven Central POM checked 2026-11-03 |

@@ -114,3 +114,6 @@ codes:
   - code: UNAVAILABLE
     http: 503
     messageKey: err.unavailable
+  - code: INTERNAL_ERROR
+    http: 500
+    messageKey: err.internal_error

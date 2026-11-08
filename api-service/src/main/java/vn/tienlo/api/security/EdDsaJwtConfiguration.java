@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Clock;
 import java.text.ParseException;
 import java.time.Duration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -38,6 +39,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /** API-R-030 and SEC-R-013: validate Ed25519 public-audience access tokens. */
 @Configuration
@@ -84,7 +86,7 @@ public class EdDsaJwtConfiguration {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(OctetKeyPair keyPair) {
+    JwtDecoder jwtDecoder(OctetKeyPair keyPair, Clock clock, StringRedisTemplate redis) {
         OAuth2TokenValidator<Jwt> audienceValidator = jwt -> jwt.getAudience().size() == 1
                         && jwt.getAudience().contains("public")
                 ? OAuth2TokenValidatorResult.success()
@@ -142,9 +144,23 @@ public class EdDsaJwtConfiguration {
                         expiresAt == null ? null : expiresAt.toInstant(),
                         header.toJSONObject(),
                         claims);
+                if (expiresAt != null && !expiresAt.toInstant().isAfter(clock.instant())) {
+                    throw new JwtValidationException(
+                            "Access token has expired",
+                            List.of(new OAuth2Error("token_expired", "Access token has expired", null)));
+                }
                 var validation = validator.validate(jwt);
                 if (validation.hasErrors()) {
                     throw new JwtValidationException("JWT claims are invalid", validation.getErrors());
+                }
+                try {
+                    if (Boolean.TRUE.equals(redis.hasKey("auth:revoked:sid:" + jwt.getClaimAsString("sid")))) {
+                        throw new JwtValidationException(
+                                "Access token session has been revoked",
+                                List.of(new OAuth2Error("token_revoked", "Session has been revoked", null)));
+                    }
+                } catch (org.springframework.dao.DataAccessException exception) {
+                    throw new JwtDependencyUnavailableException("Session revocation store is unavailable", exception);
                 }
                 return jwt;
             } catch (ParseException | JOSEException exception) {

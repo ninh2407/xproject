@@ -70,6 +70,10 @@ Thư mục này chứa toàn bộ tài liệu thiết kế. Kế hoạch tổng 
 
 Trạng thái: ⬜ chưa viết · 🟡 bản nháp · 🟢 đã duyệt · 🔵 đã triển khai.
 
+### Đề xuất chưa chuẩn tắc
+
+- [Đề xuất đặc tả triển khai tạo nhân vật](04-talents-creation-proposal.md) — chờ duyệt; không dùng làm nguồn quy tắc cho code.
+
 ## 2. Quy ước viết spec (bắt buộc với mọi tài liệu GD/TD)
 
 Các tài liệu sẽ được **AI đọc để sinh code**, nên phải cụ thể, không mơ hồ và liên kết được với nhau.

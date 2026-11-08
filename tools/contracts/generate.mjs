@@ -16,10 +16,16 @@ function run(args) {
   if (result.status !== 0) throw new Error(`OpenAPI Generator failed (${result.status ?? "signal"}).`);
 }
 
-for (const name of ["public", "internal"]) {
+const javaPackages = {
+  public: "vn.tienlo.api.generated.publicapi",
+  internal: "vn.tienlo.api.generated.internal",
+  admin: "vn.tienlo.api.generated.admin"
+};
+
+for (const name of Object.keys(javaPackages)) {
   const tsOutput = resolve(contracts, "generated", name, "typescript-fetch");
   const javaOutput = resolve(root, "api-service", "build", "generated", "openapi", name);
-  const javaPackage = `vn.tienlo.api.generated.${name === "public" ? "publicapi" : name}`;
+  const javaPackage = javaPackages[name];
   rmSync(tsOutput, { recursive: true, force: true });
   rmSync(javaOutput, { recursive: true, force: true });
   mkdirSync(tsOutput, { recursive: true });

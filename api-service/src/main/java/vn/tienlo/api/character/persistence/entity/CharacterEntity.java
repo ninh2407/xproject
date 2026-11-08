@@ -26,7 +26,7 @@ public class CharacterEntity {
     @Column(name = "server_id", nullable = false)
     private Short serverId;
 
-    @Column(name = "name", nullable = false, length = 16)
+    @Column(name = "name", nullable = false, length = 12)
     private String name;
 
     @Column(name = "generation", nullable = false)
@@ -34,6 +34,10 @@ public class CharacterEntity {
 
     @Column(name = "background_id", nullable = false, length = 48)
     private String backgroundId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "base_appearance", nullable = false, columnDefinition = "jsonb")
+    private JsonNode baseAppearance;
 
     @Column(name = "life_state", nullable = false, length = 8)
     private String lifeState;
@@ -199,6 +203,14 @@ public class CharacterEntity {
 
     public void setBackgroundId(String backgroundId) {
         this.backgroundId = backgroundId;
+    }
+
+    public JsonNode getBaseAppearance() {
+        return baseAppearance;
+    }
+
+    public void setBaseAppearance(JsonNode baseAppearance) {
+        this.baseAppearance = baseAppearance;
     }
 
     public String getLifeState() {

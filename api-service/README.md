@@ -6,7 +6,7 @@ Package root: `vn.tienlo.api`. Each business module owns `api`, `web`, `app`, `d
 
 ## Local authentication keys
 
-The service requires an Ed25519 JWT key pair and a 256-bit HMAC key. Do not commit these values or reuse local keys in deployed environments. From PowerShell, create local-only keys and export their DER encodings as Base64:
+The service requires an Ed25519 JWT key pair and a 256-bit HMAC key. The HMAC key also derives a separate AES-GCM key for encrypted auth idempotency responses; keep it stable while those records are retained. Auth refresh tokens are sent only as the `__Secure-xproject_refresh` HttpOnly, Secure, SameSite=Strict cookie. Browser clients must send credentialed requests; configure `TL_CORS_ALLOWED_ORIGINS` as a comma-separated allowlist of exact game origins (never `*`). CAPTCHA is provider-neutral: configure `TL_CAPTCHA_VERIFICATION_URI` and `TL_CAPTCHA_SECRET` for a verifier accepting `{ secret, response, remoteIp }` and returning `{ success }`. Registration always verifies CAPTCHA; login requires it after five failed attempts. Missing verifier configuration fails closed with `503 UNAVAILABLE`. Do not commit secrets or reuse local keys in deployed environments. From PowerShell, create local-only keys and export their DER encodings as Base64:
 
 ```powershell
 Set-Location api-service
@@ -34,8 +34,8 @@ The `rng_audit` and `pvp_kill_log` partition parents start with default partitio
 
 The jOOQ repositories cover the hot queries currently specified in TD-03: conditional character snapshot updates, auction listing search, and item history lookup. Other straightforward persistence operations use Spring Data JPA.
 
-Run `.\gradlew.bat bootRun` from this directory. `POST /v1/auth/login` authenticates an existing `game.account`, creates an `account_session`, and returns an Ed25519 access token plus an opaque refresh token. Account registration, refresh rotation, Valkey-backed login throttling, and CAPTCHA are separate follow-up flows.
+`compileJava` runs `openApiGenerate` first and generates Java interfaces for public, internal, and admin contracts. The auth controller implements the generated public `AuthApi` interface for register, login, refresh, logout, and logout-all. Valkey enforces the auth IP token bucket, login CAPTCHA threshold, account lockout, and IP failure block. Refresh-token reuse revokes all account sessions; revoked access-token session IDs are rejected, and `account.sessions_revoked` is stored in the transactional outbox and relayed to `evt:account`.
 
 ## Build and test
 
-Run `.\gradlew.bat compileJava` to verify the API service without running unit tests.
+Run `.\gradlew.bat compileJava` to compile the API service. Focused auth acceptance checks: `.\gradlew.bat test --tests "vn.tienlo.api.security.app.AuthServiceTest" --tests "vn.tienlo.api.security.web.AuthLoginControllerTest" --tests "vn.tienlo.api.security.ApiSecurityConfigurationTest"`.

@@ -17,8 +17,24 @@ sourceSets {
         java {
             srcDir(layout.buildDirectory.dir("generated/openapi/public/src/main/java"))
             srcDir(layout.buildDirectory.dir("generated/openapi/internal/src/main/java"))
+            srcDir(layout.buildDirectory.dir("generated/openapi/admin/src/main/java"))
         }
     }
+}
+
+tasks.register<Exec>("openApiGenerate") {
+    group = "code generation"
+    description = "Generate TypeScript clients and Java API interfaces from OpenAPI contracts."
+    val repositoryRoot = rootProject.projectDir.parentFile
+    workingDir(repositoryRoot)
+    commandLine("node", "tools/contracts/generate.mjs")
+    inputs.files(repositoryRoot.resolve("shared/contracts"))
+    inputs.file(repositoryRoot.resolve("tools/contracts/generate.mjs"))
+    outputs.dir(layout.buildDirectory.dir("generated/openapi"))
+}
+
+tasks.named("compileJava") {
+    dependsOn("openApiGenerate")
 }
 
 repositories {
@@ -29,6 +45,7 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.5"))
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-jooq")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")

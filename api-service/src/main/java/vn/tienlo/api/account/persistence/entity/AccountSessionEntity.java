@@ -40,6 +40,9 @@ public class AccountSessionEntity {
     @Column(name = "revoked_at", nullable = true)
     private Instant revokedAt;
 
+    @Column(name = "replaced_by_session_id", nullable = true)
+    private UUID replacedBySessionId;
+
     public AccountSessionEntity() {}
 
     public UUID getId() {
@@ -112,6 +115,14 @@ public class AccountSessionEntity {
 
     public void setRevokedAt(Instant revokedAt) {
         this.revokedAt = revokedAt;
+    }
+
+    public UUID getReplacedBySessionId() {
+        return replacedBySessionId;
+    }
+
+    public void setReplacedBySessionId(UUID replacedBySessionId) {
+        this.replacedBySessionId = replacedBySessionId;
     }
 
 }

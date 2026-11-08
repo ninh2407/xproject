@@ -27,6 +27,7 @@ public class AccountRepository {
                         SELECT id, password_hash, status, suspended_until, roles::text
                         FROM game.account
                         WHERE login_email = ?
+                        FOR UPDATE
                         """,
                         (resultSet, rowNumber) -> {
                             try {
@@ -53,5 +54,29 @@ public class AccountRepository {
         if (updated != 1) {
             throw new IllegalStateException("Authenticated account disappeared before session creation");
         }
+    }
+
+    public Optional<UUID> create(
+            UUID accountId,
+            String normalizedEmail,
+            String passwordHash,
+            String displayHandle,
+            String locale) {
+        return jdbcTemplate.query(
+                        """
+                        INSERT INTO game.account
+                            (id, login_email, password_hash, display_handle, locale, roles)
+                        VALUES (?, ?, ?, ?, ?, '["PLAYER"]'::jsonb)
+                        ON CONFLICT DO NOTHING
+                        RETURNING id
+                        """,
+                        (resultSet, rowNumber) -> resultSet.getObject("id", UUID.class),
+                        accountId,
+                        normalizedEmail,
+                        passwordHash,
+                        displayHandle,
+                        locale)
+                .stream()
+                .findFirst();
     }
 }

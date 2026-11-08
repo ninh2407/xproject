@@ -100,17 +100,17 @@ Content-Type: application/json
 ### 4.1. Tài khoản người chơi
 | Endpoint | Mục đích | Ghi chú |
 |----------|----------|---------|
-| `POST /v1/auth/register` | `{ email, password, displayHandle?, locale }` → `201 { accountId }` | Email chuẩn hóa chữ thường; mật khẩu Argon2id (TD-03 §6); chống tạo hàng loạt: rate limit + captcha (TD-08) |
-| `POST /v1/auth/login` | `{ email, password, device }` → `{ accessToken, refreshToken, expiresIn: 900 }` | Tạo `account_session` (TD-03); sai → `401 INVALID_CREDENTIALS` (không phân biệt email sai / mật khẩu sai) |
-| `POST /v1/auth/refresh` | `{ refreshToken }` → cặp token mới | **Xoay vòng:** refresh cũ bị thu hồi ngay; dùng lại refresh đã thu hồi → thu hồi **toàn bộ** phiên của tài khoản (dấu hiệu bị đánh cắp) + `401 TOKEN_REVOKED` |
-| `POST /v1/auth/logout` | `{ refreshToken }` | Thu hồi phiên này |
-| `POST /v1/auth/logout-all` | — | Thu hồi mọi phiên |
+| `POST /v1/auth/register` | `{ email, password, displayHandle?, locale, captchaToken }` → `201 { accountId }` | Email chuẩn hóa chữ thường; mật khẩu Argon2id (TD-03 §6); chống tạo hàng loạt: rate limit + CAPTCHA (TD-08) |
+| `POST /v1/auth/login` | `{ email, password, device, captchaToken? }` → `{ accessToken, expiresIn: 900 }` + refresh token trong cookie HttpOnly | Tạo `account_session` (TD-03); sai → `401 INVALID_CREDENTIALS` (không phân biệt email sai / mật khẩu sai); CAPTCHA từ lần sai thứ 6 |
+| `POST /v1/auth/refresh` | Refresh token lấy từ cookie HttpOnly → access token mới + cookie refresh token đã xoay | **Xoay vòng:** refresh cũ bị thu hồi ngay; dùng lại refresh đã thu hồi → thu hồi **toàn bộ** phiên của tài khoản (dấu hiệu bị đánh cắp) + `401 TOKEN_REVOKED` |
+| `POST /v1/auth/logout` | Bearer access token + refresh cookie | Thu hồi phiên này và xóa cookie |
+| `POST /v1/auth/logout-all` | Bearer access token | Thu hồi mọi phiên và xóa cookie |
 | `GET /v1/accounts/me` | Hồ sơ tài khoản, cài đặt, thông tin Luân Hồi tóm tắt | |
 | `PATCH /v1/accounts/me/settings` | `{ hideNameInBroadcast?, locale?, … }` | GD-14 SO-R-061 |
 | `GET /v1/accounts/me/characters` | Nhân vật `ALIVE` / `ENDING` hiện tại + danh sách kiếp đã kết thúc (tóm tắt) | |
 | `POST /v1/accounts/me/deletion-requests` | Yêu cầu xóa tài khoản | TD-03 DB-R-100 |
 
-- <a id="api-r-030"></a>**API-R-030** **Access token** JWT ký **EdDSA (Ed25519)**, TTL 15 phút, claims: `sub = accountId`, `sid = sessionId`, `roles`, `iat`, `exp`, `aud = public`. **Refresh token** ngẫu nhiên 256-bit (không phải JWT), lưu **băm** trong `account_session.refresh_token_hash`, TTL 30 ngày, xoay vòng mỗi lần dùng.
+- <a id="api-r-030"></a>**API-R-030** **Access token** JWT ký **EdDSA (Ed25519)**, TTL 15 phút, claims: `sub = accountId`, `sid = sessionId`, `roles`, `iat`, `exp`, `aud = public`. **Refresh token** ngẫu nhiên 256-bit (không phải JWT), lưu **băm** trong `account_session.refresh_token_hash`, TTL 30 ngày, xoay vòng mỗi lần dùng; chỉ truyền qua cookie `__Secure-xproject_refresh` với `HttpOnly; Secure; SameSite=Strict; Path=/v1/auth`. Không đưa refresh token vào JSON response. Browser client dùng `credentials: include`; API chỉ cho phép các origin cấu hình chính xác qua `TL_CORS_ALLOWED_ORIGINS` và không bật wildcard khi dùng credentials. Response auth lưu trong `idempotency_record` phải được mã hóa AES-GCM; không lưu token thô trong DB.
 - <a id="api-r-031"></a>**API-R-031** Tài khoản `SUSPENDED` / `BANNED`: login / refresh trả `403 ACCOUNT_SUSPENDED` kèm `details.until`, mọi phiên bị thu hồi khi trạng thái đổi.
 
 ### 4.2. Nội bộ và quản trị
@@ -121,7 +121,7 @@ Content-Type: application/json
 ### 4.3. Rate limit (token bucket, Valkey `rl:*`, TD-03 §12)
 | Nhóm | Phạm vi | Giới hạn | Vượt |
 |------|---------|----------|------|
-| `auth` (register, login, refresh) | IP + email | 10 / phút / IP; 5 lần login sai / 15 phút / email → khóa tạm 15 phút | `429 RATE_LIMITED` |
+| `auth` (register, login, refresh) | IP + email | 10 / phút / IP; 5 login sai / 15 phút / email → CAPTCHA; 10 sai → khóa tăng dần (15 phút–24 giờ); 50 sai / giờ / IP → chặn 1 giờ | `429 RATE_LIMITED` |
 | `read` (`GET /v1/**`) | tài khoản | 60 / giây, burst 120 | `429` |
 | `write` (thao tác ghi công khai) | tài khoản | 10 / giây, burst 20 | `429` |
 | `preview` (`…/preview`) | tài khoản | 5 / giây | `429` |
@@ -130,6 +130,7 @@ Content-Type: application/json
 | `internal` | tiến trình | không giới hạn cứng; cảnh báo khi > 2.000 / giây / tiến trình | — |
 
 - <a id="api-r-035"></a>**API-R-035** Response `429` có header `Retry-After` (giây). Rate limit tính **trước** idempotency (gửi lặp cũng tính).
+- Auth CAPTCHA dùng gateway provider-neutral theo SEC-R-011: API gửi `{ secret, response, remoteIp }` đến `TL_CAPTCHA_VERIFICATION_URI`, nhận `{ "success": boolean }`. Thiếu cấu hình hoặc gateway lỗi trả `503 UNAVAILABLE`; không bỏ qua bước xác minh.
 
 ---
 
@@ -163,6 +164,7 @@ Ký hiệu: **Idem** — `IK` = header `Idempotency-Key`; tên trường = khóa
 |---------------|----------|-------|------|-----|
 | (§4.1) `/v1/auth/*`, `/v1/accounts/me`, `/v1/accounts/me/characters`, `/v1/accounts/me/settings`, `/v1/accounts/me/deletion-requests` | Tài khoản | TD-04 §4.1 | IK (ghi) | |
 | `GET /v1/creation/odds` | Bảng tỷ lệ "Thiên cơ" | GD-27 §9 | — | |
+| `GET /v1/servers` | Danh mục server mở / bảo trì để chọn | GD-27 §9, TD-03 DB-Q-2 | — | |
 | `GET /v1/backgrounds` · `GET /v1/talents` | Danh mục + trạng thái mở khóa | GD-27 §9 | — | |
 | `POST /v1/creation/attempts` | Bắt đầu tạo nhân vật | GD-27 §9 | IK | |
 | `POST /v1/creation/attempts/{attemptId}/rolls` | Roll / roll lại | GD-27 §9 | IK | |
@@ -352,6 +354,7 @@ Ký hiệu: **Idem** — `IK` = header `Idempotency-Key`; tên trường = khóa
 | `STORE_LOCKED` | 423 | Cửa hàng bị khóa do số dư Tiên Ngọc âm sau hoàn tiền | mới (GD-19) |
 | `RATE_LIMITED` | 429 | Vượt giới hạn (`Retry-After`) | TD-01 |
 | `UNAVAILABLE` | 503 | Lỗi tạm thời, thử lại cùng khóa | TD-01 |
+| `INTERNAL_ERROR` | 500 | Lỗi không dự kiến; response không để lộ chi tiết nội bộ | TD-01 |
 
 - <a id="api-r-040"></a>**API-R-040** Lý do từ chối **realtime** (`S2C_CastRejected.reason`, `S2C_GatherRejected.reason`, `S2C_ChatRejected.reason`…) **không** thuộc `errors.yaml`; chúng là enum trong `shared/schema` (TD-02). Kết quả nghiệp vụ không phải lỗi (`DIED`, `DEFERRED`, `PENDING_CHOICE`, `WARD_CONSUMED`…) là trường trong response 200, không phải mã lỗi.
 - <a id="api-r-041"></a>**API-R-041** Ưu tiên mã cụ thể; `INVALID_STATE` chỉ dùng khi không có mã cụ thể hơn. Thêm mã: sửa `errors.yaml` + bảng này + i18n `err.*` (`vi` bắt buộc, TD-07 DT-R-072) trong cùng PR.
@@ -414,6 +417,7 @@ Danh sách đóng = TD-01 §9.3 (đã gồm các bổ sung của GD-08, GD-25: `
 | API-AC-010 | GM đổi tên công pháp không kèm `reason` | `/admin/v1/…` | `400 VALIDATION`; có `reason` → ghi `admin_audit` có `before` / `after` |
 | API-AC-011 | Client có `gamedataVersion` cũ hơn tối thiểu | `POST /v1/play/join` | `426 CLIENT_OUTDATED` |
 | API-AC-012 | Client TS sinh từ OpenAPI | Gọi `craft.submitAlchemySession` | Kiểu request / response khớp; zod chặn response sai schema ở môi trường dev |
+| API-AC-013 | Lỗi validation hoặc runtime tại API auth/account/server đã triển khai | Gọi API | Trả error envelope TA-R-043; lỗi runtime dùng `500 INTERNAL_ERROR`, không lộ chi tiết nội bộ |
 
 ---
 
@@ -433,3 +437,4 @@ Danh sách đóng = TD-01 §9.3 (đã gồm các bổ sung của GD-08, GD-25: `
 | v0.3 | 2026-10-25 | — | Bổ sung mã lỗi `SPEND_LIMIT_REACHED`, `STORE_LOCKED`; trỏ endpoint GD-19 |
 | v0.4 | 2026-10-25 | — | Trỏ endpoint GD-23, GD-20 |
 | v0.5 | 2026-10-25 | — | `GET /v1/crafted-techniques/{id}` trả thành phần (GD-08 TF-R-072, AR-04) |
+| v0.6 | 2026-11-08 | — | Account controllers implement generated APIs (API-R-011); global error envelope, `INTERNAL_ERROR` |

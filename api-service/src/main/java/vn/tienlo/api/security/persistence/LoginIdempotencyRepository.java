@@ -1,34 +1,38 @@
 package vn.tienlo.api.security.persistence;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import vn.tienlo.api.generated.publicapi.model.AuthTokens;
+import vn.tienlo.api.generated.publicapi.model.AccountCreated;
 import vn.tienlo.api.generated.publicapi.model.ErrorResponse;
 import vn.tienlo.api.generated.publicapi.model.ErrorResponseError;
+import vn.tienlo.api.security.AuthIdempotencyCipher;
+import vn.tienlo.api.security.app.AuthSessionTokens;
 import vn.tienlo.api.security.app.LoginResult;
 
 @Repository
 public class LoginIdempotencyRepository {
-    private static final String ENDPOINT = "/v1/auth/login";
-
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+    private final AuthIdempotencyCipher responseCipher;
 
-    public LoginIdempotencyRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public LoginIdempotencyRepository(
+            JdbcTemplate jdbcTemplate,
+            ObjectMapper objectMapper,
+            AuthIdempotencyCipher responseCipher) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
+        this.responseCipher = responseCipher;
     }
 
     @Transactional
-    public Optional<LoginResult> begin(String key, byte[] requestHash, UUID requestId) {
-        jdbcTemplate.update(
-                "DELETE FROM game.idempotency_record WHERE created_at < now() - INTERVAL '7 days'");
+    public Optional<LoginResult> begin(String endpoint, String key, byte[] requestHash, UUID requestId) {
         int inserted = jdbcTemplate.update(
                 """
                 INSERT INTO game.idempotency_record (key, endpoint, request_hash, status)
@@ -36,17 +40,18 @@ public class LoginIdempotencyRepository {
                 ON CONFLICT (key) DO NOTHING
                 """,
                 key,
-                ENDPOINT,
+                endpoint,
                 requestHash);
 
         StoredRecord record = jdbcTemplate.queryForObject(
                 """
-                SELECT endpoint, request_hash, status, http_status, response::text AS response
+                SELECT key, endpoint, request_hash, status, http_status, response::text AS response
                 FROM game.idempotency_record
                 WHERE key = ?
                 FOR UPDATE
                 """,
                 (resultSet, rowNumber) -> new StoredRecord(
+                        resultSet.getString("key"),
                         resultSet.getString("endpoint"),
                         resultSet.getBytes("request_hash"),
                         resultSet.getString("status"),
@@ -59,7 +64,7 @@ public class LoginIdempotencyRepository {
         if (record == null) {
             throw new IllegalStateException("Idempotency record could not be loaded");
         }
-        if (!ENDPOINT.equals(record.endpoint()) || !MessageDigest.isEqual(requestHash, record.requestHash())) {
+        if (!endpoint.equals(record.endpoint()) || !MessageDigest.isEqual(requestHash, record.requestHash())) {
             return Optional.of(errorResult(
                     422,
                     requestId,
@@ -75,14 +80,8 @@ public class LoginIdempotencyRepository {
         throw new IllegalStateException("A committed login idempotency record is still in progress");
     }
 
-    public void complete(String key, LoginResult result) {
-        final String response;
-        try {
-            response = objectMapper.writeValueAsString(result.body());
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Could not serialize login response for idempotency", exception);
-        }
-
+    public void complete(String endpoint, String key, LoginResult result) {
+        final String response = responseCipher.encrypt(endpoint + ":" + key, result.body());
         int updated = jdbcTemplate.update(
                 """
                 UPDATE game.idempotency_record
@@ -92,7 +91,7 @@ public class LoginIdempotencyRepository {
                 result.httpStatus(),
                 response,
                 key,
-                ENDPOINT);
+                endpoint);
         if (updated != 1) {
             throw new IllegalStateException("Login idempotency record was not in progress");
         }
@@ -103,11 +102,39 @@ public class LoginIdempotencyRepository {
             throw new IllegalStateException("Completed login idempotency record has no response");
         }
         try {
-            Object body = record.httpStatus() == 200
-                    ? objectMapper.readValue(record.response(), AuthTokens.class)
-                    : objectMapper.readValue(record.response(), ErrorResponse.class);
+            String context = record.endpoint() + ":" + record.key();
+            byte[] plaintext;
+            if (responseCipher.isEncrypted(record.response())) {
+                plaintext = responseCipher.decrypt(context, record.response());
+            } else {
+                JsonNode legacyResponse = objectMapper.readTree(record.response());
+                String encrypted = responseCipher.encrypt(context, legacyResponse);
+                jdbcTemplate.update(
+                        """
+                        UPDATE game.idempotency_record
+                        SET response = ?::jsonb
+                        WHERE key = ? AND status = 'DONE'
+                        """,
+                        encrypted,
+                        record.key());
+                plaintext = objectMapper.writeValueAsBytes(legacyResponse);
+            }
+            Object body;
+            try {
+                body = switch (record.httpStatus()) {
+                    case 200 -> record.endpoint().equals("/v1/auth/login")
+                                    || record.endpoint().equals("/v1/auth/refresh")
+                            ? objectMapper.readValue(plaintext, AuthSessionTokens.class)
+                            : objectMapper.readValue(plaintext, ErrorResponse.class);
+                    case 201 -> objectMapper.readValue(plaintext, AccountCreated.class);
+                    case 204 -> null;
+                    default -> objectMapper.readValue(plaintext, ErrorResponse.class);
+                };
+            } finally {
+                java.util.Arrays.fill(plaintext, (byte) 0);
+            }
             return new LoginResult(record.httpStatus(), body);
-        } catch (JsonProcessingException exception) {
+        } catch (IOException exception) {
             throw new IllegalStateException("Stored login idempotency response is invalid", exception);
         }
     }
@@ -123,5 +150,11 @@ public class LoginIdempotencyRepository {
         return new LoginResult(status, body);
     }
 
-    private record StoredRecord(String endpoint, byte[] requestHash, String status, Integer httpStatus, String response) {}
+    private record StoredRecord(
+            String key,
+            String endpoint,
+            byte[] requestHash,
+            String status,
+            Integer httpStatus,
+            String response) {}
 }

@@ -45,6 +45,10 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -83,6 +87,8 @@ paths:
           $ref: "#/components/responses/Unprocessable"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "503":
           $ref: "#/components/responses/Unavailable"
   /v1/auth/login:
@@ -90,6 +96,7 @@ paths:
       tags: [auth]
       operationId: auth.login
       summary: Create an authenticated account session.
+      description: Browser clients must send credentialed requests so the refresh cookie is stored.
       parameters:
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/Traceparent"
@@ -102,7 +109,11 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
-          description: The access and refresh tokens.
+          description: The access token; the refresh token is set in an HttpOnly cookie.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -117,26 +128,29 @@ paths:
           $ref: "#/components/responses/Unprocessable"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "503":
           $ref: "#/components/responses/Unavailable"
   /v1/auth/refresh:
     post:
       tags: [auth]
       operationId: auth.refresh
-      summary: Rotate a refresh token.
+      summary: Rotate the refresh token stored in the HttpOnly cookie.
+      description: Browser clients must send credentialed requests so the rotated refresh cookie is accepted.
+      security:
+        - refreshCookieAuth: []
       parameters:
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/Traceparent"
         - $ref: "#/components/parameters/IdempotencyKey"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshRequest"
       responses:
         "200":
-          description: The rotated access and refresh tokens.
+          description: The rotated access token; the new refresh token is set in an HttpOnly cookie.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -151,6 +165,8 @@ paths:
           $ref: "#/components/responses/Unprocessable"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "503":
           $ref: "#/components/responses/Unavailable"
   /v1/auth/logout:
@@ -160,25 +176,30 @@ paths:
       summary: Revoke the session associated with a refresh token.
       security:
         - bearerAuth: []
+          refreshCookieAuth: []
       parameters:
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/Traceparent"
         - $ref: "#/components/parameters/IdempotencyKey"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshRequest"
       responses:
         "204":
           description: The session was revoked.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "422":
           $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/auth/logout-all:
     post:
       tags: [auth]
@@ -193,10 +214,18 @@ paths:
       responses:
         "204":
           description: All account sessions were revoked.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
         "422":
           $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/accounts/me:
     get:
       tags: [account]
@@ -214,8 +243,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/servers:
+    get:
+      tags: [server]
+      operationId: server.listServers
+      summary: List servers available for character creation.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/Traceparent"
+      responses:
+        "200":
+          description: Open servers and servers currently in maintenance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerCatalog"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/accounts/me/settings:
     patch:
       tags: [account]
@@ -244,8 +306,14 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "422":
           $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/accounts/me/characters:
     get:
       tags: [account]
@@ -263,8 +331,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountCharacters"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/accounts/me/deletion-requests:
     post:
       tags: [account]
@@ -285,8 +359,16 @@ paths:
                 $ref: "#/components/schemas/DeletionRequestAccepted"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "422":
           $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /v1/creation/odds:
     get:
       tags: [creation]
@@ -351,6 +433,12 @@ paths:
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/Traceparent"
         - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreationAttemptRequest"
       responses:
         "200":
           description: The current attempt and its roll history.
@@ -527,6 +615,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    refreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Secure-xproject_refresh
   parameters:
     RequestId:
       name: X-Request-Id
@@ -556,7 +648,7 @@ components:
     RegisterRequest:
       type: object
       additionalProperties: false
-      required: [email, password, locale]
+      required: [email, password, locale, captchaToken]
       properties:
         email:
           type: string
@@ -565,6 +657,7 @@ components:
         password:
           type: string
           format: password
+          minLength: 10
         displayHandle:
           type: string
           minLength: 3
@@ -572,6 +665,10 @@ components:
         locale:
           type: string
           maxLength: 8
+        captchaToken:
+          type: string
+          minLength: 1
+          maxLength: 4096
     LoginRequest:
       type: object
       additionalProperties: false
@@ -587,13 +684,10 @@ components:
         device:
           type: string
           maxLength: 128
-    RefreshRequest:
-      type: object
-      additionalProperties: false
-      required: [refreshToken]
-      properties:
-        refreshToken:
+        captchaToken:
           type: string
+          minLength: 1
+          maxLength: 4096
     AccountCreated:
       type: object
       additionalProperties: false
@@ -605,11 +699,9 @@ components:
     AuthTokens:
       type: object
       additionalProperties: false
-      required: [accessToken, refreshToken, expiresIn]
+      required: [accessToken, expiresIn]
       properties:
         accessToken:
-          type: string
-        refreshToken:
           type: string
         expiresIn:
           type: integer
@@ -667,14 +759,17 @@ components:
     CharacterSummary:
       type: object
       additionalProperties: false
-      required: [id, name, generation, backgroundId, lifeState]
+      required: [id, name, serverId, generation, backgroundId, lifeState]
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
-          maxLength: 16
+          minLength: 2
+          maxLength: 12
+        serverId:
+          type: integer
         generation:
           type: integer
           minimum: 1
@@ -771,6 +866,7 @@ components:
         [
           attemptId,
           accountId,
+          serverId,
           generation,
           rollsAllowed,
           rollsUsed,
@@ -785,6 +881,8 @@ components:
         accountId:
           type: string
           format: uuid
+        serverId:
+          type: integer
         generation:
           type: integer
           minimum: 1
@@ -802,6 +900,35 @@ components:
         confirmedRollId:
           type: [string, "null"]
           format: uuid
+    CreationAttemptRequest:
+      type: object
+      additionalProperties: false
+      required: [serverId]
+      properties:
+        serverId:
+          type: integer
+    ServerCatalog:
+      type: object
+      additionalProperties: false
+      required: [servers]
+      properties:
+        servers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServerSummary"
+    ServerSummary:
+      type: object
+      additionalProperties: false
+      required: [serverId, nameKey, status]
+      properties:
+        serverId:
+          type: integer
+        nameKey:
+          type: string
+          maxLength: 64
+        status:
+          type: string
+          enum: [OPEN, MAINTENANCE]
     CreationRollRequest:
       type: object
       additionalProperties: false
@@ -824,8 +951,8 @@ components:
           format: uuid
         name:
           type: string
-          minLength: 1
-          maxLength: 16
+          minLength: 2
+          maxLength: 12
         appearancePresetId:
           type: string
         colors:
@@ -1048,6 +1175,12 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     Unavailable:
       description: A temporary dependency failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: An unexpected server error.
       content:
         application/json:
           schema:

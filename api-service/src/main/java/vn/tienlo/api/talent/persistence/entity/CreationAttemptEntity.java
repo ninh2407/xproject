@@ -18,6 +18,9 @@ public class CreationAttemptEntity {
     @Column(name = "account_id", nullable = false)
     private UUID accountId;
 
+    @Column(name = "server_id", nullable = false)
+    private Short serverId;
+
     @Column(name = "generation", nullable = false)
     private Integer generation;
 
@@ -55,6 +58,14 @@ public class CreationAttemptEntity {
 
     public void setAccountId(UUID accountId) {
         this.accountId = accountId;
+    }
+
+    public Short getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Short serverId) {
+        this.serverId = serverId;
     }
 
     public Integer getGeneration() {

@@ -28,5 +28,24 @@ public class RefreshTokenGenerator {
         }
     }
 
+    public byte[] hash(String token) {
+        byte[] tokenBytes;
+        try {
+            tokenBytes = Base64.getUrlDecoder().decode(token);
+        } catch (IllegalArgumentException exception) {
+            return new byte[0];
+        }
+        try {
+            if (tokenBytes.length != 32) {
+                return new byte[0];
+            }
+            return MessageDigest.getInstance("SHA-256").digest(tokenBytes);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is required by the Java runtime", exception);
+        } finally {
+            java.util.Arrays.fill(tokenBytes, (byte) 0);
+        }
+    }
+
     public record GeneratedRefreshToken(String token, byte[] hash) {}
 }

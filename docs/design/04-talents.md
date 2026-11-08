@@ -170,8 +170,8 @@ interface CreationRollResult {
 }
 type CreationLine = 'ROOT' | 'INNATE' | 'TALENT_1' | 'TALENT_2' | 'TALENT_3';
 
-interface CreationAttempt {                    // một lần "chuyển thế" của tài khoản
-  attemptId: string; accountId: string; generation: number;
+interface CreationAttempt {                    // một lần "chuyển thế" của tài khoản trên server
+  attemptId: string; accountId: string; serverId: number; generation: number;
   rollsAllowed: number; rollsUsed: number;     // rollsUsed tính cả lần roll đầu
   lockAvailable: boolean;
   noRarePlusStreak: number;                    // §5.6 bảo hiểm
@@ -194,8 +194,8 @@ interface PendingTalentChoice {                // chờ người chơi quyết �
 ### 4.1. `CreationAttempt`
 | Từ | Đến | Điều kiện | Tác dụng phụ |
 |----|-----|-----------|--------------|
-| — | `OPEN` | Tài khoản không có nhân vật `ALIVE`/`ENDING` (GD-26 LC-R-006) | Tính `rollsAllowed` (TLN-R-020); tự roll lần đầu |
-| `OPEN` | `OPEN` | Roll lại, `rollsUsed < rollsAllowed` | Thêm `CreationRollResult` vào lịch sử |
+| — | `OPEN` | Tài khoản không có nhân vật `ALIVE`/`ENDING` trên server đã chọn (GD-26 LC-R-006) | Tạo attempt, tính `rollsAllowed` (TLN-R-020); chưa roll |
+| `OPEN` | `OPEN` | Roll lần đầu hoặc roll lại, `rollsUsed < rollsAllowed` | Thêm `CreationRollResult` vào lịch sử |
 | `OPEN` | `CONFIRMED` | Xác nhận một `rollId` trong lịch sử + tên hợp lệ | Tạo nhân vật (GD-26 §5.1) trong cùng transaction |
 
 Attempt **không hết hạn**: người chơi thoát game giữa chừng, lần sau vào lại đúng lịch sử roll cũ (không hoàn lượt, không cho roll lại từ đầu).
@@ -209,11 +209,14 @@ Attempt **không hết hạn**: người chơi thoát game giữa chừng, lần
 
 ### 5.1. Phiên tạo nhân vật
 - <a id="tln-r-020"></a>**TLN-R-020** `rollsAllowed = 1 + params.baseRerolls (3) + số UNL_REROLL đã mua (≤ 5)`. `lockAvailable = có UNL_LOCK_LINE`.
+- <a id="tln-r-065"></a>**TLN-R-065** Mở attempt chỉ tạo hoặc resume metadata và lịch sử hiện có; không tự roll. Attempt mới có `rollsUsed = 0`, lịch sử rỗng. Roll đầu tiên được gửi tường minh qua endpoint roll với `backgroundId`, được tính là lượt đầu (`idx = 0`). Mở lại attempt trả cùng attempt và lịch sử, không tiêu lượt.
 - <a id="tln-r-021"></a>**TLN-R-021** Mỗi lần roll gắn với **một xuất thân** do người chơi chọn ở lần roll đó; đổi xuất thân giữa các lần roll được phép, không tốn thêm lượt. Xác nhận dùng xuất thân của roll được chọn.
 - <a id="tln-r-022"></a>**TLN-R-022** Người chơi được **xác nhận bất kỳ roll nào trong lịch sử** của attempt, không chỉ roll mới nhất.
 - <a id="tln-r-023"></a>**TLN-R-023** **Khóa dòng:** nếu `lockAvailable`, mỗi lần roll lại được khóa tối đa 1 `CreationLine`, sao chép từ roll **đang hiển thị**. Khóa `INNATE` giữ cả 4 chỉ số bẩm sinh lẫn thọ nguyên gốc. Khóa `ROOT` mà xuất thân mới có `rootRules` khác thì vẫn giữ linh căn đã khóa.
 - <a id="tln-r-024"></a>**TLN-R-024** Thứ tự roll trong một lần: **ROOT → INNATE → TALENT_1..3**. Dòng bị khóa bỏ qua bước roll nhưng vẫn tham gia ràng buộc của các bước sau (vd. `requires.rootElementsAny`).
 - <a id="tln-r-025"></a>**TLN-R-025** Tên nhân vật: 2–12 ký tự, chữ cái tiếng Việt có dấu và khoảng trắng đơn, qua bộ lọc từ ngữ, duy nhất trên server **trong số nhân vật `ALIVE`/`ENDING`** (tên của nhân vật đã `ENDED` được dùng lại).
+- <a id="tln-r-026"></a>**TLN-R-026** Trước khi kiểm tra tên, API chuẩn hóa Unicode NFC; từ chối khoảng trắng đầu/cuối, nhiều khoảng trắng liên tiếp, ký tự ngoài bảng chữ cái tiếng Việt và khoảng trắng ASCII. Đếm độ dài theo Unicode code point sau chuẩn hóa; giới hạn 2–12. Từ cấm lấy từ danh sách versioned phía server; không chấp nhận tạo nhân vật nếu danh sách chưa nạp được.
+- <a id="tln-r-027"></a>**TLN-R-027** Ngoại hình nền gồm preset và màu lấy từ appearance gamedata đã nạp. Mỗi preset khai báo các slot màu hợp lệ và màu mặc định; client chỉ gửi các override theo cặp `colorSlotId` → `paletteColorId`. API từ chối preset, slot hoặc màu không có trong bundle hiện hành. Màu không gửi dùng default của preset.
 
 ### 5.2. Xuất thân
 
@@ -318,7 +321,7 @@ Giá trị % là cộng dồn kiểu cộng (additive) với các nguồn khác,
 | `TAL_TEN_THOUSAND_PILLS` | Vạn Đan Thể | LEGENDARY | + | `PILL_TOXICITY_PCT` −50% | |
 | `TAL_GREAT_FORTUNE` | Đại Khí Vận | LEGENDARY | + | `luck` +20 | |
 | `TAL_HEAVEN_FAVORED` | Thiên Đạo Sủng Nhi | MYTHIC | ± | `luck` +40; `TRIBULATION_POWER_PCT` +100% | Unlock bằng mốc 100% Vực 1 (GD-21 §3.5) |
-| `TAL_CHAOS_BODY` | Hỗn Độn Thể | MYTHIC | ± | `HOOK CHAOS_ROOT`; tốc độ tu luyện +30%; `TRIBULATION_POWER_PCT` +50% | Unlock `UNL_TALENT_POOL_CHAOS_BODY` (cần `generationCount ≥ 3`) |
+| `TAL_CHAOS_BODY` | Hỗn Độn Thể | MYTHIC | ± | `HOOK CHAOS_ROOT`; tốc độ tu luyện +30%; `TRIBULATION_POWER_PCT` +50% | Unlock `UNL_TALENT_POOL_CHAOS_BODY` (cần `max(generationCount across servers) ≥ 3`, LC-R-164) |
 
 **Thiên phú tiêu cực** (`polarity = NEGATIVE`, chỉ đến từ sự kiện, §5.10): `TAL_SHATTERED_MERIDIAN` (Kinh Mạch Tổn Thương: tốc độ tu luyện −20%), `TAL_HAUNTED` (Oán Linh Bám Thân: `maxMp` −15%, tâm cảnh tối đa −10).
 
@@ -510,6 +513,7 @@ Bảng "điểm sức mạnh" cho từng thiên phú (ΔCP% theo [GD-06 §6.8](1
 
 | Endpoint | Mục đích | Quy tắc |
 |----------|----------|---------|
+| `GET /v1/servers` | Danh mục server có thể chọn | Trạng thái server theo TD-03 |
 | `POST /v1/creation/attempts` | Mở hoặc lấy lại attempt hiện tại (kèm lịch sử roll) | §4.1 |
 | `POST /v1/creation/attempts/{id}/rolls` | `{ backgroundId, lockLine?: CreationLine }` → `CreationRollResult` | TLN-R-020..024, 060..063 |
 | `POST /v1/creation/attempts/{id}/confirm` | `{ rollId, name, appearancePresetId, colors }` → nhân vật | TLN-R-022, 025; GD-26 §5.1 |
@@ -517,6 +521,8 @@ Bảng "điểm sức mạnh" cho từng thiên phú (ΔCP% theo [GD-06 §6.8](1
 | `GET /v1/backgrounds` · `GET /v1/talents` | Danh mục + trạng thái mở khóa của tài khoản | |
 | `GET /v1/characters/{id}/talents` | Thiên phú, linh căn, chỉ số bẩm sinh, lựa chọn đang chờ | |
 | `POST /v1/characters/{id}/talent-choices/{pendingId}` | `{ pick: talentId \| null, replaceTalentId?: string, element?: Element }` | TLN-R-071, 074, 080 |
+
+`POST /v1/creation/attempts` nhận `{ serverId }` và tạo/resume attempt chưa roll (TLN-R-065). Client chọn xuất thân khi gọi endpoint roll lần đầu. `GET /v1/servers` trả server `OPEN` và `MAINTENANCE`; `OPEN` có thể chọn, `MAINTENANCE` chỉ hiển thị và không thể mở attempt, `CLOSED` không xuất hiện. Attempt lưu `serverId`; roll và confirm dùng server đã lưu, không nhận lại server từ client.
 
 ### 9.3. Message thời gian thực
 
@@ -542,6 +548,7 @@ Bảng "điểm sức mạnh" cho từng thiên phú (ΔCP% theo [GD-06 §6.8](1
 CREATE TABLE creation_attempt (
   attempt_id      UUID PRIMARY KEY,
   account_id      UUID NOT NULL,
+  server_id       SMALLINT NOT NULL REFERENCES server_registry(server_id),
   generation      INT  NOT NULL,
   rolls_allowed   INT  NOT NULL,
   rolls_used      INT  NOT NULL DEFAULT 0,
@@ -550,7 +557,7 @@ CREATE TABLE creation_attempt (
   confirmed_roll_id UUID,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX ux_attempt_open ON creation_attempt(account_id) WHERE confirmed_roll_id IS NULL;
+CREATE UNIQUE INDEX ux_attempt_open ON creation_attempt(account_id, server_id) WHERE confirmed_roll_id IS NULL;
 
 CREATE TABLE creation_roll (
   roll_id     UUID PRIMARY KEY,
@@ -667,7 +674,7 @@ CREATE TABLE account_talent_seen (
 
 | Mã | Given | When | Then |
 |----|-------|------|------|
-| <a id="tln-ac-001"></a>TLN-AC-001 | Tài khoản mới, không mua unlock | Mở attempt | `rollsAllowed = 4`, đã có 1 roll, `lockAvailable = false` |
+| <a id="tln-ac-001"></a>TLN-AC-001 | Tài khoản mới, không mua unlock | Mở attempt | `rollsAllowed = 4`, `rollsUsed = 0`, lịch sử rỗng, `lockAvailable = false` |
 | TLN-AC-002 | Đã mua 2 `UNL_REROLL` | Mở attempt | `rollsAllowed = 6` |
 | TLN-AC-003 | 100.000 roll chỉ số với seed ngẫu nhiên | Kiểm tra | Mọi roll có tổng = 200 trước offset; mọi chỉ số trong [20, 80] |
 | TLN-AC-004 | Ví dụ §6.1 | Tính | `[35; 63; 47; 60]` |
@@ -691,6 +698,7 @@ CREATE TABLE account_talent_seen (
 | TLN-AC-022 | Gửi cùng `changeId` hai lần | API xử lý | Áp dụng một lần |
 | TLN-AC-023 | Ví dụ TLN-R-055 | Tính `senseLevel` | 4 |
 | TLN-AC-024 | Còn `PendingTalentChoice(AWAKEN)` chưa giải quyết | Thử đột phá lớn tiếp theo | Bị chặn với lý do rõ ràng (TLN-R-081) |
+| TLN-AC-025 | Attempt mới, chưa có roll | Gửi roll đầu với `backgroundId` hợp lệ | Tạo roll `idx = 0`, `rollsUsed = 1`; mở lại attempt không tạo thêm roll |
 
 ---
 
@@ -731,4 +739,4 @@ CREATE TABLE account_talent_seen (
 | v0.3 | 2026-10-25 | — | Trỏ telemetry chuẩn GD-20 |
 | v0.4 | 2026-10-25 | — | Đợt rà nhất quán: TLN-R-032 — mọi xuất thân xuất hiện ở miếu hoang `V1_F01` và qua hướng dẫn chung; ba xuất thân gắn tông chỉ đổi điểm đến sau hướng dẫn (`V1_HUB`), khớp GD-18 / GD-15 `QC_TUTORIAL_QI` |
 | v0.5 | 2026-10-25 | — | Đồng bộ GD-16 `V1_F01`: TLN-R-032 ghi rõ `start = { mapId: "V1_F01", poiId: "V1_F01_LM_001" }` cho mọi xuất thân; điểm này cũng là nơi hồi sinh khi chưa kích hoạt truyền tống trận (GD-26 LC-R-061) |
-
+| v0.6 | 2026-11-03 | — | Tách mở/resume attempt khỏi roll đầu; người chơi chọn `backgroundId` trong lần gọi roll đầu tiên; TLN-R-065, TLN-AC-001, 025 |

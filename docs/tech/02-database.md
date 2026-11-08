@@ -100,9 +100,11 @@ Cột: **Bảng** · **Module** (TD-01 §5.1) · **Nguồn DDL** · **Phạm vi*
 ### 5.1. Nền tảng & tài khoản
 | Bảng | Module | Nguồn DDL | Phạm vi | Ghi chú |
 |------|--------|-----------|---------|---------|
+| `server_registry` | platform | TD-04 / GD-27 | GLOBAL | Danh mục server chọn được; ID ổn định |
 | `account` | account | **TD-03 §6** | ACCOUNT | |
 | `account_session` | account | **TD-03 §6** | ACCOUNT | `device_hash` lưu SHA-256 dạng BYTEA, nullable (TD-08) |
 | `account_meta` | lifecycle | GD-26 §9 (+ GD-09 `bag_expansion`) | ACCOUNT | V |
+| `account_server_meta` | lifecycle | GD-26 §9 | ACCOUNT × SERVER | Generation theo server |
 | `account_flag` | encounter | GD-22 §10 | ACCOUNT | |
 | `idempotency_record` | platform | **TD-03 §6** | LOG | R 7 ngày |
 | `outbox_event` | platform | **TD-03 §6** | LOG | R 7 ngày |
@@ -236,17 +238,32 @@ CREATE TABLE account (
 CREATE TABLE account_session (
   id UUID PRIMARY KEY, account_id UUID NOT NULL REFERENCES account(id),
   refresh_token_hash BYTEA NOT NULL UNIQUE, device_hash BYTEA, device VARCHAR(128), ip INET,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL, revoked_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL, revoked_at TIMESTAMPTZ,
+  replaced_by_session_id UUID REFERENCES account_session(id)
 );
 CREATE INDEX ix_account_session_account ON account_session(account_id) WHERE revoked_at IS NULL;
+
+-- ===== server registry and per-server account progress =====
+CREATE TABLE server_registry (
+  server_id SMALLINT PRIMARY KEY,
+  name_key VARCHAR(64) NOT NULL,
+  status VARCHAR(16) NOT NULL CHECK (status IN ('OPEN', 'MAINTENANCE', 'CLOSED'))
+);
+CREATE TABLE account_server_meta (
+  account_id UUID NOT NULL REFERENCES account(id),
+  server_id SMALLINT NOT NULL REFERENCES server_registry(server_id),
+  generation_count INT NOT NULL DEFAULT 0 CHECK (generation_count >= 0),
+  PRIMARY KEY (account_id, server_id)
+);
 
 -- ===== character (gộp cột từ các GD; cột nào thuộc GD nào ghi chú bên phải) =====
 CREATE TABLE character (
   id UUID PRIMARY KEY,
   account_id UUID NOT NULL REFERENCES account(id),
   server_id SMALLINT NOT NULL,
-  name VARCHAR(16) NOT NULL,
+  name VARCHAR(12) NOT NULL,
   generation INT NOT NULL,                                        -- GD-26
+  base_appearance JSONB NOT NULL,                                  -- GD-27 preset + palette color IDs
   background_id VARCHAR(48) NOT NULL,                             -- GD-27
   -- vòng đời (GD-26)
   life_state VARCHAR(8) NOT NULL DEFAULT 'ALIVE' CHECK (life_state IN ('ALIVE','ENDING','ENDED')),
@@ -477,7 +494,7 @@ Dữ liệu telemetry / KPI nằm ở **kho phân tích tách riêng** (PostHog 
 
 ## 15. Câu hỏi mở
 - [ ] **DB-Q-1:** Tách schema PostgreSQL theo module ngay từ đầu (dễ tách service sau) hay một schema `game` (đơn giản)? Đề xuất: một schema ở MVP.
-- [ ] **DB-Q-2:** Đa server (nhiều "server game" cho người chơi chọn) dùng chung một DB với `server_id`, hay mỗi server một DB? Ảnh hưởng `character.server_id`, bảng xếp hạng, sơn môn. Đề xuất: chung DB tới ~5 server.
+- [x] **DB-Q-2:** *(Đã chốt: DB chung cho nhiều server; `character.server_id` và generation theo server. Metadata Luân Hồi / unlocks / vault vẫn cấp account.)*
 - [ ] **DB-Q-3:** Kho lạnh cho log quá hạn: S3-compatible của nhà cung cấp cloud nào (liên quan PLAN Q10)?
 
 ---
